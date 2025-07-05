@@ -130,6 +130,10 @@ class RealSatisfied_Office_Ratings_Block {
                     'type' => 'boolean',
                     'default' => false
                 ),
+                'showTrustBadge' => array(
+                    'type' => 'boolean',
+                    'default' => false
+                ),
                 'linkToProfile' => array(
                     'type' => 'boolean',
                     'default' => true
@@ -180,84 +184,97 @@ class RealSatisfied_Office_Ratings_Block {
         // Start building output
         ob_start();
         ?>
-        <div <?php echo $wrapper_attributes; ?>>
+        <div <?php echo $wrapper_attributes; ?> style="width: 100%; padding: 10px; overflow: hidden; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 16px; display: inline-flex;">
             
-            <?php if ($attributes['showPhoto'] && !empty($channel['logo'])): ?>
-                <div class="office-logo">
-                    <img src="<?php echo esc_url($channel['logo']); ?>" 
-                         alt="<?php echo esc_attr($channel['office']); ?> Logo" 
-                         class="office-logo-img" />
+            <!-- Header Section -->
+            <div style="align-self: stretch; height: 46px; padding: 4px; backdrop-filter: blur(50px); justify-content: flex-start; align-items: center; gap: 6px; display: inline-flex;">
+                <div style="width: 218px; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 3px; display: inline-flex;">
+                    <?php if ($attributes['showOverallRating'] || $attributes['showOfficeName']): ?>
+                        <div style="color: black; font-size: 12px; font-family: Roboto; font-weight: 500; word-wrap: break-word;">
+                            <?php if ($attributes['showOverallRating']): ?>
+                                <?php echo esc_html($overall_rating); ?>
+                            <?php endif; ?>
+                            <?php if ($attributes['showOfficeName']): ?>
+                                <?php echo esc_html($channel['office']); ?>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                
+                <?php if ($attributes['showTrustBadge']): ?>
+                    <a href="https://www.realsatisfied.com/" target="_blank" rel="noopener noreferrer">
+                        <img style="width: 41px; height: 40px;" src="<?php echo esc_url(RSOB_PLUGIN_URL . 'assets/images/realsatisfied-trust-badge.svg'); ?>" alt="<?php echo esc_attr(__('Verified with RealSatisfied', 'realsatisfied-blocks')); ?>" />
+                    </a>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($attributes['showDetailedRatings']): ?>
+                <!-- Detailed Ratings Section -->
+                <div style="align-self: stretch; flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 9px; display: flex;">
+                    
+                    <!-- Satisfaction Row -->
+                    <div style="align-self: stretch; justify-content: flex-start; align-items: center; gap: 8px; display: inline-flex;">
+                        <div style="width: 180px; color: black; font-size: 10px; font-family: Roboto; font-weight: 400; word-wrap: break-word;">
+                            <?php esc_html_e('Satisfaction', 'realsatisfied-blocks'); ?>
+                        </div>
+                        <div style="width: 15px; color: black; font-size: 10px; font-family: Roboto; font-weight: 400; word-wrap: break-word;">
+                            <?php echo esc_html($rss_parser->calculate_star_rating($channel['overall_satisfaction'])); ?>
+                        </div>
+                        <div style="justify-content: flex-start; align-items: flex-start; gap: 3px; display: flex;">
+                            <?php echo $this->render_mini_star_rating($rss_parser->calculate_star_rating($channel['overall_satisfaction'])); ?>
+                        </div>
+                    </div>
+                    
+                    <!-- Recommendation Row -->
+                    <div style="align-self: stretch; justify-content: flex-start; align-items: center; gap: 8px; display: inline-flex;">
+                        <div style="width: 180px; color: black; font-size: 10px; font-family: Roboto; font-weight: 400; word-wrap: break-word;">
+                            <?php esc_html_e('Recommendation', 'realsatisfied-blocks'); ?>
+                        </div>
+                        <div style="width: 15px; color: black; font-size: 10px; font-family: Roboto; font-weight: 400; word-wrap: break-word;">
+                            <?php echo esc_html($rss_parser->calculate_star_rating($channel['recommendation_rating'])); ?>
+                        </div>
+                        <div style="justify-content: flex-start; align-items: flex-start; gap: 3px; display: flex;">
+                            <?php echo $this->render_mini_star_rating($rss_parser->calculate_star_rating($channel['recommendation_rating'])); ?>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Row -->
+                    <div style="align-self: stretch; justify-content: flex-start; align-items: center; gap: 8px; display: inline-flex;">
+                        <div style="width: 180px; color: black; font-size: 10px; font-family: Roboto; font-weight: 400; word-wrap: break-word;">
+                            <?php esc_html_e('Performance', 'realsatisfied-blocks'); ?>
+                        </div>
+                        <div style="width: 15px; color: black; font-size: 10px; font-family: Roboto; font-weight: 400; word-wrap: break-word;">
+                            <?php echo esc_html($rss_parser->calculate_star_rating($channel['performance_rating'])); ?>
+                        </div>
+                        <div style="justify-content: flex-start; align-items: flex-start; gap: 3px; display: flex;">
+                            <?php echo $this->render_mini_star_rating($rss_parser->calculate_star_rating($channel['performance_rating'])); ?>
+                        </div>
+                    </div>
+                    
                 </div>
             <?php endif; ?>
 
-            <div class="office-info">
-                <?php if ($attributes['showOfficeName']): ?>
-                    <h3 class="office-name"><?php echo esc_html($channel['office']); ?></h3>
-                <?php endif; ?>
-                
-                <?php if ($attributes['showOverallRating']): ?>
-                    <div class="overall-rating">
-                        <span class="rating-score"><?php echo esc_html($overall_rating); ?></span>
-                        <?php if ($attributes['showStars']): ?>
-                            <div class="star-rating" data-rating="<?php echo esc_attr($overall_rating); ?>">
-                                <?php echo $this->render_star_rating($overall_rating); ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($attributes['showReviewCount']): ?>
-                    <div class="review-count">
-                        <?php if ($attributes['linkToProfile']): ?>
-                            <a href="<?php echo esc_url($channel['link']); ?>" 
-                               target="_blank" 
-                               class="review-count-link">
-                                <?php 
-                                printf(
-                                    _n('%d review', '%d reviews', $channel['response_count'], 'realsatisfied-blocks'),
-                                    $channel['response_count']
-                                );
-                                ?>
-                            </a>
-                        <?php else: ?>
-                            <span class="review-count-text">
-                                <?php 
-                                printf(
-                                    _n('%d review', '%d reviews', $channel['response_count'], 'realsatisfied-blocks'),
-                                    $channel['response_count']
-                                );
-                                ?>
-                            </span>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($attributes['showDetailedRatings']): ?>
-                    <div class="detailed-ratings">
-                        <div class="rating-item">
-                            <span class="rating-label"><?php esc_html_e('Satisfaction', 'realsatisfied-blocks'); ?></span>
-                            <span class="rating-value"><?php echo esc_html($rss_parser->calculate_star_rating($channel['overall_satisfaction'])); ?></span>
-                            <div class="rating-stars">
-                                <?php echo $this->render_star_rating($rss_parser->calculate_star_rating($channel['overall_satisfaction'])); ?>
-                            </div>
-                        </div>
-                        <div class="rating-item">
-                            <span class="rating-label"><?php esc_html_e('Recommendation', 'realsatisfied-blocks'); ?></span>
-                            <span class="rating-value"><?php echo esc_html($rss_parser->calculate_star_rating($channel['recommendation_rating'])); ?></span>
-                            <div class="rating-stars">
-                                <?php echo $this->render_star_rating($rss_parser->calculate_star_rating($channel['recommendation_rating'])); ?>
-                            </div>
-                        </div>
-                        <div class="rating-item">
-                            <span class="rating-label"><?php esc_html_e('Performance', 'realsatisfied-blocks'); ?></span>
-                            <span class="rating-value"><?php echo esc_html($rss_parser->calculate_star_rating($channel['performance_rating'])); ?></span>
-                            <div class="rating-stars">
-                                <?php echo $this->render_star_rating($rss_parser->calculate_star_rating($channel['performance_rating'])); ?>
-                            </div>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
+            <?php if ($attributes['showReviewCount']): ?>
+                <div style="color: black; font-size: 10px; font-family: Roboto; font-weight: 400;">
+                    <?php if ($attributes['linkToProfile']): ?>
+                        <a href="<?php echo esc_url($channel['link']); ?>" target="_blank" style="color: inherit; text-decoration: none;">
+                            <?php 
+                            printf(
+                                _n('%d review', '%d reviews', $channel['response_count'], 'realsatisfied-blocks'),
+                                $channel['response_count']
+                            );
+                            ?>
+                        </a>
+                    <?php else: ?>
+                        <?php 
+                        printf(
+                            _n('%d review', '%d reviews', $channel['response_count'], 'realsatisfied-blocks'),
+                            $channel['response_count']
+                        );
+                        ?>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
         <?php
         
@@ -282,37 +299,79 @@ class RealSatisfied_Office_Ratings_Block {
     }
 
     /**
-     * Render star rating HTML
+     * Render SVG star rating HTML
      *
      * @param float $rating Rating value (0.0-5.0)
      * @return string Star rating HTML
      */
-    private function render_star_rating($rating) {
-        $full_stars = floor($rating);
-        $partial_star = $rating - $full_stars;
-        $empty_stars = 5 - ceil($rating);
+    private function render_svg_star_rating($rating) {
+        $width = min(max($rating * 20, 0), 100);
         
-        $html = '<div class="stars-container">';
+        $html = '<div style="position: relative; display: inline-block; width: 80px; height: 16px;">';
         
-        // Full stars
-        for ($i = 0; $i < $full_stars; $i++) {
-            $html .= '<span class="star star-full">★</span>';
-        }
+        // Background (empty) stars
+        $html .= '<svg viewBox="0 0 80 16" style="width: 80px; height: 16px; position: absolute; top: 0; left: 0;">';
+        $html .= '<path fill="#A0A0A0" d="M6.00682 0.92556C6.25927 0.16202 7.35844 0.162021 7.61088 0.92556L8.51285 3.65365C8.62575 3.99511 8.94954 4.2263 9.31488 4.2263H12.2337C13.0506 4.2263 13.3903 5.25364 12.7294 5.72553L10.368 7.41159C10.0724 7.62262 9.94877 7.99669 10.0617 8.33816L10.9636 11.0663C11.2161 11.8298 10.3268 12.4647 9.66592 11.9928L7.30453 10.3068C7.00897 10.0957 6.60874 10.0957 6.31317 10.3068L3.95178 11.9928C3.29087 12.4647 2.40162 11.8298 2.65407 11.0662L3.55604 8.33816C3.66894 7.99669 3.54526 7.62262 3.24969 7.41159L0.888301 5.72553C0.227393 5.25364 0.567055 4.2263 1.38398 4.2263H4.30282C4.66816 4.2263 4.99195 3.99511 5.10485 3.65365L6.00682 0.92556Z" />';
+        $html .= '<path fill="#A0A0A0" d="M22.7822 0.92556C23.0347 0.16202 24.1338 0.162021 24.3863 0.92556L25.2882 3.65365C25.4011 3.99511 25.7249 4.2263 26.0903 4.2263H29.0091C29.826 4.2263 30.1657 5.25364 29.5048 5.72553L27.1434 7.41159C26.8478 7.62262 26.7242 7.99669 26.8371 8.33816L27.739 11.0662C27.9915 11.8298 27.1022 12.4647 26.4413 11.9928L24.0799 10.3068C23.7844 10.0957 23.3841 10.0957 23.0886 10.3068L20.7272 11.9928C20.0663 12.4647 19.177 11.8298 19.4295 11.0662L20.3314 8.33816C20.4443 7.99669 20.3206 7.62262 20.0251 7.41159L17.6637 5.72553C17.0028 5.25364 17.3424 4.2263 18.1594 4.2263H21.0782C21.4436 4.2263 21.7673 3.99511 21.8802 3.65365L22.7822 0.92556Z" />';
+        $html .= '<path fill="#A0A0A0" d="M39.5575 0.92556C39.81 0.16202 40.9091 0.162021 41.1616 0.92556L42.0635 3.65365C42.1764 3.99511 42.5002 4.2263 42.8656 4.2263H45.7844C46.6014 4.2263 46.941 5.25364 46.2801 5.72553L43.9187 7.41159C43.6232 7.62262 43.4995 7.99669 43.6124 8.33816L44.5144 11.0662C44.7668 11.8298 43.8775 12.4647 43.2166 11.9928L40.8552 10.3068C40.5597 10.0957 40.1594 10.0957 39.8639 10.3068L37.5025 11.9928C36.8416 12.4647 35.9523 11.8298 36.2048 11.0662L37.1067 8.33816C37.2196 7.99669 37.0959 7.62262 36.8004 7.41159L34.439 5.72553C33.7781 5.25364 34.1177 4.2263 34.9347 4.2263H37.8535C38.2189 4.2263 38.5426 3.99511 38.6555 3.65365L39.5575 0.92556Z" />';
+        $html .= '<path fill="#A0A0A0" d="M56.3329 0.92556C56.5853 0.16202 57.6845 0.162021 57.9369 0.92556L58.8389 3.65365C58.9518 3.99511 59.2756 4.2263 59.6409 4.2263H62.5597C63.3767 4.2263 63.7163 5.25364 63.0554 5.72553L60.694 7.41159C60.3985 7.62262 60.2748 7.99669 60.3877 8.33816L61.2897 11.0662C61.5421 11.8298 60.6528 12.4647 59.9919 11.9928L57.6305 10.3068C57.335 10.0957 56.9347 10.0957 56.6392 10.3068L54.2778 11.9928C53.6169 12.4647 52.7276 11.8298 52.9801 11.0662L53.882 8.33816C53.9949 7.99669 53.8712 7.62262 53.5757 7.41159L51.2143 5.72553C50.5534 5.25364 50.893 4.2263 51.71 4.2263H54.6288C54.9942 4.2263 55.3179 3.99511 55.4308 3.65365L56.3329 0.92556Z" />';
+        $html .= '<path fill="#A0A0A0" d="M73.1103 0.92556C73.3628 0.16202 74.462 0.162021 74.7144 0.92556L75.6164 3.65365C75.7293 3.99511 76.0531 4.2263 76.4184 4.2263H79.3372C80.1542 4.2263 80.4938 5.25364 79.8329 5.72553L77.4715 7.41159C77.176 7.62262 77.0523 7.99669 77.1652 8.33816L78.0672 11.0662C78.3196 11.8298 77.4303 12.4647 76.7694 11.9928L74.408 10.3068C74.1125 10.0957 73.7123 10.0957 73.4167 10.3068L71.0553 11.9928C70.3944 12.4647 69.5051 11.8298 69.7576 11.0662L70.6596 8.33816C70.7725 7.99669 70.6488 7.62262 70.3532 7.41159L67.9918 5.72553C67.3309 5.25364 67.6706 4.2263 68.4875 4.2263H71.4063C71.7717 4.2263 72.0955 3.99511 72.2084 3.65365L73.1103 0.92556Z" />';
+        $html .= '</svg>';
         
-        // Partial star
-        if ($partial_star > 0) {
-            $percentage = $partial_star * 100;
-            $html .= '<span class="star star-partial" style="--partial: ' . $percentage . '%">★</span>';
-        }
-        
-        // Empty stars
-        for ($i = 0; $i < $empty_stars; $i++) {
-            $html .= '<span class="star star-empty">☆</span>';
-        }
+        // Filled (gold) stars with proper clipping
+        $html .= '<svg viewBox="0 0 80 16" style="width: ' . $width . '%; height: 16px; position: absolute; top: 0; left: 0; overflow: hidden;">';
+        $html .= '<path fill="#F0B64F" d="M6.00682 0.92556C6.25927 0.16202 7.35844 0.162021 7.61088 0.92556L8.51285 3.65365C8.62575 3.99511 8.94954 4.2263 9.31488 4.2263H12.2337C13.0506 4.2263 13.3903 5.25364 12.7294 5.72553L10.368 7.41159C10.0724 7.62262 9.94877 7.99669 10.0617 8.33816L10.9636 11.0663C11.2161 11.8298 10.3268 12.4647 9.66592 11.9928L7.30453 10.3068C7.00897 10.0957 6.60874 10.0957 6.31317 10.3068L3.95178 11.9928C3.29087 12.4647 2.40162 11.8298 2.65407 11.0662L3.55604 8.33816C3.66894 7.99669 3.54526 7.62262 3.24969 7.41159L0.888301 5.72553C0.227393 5.25364 0.567055 4.2263 1.38398 4.2263H4.30282C4.66816 4.2263 4.99195 3.99511 5.10485 3.65365L6.00682 0.92556Z" />';
+        $html .= '<path fill="#F0B64F" d="M22.7822 0.92556C23.0347 0.16202 24.1338 0.162021 24.3863 0.92556L25.2882 3.65365C25.4011 3.99511 25.7249 4.2263 26.0903 4.2263H29.0091C29.826 4.2263 30.1657 5.25364 29.5048 5.72553L27.1434 7.41159C26.8478 7.62262 26.7242 7.99669 26.8371 8.33816L27.739 11.0662C27.9915 11.8298 27.1022 12.4647 26.4413 11.9928L24.0799 10.3068C23.7844 10.0957 23.3841 10.0957 23.0886 10.3068L20.7272 11.9928C20.0663 12.4647 19.177 11.8298 19.4295 11.0662L20.3314 8.33816C20.4443 7.99669 20.3206 7.62262 20.0251 7.41159L17.6637 5.72553C17.0028 5.25364 17.3424 4.2263 18.1594 4.2263H21.0782C21.4436 4.2263 21.7673 3.99511 21.8802 3.65365L22.7822 0.92556Z" />';
+        $html .= '<path fill="#F0B64F" d="M39.5575 0.92556C39.81 0.16202 40.9091 0.162021 41.1616 0.92556L42.0635 3.65365C42.1764 3.99511 42.5002 4.2263 42.8656 4.2263H45.7844C46.6014 4.2263 46.941 5.25364 46.2801 5.72553L43.9187 7.41159C43.6232 7.62262 43.4995 7.99669 43.6124 8.33816L44.5144 11.0662C44.7668 11.8298 43.8775 12.4647 43.2166 11.9928L40.8552 10.3068C40.5597 10.0957 40.1594 10.0957 39.8639 10.3068L37.5025 11.9928C36.8416 12.4647 35.9523 11.8298 36.2048 11.0662L37.1067 8.33816C37.2196 7.99669 37.0959 7.62262 36.8004 7.41159L34.439 5.72553C33.7781 5.25364 34.1177 4.2263 34.9347 4.2263H37.8535C38.2189 4.2263 38.5426 3.99511 38.6555 3.65365L39.5575 0.92556Z" />';
+        $html .= '<path fill="#F0B64F" d="M56.3329 0.92556C56.5853 0.16202 57.6845 0.162021 57.9369 0.92556L58.8389 3.65365C58.9518 3.99511 59.2756 4.2263 59.6409 4.2263H62.5597C63.3767 4.2263 63.7163 5.25364 63.0554 5.72553L60.694 7.41159C60.3985 7.62262 60.2748 7.99669 60.3877 8.33816L61.2897 11.0662C61.5421 11.8298 60.6528 12.4647 59.9919 11.9928L57.6305 10.3068C57.335 10.0957 56.9347 10.0957 56.6392 10.3068L54.2778 11.9928C53.6169 12.4647 52.7276 11.8298 52.9801 11.0662L53.882 8.33816C53.9949 7.99669 53.8712 7.62262 53.5757 7.41159L51.2143 5.72553C50.5534 5.25364 50.893 4.2263 51.71 4.2263H54.6288C54.9942 4.2263 55.3179 3.99511 55.4308 3.65365L56.3329 0.92556Z" />';
+        $html .= '<path fill="#F0B64F" d="M73.1103 0.92556C73.3628 0.16202 74.462 0.162021 74.7144 0.92556L75.6164 3.65365C75.7293 3.99511 76.0531 4.2263 76.4184 4.2263H79.3372C80.1542 4.2263 80.4938 5.25364 79.8329 5.72553L77.4715 7.41159C77.176 7.62262 77.0523 7.99669 77.1652 8.33816L78.0672 11.0662C78.3196 11.8298 77.4303 12.4647 76.7694 11.9928L74.408 10.3068C74.1125 10.0957 73.7123 10.0957 73.4167 10.3068L71.0553 11.9928C70.3944 12.4647 69.5051 11.8298 69.7576 11.0662L70.6596 8.33816C70.7725 7.99669 70.6488 7.62262 70.3532 7.41159L67.9918 5.72553C67.3309 5.25364 67.6706 4.2263 68.4875 4.2263H71.4063C71.7717 4.2263 72.0955 3.99511 72.2084 3.65365L73.1103 0.92556Z" />';
+        $html .= '</svg>';
         
         $html .= '</div>';
         
         return $html;
+    }
+
+    /**
+     * Render mini star rating HTML for compact display
+     *
+     * @param float $rating Rating value (0.0-5.0)
+     * @return string Mini star rating HTML
+     */
+    private function render_mini_star_rating($rating) {
+        $html = '';
+        
+        for ($i = 1; $i <= 5; $i++) {
+            $filled = $rating >= $i;
+            $halfFilled = !$filled && $rating >= ($i - 0.5);
+            
+            $html .= '<div style="width: 9px; height: 8.5px; position: relative;">';
+            
+            if ($filled) {
+                // Full star
+                $html .= '<div style="width: 9px; height: 8.5px; position: absolute; background: #FFCB45;"></div>';
+            } elseif ($halfFilled) {
+                // Half star
+                $html .= '<div style="width: 4.5px; height: 8.5px; position: absolute; background: #FFCB45;"></div>';
+            } else {
+                // Empty star - gray background
+                $html .= '<div style="width: 9px; height: 8.5px; position: absolute; background: #E5E5E5;"></div>';
+            }
+            
+            $html .= '</div>';
+        }
+        
+        return $html;
+    }
+
+    /**
+     * Render RealSatisfied Trust Badge
+     *
+     * @return string Trust badge HTML
+     */
+    private function render_realsatisfied_trust_badge() {
+        $badge_url = RSOB_PLUGIN_URL . 'assets/images/realsatisfied-trust-badge.svg';
+        return '<img src="' . esc_url($badge_url) . '" alt="' . esc_attr(__('Verified with RealSatisfied', 'realsatisfied-blocks')) . '" style="height: 22px; width: auto;" />';
     }
 
     /**
@@ -337,6 +396,17 @@ class RealSatisfied_Office_Ratings_Block {
             array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components', 'wp-i18n'),
             RSOB_PLUGIN_VERSION,
             true
+        );
+
+        // Localize script for plugin URL
+        wp_localize_script(
+            'realsatisfied-office-ratings-editor',
+            'realsatisfiedBlocks',
+            array(
+                'pluginUrl' => RSOB_PLUGIN_URL,
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('realsatisfied_blocks_nonce')
+            )
         );
 
         wp_enqueue_style(
