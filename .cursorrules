@@ -1,0 +1,72 @@
+# WordPress RealSatisfied Office Blocks Development
+
+## Project Context
+Building office-focused Gutenberg blocks that parse RealSatisfied office RSS feeds using Blocksy theme with dynamic content templates for office pages. Display office testimonials and ratings dynamically based on custom fields, working with ACF (Advanced Custom Fields) for data storage.
+
+## IMPORTANT: Existing Plugin Analysis Required
+**Thoroughly inspect the existing RealSatisfied Review Widget plugin** before building new blocks. The plugin is located at `/wp-content/plugins/realsatisfied-review-widget/` and should be analyzed for:
+- RSS parsing logic and XML namespace handling
+- Data extraction methods from custom namespace elements
+- Caching mechanisms and performance optimizations  
+- Error handling and fallback strategies
+- CSS styling patterns and responsive design
+- JavaScript functionality for animations and interactions
+- Security practices for external RSS fetching
+- WordPress integration patterns and hooks
+
+**Reuse existing plugin code wherever applicable** rather than rebuilding from scratch. Extract utility functions, adapt parsing logic, and maintain consistency with the original plugin's approach while creating modular blocks.
+
+## Target Office Blocks
+1. **Office Overall Ratings Block** - Office-wide satisfaction, recommendation, performance percentages with total review count and visual rating displays
+2. **Office Testimonials Block** - Customer testimonials with multiple agents' reviews, layout options (slider, grid, list), filtering by agent/date/rating  
+3. **Office Stats Summary Block** - Key metrics overview with compact display and call-to-action integration
+4. **Office Agent List Block** - All agents within office who have reviews, with photos, names, individual ratings
+
+## Existing Widget Plugin Details
+- **Widget Class**: `RSRW_Real_Satisfied_Review_Widget` extends `WP_Widget`
+- **Widget Settings**: mode, real_satisfied_id, display_photo, show_overall_ratings, show_rs_banner, display_ratings, show_dates, auto_animate, display_arrows, speed, animation_type
+- **RSS Feed Pattern**: `https://rss.realsatisfied.com/rss/office/{vanity_key}`
+- **Custom Namespace Elements**: realsatisfied:overall_satisfaction, realsatisfied:recommendation_rating, realsatisfied:performance_rating, realsatisfied:responseCount, realsatisfied:agent_name, realsatisfied:client_type, realsatisfied:rating
+
+## Technical Requirements
+- Office Post Type: `post_type_685d8ecad6bb5`
+- Custom Field: `realsatisfied_feed` (vanity keys like "CENTURY21-Masters-11")
+- RSS Mode: Always "Office" (not Agent mode)
+- Dynamic Templates: Work with Blocksy's post loops
+- No Build Process: Vanilla JS with WordPress APIs
+- **Code Reuse**: Extract and adapt existing widget functionality rather than recreating
+
+## Implementation Strategy
+1. **First Step**: Analyze existing widget plugin thoroughly
+2. **Extract Reusable Components**: RSS parsing, caching, XML namespace handling
+3. **Adapt Widget Logic**: Convert monolithic widget into modular block components
+4. **Maintain Compatibility**: Ensure blocks work alongside existing widget
+5. **Preserve Functionality**: Keep all existing features while adding block flexibility
+
+## File Structure
+```
+realsatisfied-office-blocks/
+├── realsatisfied-office-blocks.php
+├── includes/
+│   ├── class-office-rss-parser.php (adapted from widget)
+│   ├── class-custom-fields.php
+│   └── class-widget-compatibility.php
+├── blocks/
+│   ├── office-ratings/
+│   ├── office-testimonials/
+│   ├── office-stats/
+│   └── office-agents/
+└── assets/
+    └── office-blocks.css (adapted from widget styles)
+```
+
+## Key Integration Points
+- Reuse widget's RSS fetching and parsing logic
+- Adapt widget's caching mechanisms
+- Extract widget's CSS styling patterns
+- Maintain widget's error handling approaches
+- Preserve widget's responsive design principles
+- Use widget's security practices for external requests
+
+## Development Approach
+Start by thoroughly examining the existing widget plugin code to understand its architecture, then extract and modularize components for use in the new block system while maintaining all existing functionality and adding new block-specific features.
