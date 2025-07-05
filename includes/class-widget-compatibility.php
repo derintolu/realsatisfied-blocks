@@ -169,10 +169,10 @@ class RealSatisfied_Widget_Compatibility {
 
         // Check for our block patterns in post content
         $blocks = array(
-            'realsatisfied-office-blocks/office-ratings',
-            'realsatisfied-office-blocks/office-testimonials',
-            'realsatisfied-office-blocks/office-stats',
-            'realsatisfied-office-blocks/office-agents'
+            'realsatisfied-blocks/office-ratings',
+            'realsatisfied-blocks/office-testimonials',
+            'realsatisfied-blocks/office-stats',
+            'realsatisfied-blocks/office-agents'
         );
 
         foreach ($blocks as $block) {
@@ -198,7 +198,7 @@ class RealSatisfied_Widget_Compatibility {
             echo '<p><strong>RealSatisfied Office Blocks:</strong> ';
             echo esc_html__(
                 'For best compatibility, please update the RealSatisfied Review Widget to version 2.0.0 or higher.',
-                'realsatisfied-office-blocks'
+                'realsatisfied-blocks'
             );
             echo '</p>';
             echo '</div>';

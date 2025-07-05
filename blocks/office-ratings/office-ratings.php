@@ -21,7 +21,7 @@ class RealSatisfied_Office_Ratings_Block {
      *
      * @var string
      */
-    private $block_name = 'realsatisfied-office-blocks/office-ratings';
+    private $block_name = 'realsatisfied-blocks/office-ratings';
 
     /**
      * Constructor
@@ -118,7 +118,7 @@ class RealSatisfied_Office_Ratings_Block {
         $vanity_key = $this->get_vanity_key($attributes);
         
         if (empty($vanity_key)) {
-            return $this->render_error(__('No vanity key specified for office ratings.', 'realsatisfied-office-blocks'));
+            return $this->render_error(__('No vanity key specified for office ratings.', 'realsatisfied-blocks'));
         }
 
         // Get RSS parser instance
@@ -186,7 +186,7 @@ class RealSatisfied_Office_Ratings_Block {
                                class="review-count-link">
                                 <?php 
                                 printf(
-                                    _n('%d review', '%d reviews', $channel['response_count'], 'realsatisfied-office-blocks'),
+                                    _n('%d review', '%d reviews', $channel['response_count'], 'realsatisfied-blocks'),
                                     $channel['response_count']
                                 );
                                 ?>
@@ -195,7 +195,7 @@ class RealSatisfied_Office_Ratings_Block {
                             <span class="review-count-text">
                                 <?php 
                                 printf(
-                                    _n('%d review', '%d reviews', $channel['response_count'], 'realsatisfied-office-blocks'),
+                                    _n('%d review', '%d reviews', $channel['response_count'], 'realsatisfied-blocks'),
                                     $channel['response_count']
                                 );
                                 ?>
@@ -207,21 +207,21 @@ class RealSatisfied_Office_Ratings_Block {
                 <?php if ($attributes['showDetailedRatings']): ?>
                     <div class="detailed-ratings">
                         <div class="rating-item">
-                            <span class="rating-label"><?php esc_html_e('Satisfaction', 'realsatisfied-office-blocks'); ?></span>
+                            <span class="rating-label"><?php esc_html_e('Satisfaction', 'realsatisfied-blocks'); ?></span>
                             <span class="rating-value"><?php echo esc_html($rss_parser->calculate_star_rating($channel['overall_satisfaction'])); ?></span>
                             <div class="rating-stars">
                                 <?php echo $this->render_star_rating($rss_parser->calculate_star_rating($channel['overall_satisfaction'])); ?>
                             </div>
                         </div>
                         <div class="rating-item">
-                            <span class="rating-label"><?php esc_html_e('Recommendation', 'realsatisfied-office-blocks'); ?></span>
+                            <span class="rating-label"><?php esc_html_e('Recommendation', 'realsatisfied-blocks'); ?></span>
                             <span class="rating-value"><?php echo esc_html($rss_parser->calculate_star_rating($channel['recommendation_rating'])); ?></span>
                             <div class="rating-stars">
                                 <?php echo $this->render_star_rating($rss_parser->calculate_star_rating($channel['recommendation_rating'])); ?>
                             </div>
                         </div>
                         <div class="rating-item">
-                            <span class="rating-label"><?php esc_html_e('Performance', 'realsatisfied-office-blocks'); ?></span>
+                            <span class="rating-label"><?php esc_html_e('Performance', 'realsatisfied-blocks'); ?></span>
                             <span class="rating-value"><?php echo esc_html($rss_parser->calculate_star_rating($channel['performance_rating'])); ?></span>
                             <div class="rating-stars">
                                 <?php echo $this->render_star_rating($rss_parser->calculate_star_rating($channel['performance_rating'])); ?>

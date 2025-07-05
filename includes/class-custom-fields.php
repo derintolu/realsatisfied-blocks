@@ -173,7 +173,7 @@ class RealSatisfied_Custom_Fields {
     public function add_meta_boxes() {
         add_meta_box(
             'realsatisfied_office_meta',
-            __('RealSatisfied Office Settings', 'realsatisfied-office-blocks'),
+            __('RealSatisfied Office Settings', 'realsatisfied-blocks'),
             array($this, 'render_meta_box'),
             $this->office_post_type,
             'side',
@@ -198,7 +198,7 @@ class RealSatisfied_Custom_Fields {
             <tr>
                 <th scope="row">
                     <label for="<?php echo esc_attr($this->vanity_key_field); ?>">
-                        <?php esc_html_e('Office Vanity Key', 'realsatisfied-office-blocks'); ?>
+                        <?php esc_html_e('Office Vanity Key', 'realsatisfied-blocks'); ?>
                     </label>
                 </th>
                 <td>
@@ -207,10 +207,10 @@ class RealSatisfied_Custom_Fields {
                            name="<?php echo esc_attr($this->vanity_key_field); ?>"
                            value="<?php echo esc_attr($vanity_key); ?>"
                            class="regular-text"
-                           placeholder="<?php esc_attr_e('e.g., CENTURY21-Masters-11', 'realsatisfied-office-blocks'); ?>"
+                           placeholder="<?php esc_attr_e('e.g., CENTURY21-Masters-11', 'realsatisfied-blocks'); ?>"
                     />
                     <p class="description">
-                        <?php esc_html_e('Enter the RealSatisfied office vanity key for this office page.', 'realsatisfied-office-blocks'); ?>
+                        <?php esc_html_e('Enter the RealSatisfied office vanity key for this office page.', 'realsatisfied-blocks'); ?>
                     </p>
                 </td>
             </tr>

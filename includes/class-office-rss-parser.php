@@ -86,7 +86,7 @@ class RealSatisfied_Office_RSS_Parser {
      */
     public function fetch_office_data($vanity_key) {
         if (empty($vanity_key)) {
-            return new WP_Error('missing_vanity_key', __('No vanity key provided', 'realsatisfied-office-blocks'));
+            return new WP_Error('missing_vanity_key', __('No vanity key provided', 'realsatisfied-blocks'));
         }
 
         // Build feed URL
@@ -135,7 +135,7 @@ class RealSatisfied_Office_RSS_Parser {
 
         // Validate we have data
         if (empty($channel_data['response_count']) || $channel_data['response_count'] == 0) {
-            return new WP_Error('no_reviews', __('No reviews found for this office', 'realsatisfied-office-blocks'));
+            return new WP_Error('no_reviews', __('No reviews found for this office', 'realsatisfied-blocks'));
         }
 
         // Extract testimonials
@@ -227,7 +227,7 @@ class RealSatisfied_Office_RSS_Parser {
         add_filter('wp_feed_cache_transient_lifetime', function() { return 1; });
         
         // Clear cache by fetching with minimal cache time
-        $response = __('Feed cache has been cleared.', 'realsatisfied-office-blocks');
+        $response = __('Feed cache has been cleared.', 'realsatisfied-blocks');
         
         // Restore normal cache time
         add_filter('wp_feed_cache_transient_lifetime', function() { return $this->cache_duration; });

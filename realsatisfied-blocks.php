@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: RealSatisfied Office Blocks
- * Description: Office-focused Gutenberg blocks that parse RealSatisfied office RSS feeds for dynamic content display
+ * Plugin Name: RealSatisfied Blocks
+ * Description: Comprehensive Gutenberg blocks for RealSatisfied office and agent data - ratings, testimonials, stats, and more
  * Version: 1.0.0
  * Author: RealSatisfied
- * Text Domain: realsatisfied-office-blocks
+ * Text Domain: realsatisfied-blocks
  * Requires at least: 5.4
  * Tested up to: 6.7
  * License: GPLv2 or later
@@ -23,21 +23,21 @@ define('RSOB_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('RSOB_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 /**
- * Main RealSatisfied Office Blocks class
+ * Main RealSatisfied Blocks class
  */
-class RealSatisfied_Office_Blocks {
+class RealSatisfied_Blocks {
     
     /**
      * Plugin instance
      *
-     * @var RealSatisfied_Office_Blocks
+     * @var RealSatisfied_Blocks
      */
     private static $instance = null;
 
     /**
      * Get plugin instance
      *
-     * @return RealSatisfied_Office_Blocks
+     * @return RealSatisfied_Blocks
      */
     public static function get_instance() {
         if (self::$instance === null) {
@@ -115,7 +115,7 @@ class RealSatisfied_Office_Blocks {
      */
     public function load_textdomain() {
         load_plugin_textdomain(
-            'realsatisfied-office-blocks',
+            'realsatisfied-blocks',
             false,
             dirname(RSOB_PLUGIN_BASENAME) . '/languages/'
         );
@@ -127,7 +127,7 @@ class RealSatisfied_Office_Blocks {
     public function check_required_plugin() {
         if (!class_exists('RSRW_Real_Satisfied_Review_Widget')) {
             $message = sprintf(
-                __('RealSatisfied Office Blocks requires the %s plugin to be installed and activated.', 'realsatisfied-office-blocks'),
+                __('RealSatisfied Blocks requires the %s plugin to be installed and activated.', 'realsatisfied-blocks'),
                 '<strong>RealSatisfied Review Widget</strong>'
             );
             
@@ -148,15 +148,15 @@ class RealSatisfied_Office_Blocks {
      */
     public function enqueue_frontend_assets() {
         wp_enqueue_style(
-            'realsatisfied-office-blocks',
-            RSOB_PLUGIN_URL . 'assets/office-blocks.css',
+            'realsatisfied-blocks',
+            RSOB_PLUGIN_URL . 'assets/realsatisfied-blocks.css',
             array(),
             RSOB_PLUGIN_VERSION
         );
 
         wp_enqueue_script(
-            'realsatisfied-office-blocks',
-            RSOB_PLUGIN_URL . 'assets/office-blocks.js',
+            'realsatisfied-blocks',
+            RSOB_PLUGIN_URL . 'assets/realsatisfied-blocks.js',
             array('jquery'),
             RSOB_PLUGIN_VERSION,
             true
@@ -168,8 +168,8 @@ class RealSatisfied_Office_Blocks {
      */
     public function enqueue_editor_assets() {
         wp_enqueue_style(
-            'realsatisfied-office-blocks-editor',
-            RSOB_PLUGIN_URL . 'assets/office-blocks-editor.css',
+            'realsatisfied-blocks-editor',
+            RSOB_PLUGIN_URL . 'assets/realsatisfied-blocks-editor.css',
             array(),
             RSOB_PLUGIN_VERSION
         );
@@ -182,13 +182,13 @@ class RealSatisfied_Office_Blocks {
         // Check WordPress version
         if (version_compare(get_bloginfo('version'), '5.4', '<')) {
             deactivate_plugins(RSOB_PLUGIN_BASENAME);
-            wp_die(__('RealSatisfied Office Blocks requires WordPress 5.4 or higher.', 'realsatisfied-office-blocks'));
+            wp_die(__('RealSatisfied Blocks requires WordPress 5.4 or higher.', 'realsatisfied-blocks'));
         }
 
         // Check for required plugin
         if (!class_exists('RSRW_Real_Satisfied_Review_Widget')) {
             deactivate_plugins(RSOB_PLUGIN_BASENAME);
-            wp_die(__('RealSatisfied Office Blocks requires the RealSatisfied Review Widget plugin.', 'realsatisfied-office-blocks'));
+            wp_die(__('RealSatisfied Blocks requires the RealSatisfied Review Widget plugin.', 'realsatisfied-blocks'));
         }
 
         // Flush rewrite rules
@@ -205,4 +205,4 @@ class RealSatisfied_Office_Blocks {
 }
 
 // Initialize the plugin
-RealSatisfied_Office_Blocks::get_instance(); 
+RealSatisfied_Blocks::get_instance(); 

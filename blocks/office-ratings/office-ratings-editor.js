@@ -16,17 +16,17 @@
     var useEffect = wp.element.useEffect;
     var __ = wp.i18n.__;
 
-    registerBlockType('realsatisfied-office-blocks/office-ratings', {
-        title: __('Office Overall Ratings', 'realsatisfied-office-blocks'),
+    registerBlockType('realsatisfied-blocks/office-ratings', {
+        title: __('Office Overall Ratings', 'realsatisfied-blocks'),
         icon: 'star-filled',
         category: 'widgets',
         keywords: [
-            __('realsatisfied', 'realsatisfied-office-blocks'),
-            __('ratings', 'realsatisfied-office-blocks'),
-            __('reviews', 'realsatisfied-office-blocks'),
-            __('office', 'realsatisfied-office-blocks')
+            __('realsatisfied', 'realsatisfied-blocks'),
+            __('ratings', 'realsatisfied-blocks'),
+            __('reviews', 'realsatisfied-blocks'),
+            __('office', 'realsatisfied-blocks')
         ],
-        description: __('Display office-wide satisfaction, recommendation, and performance ratings with review count.', 'realsatisfied-office-blocks'),
+        description: __('Display office-wide satisfaction, recommendation, and performance ratings with review count.', 'realsatisfied-blocks'),
         
         attributes: {
             useCustomField: {
@@ -118,7 +118,7 @@
                 })
                 .then(function(data) {
                     if (data.success && data.data) {
-                        var options = [{ label: __('Select a custom field...', 'realsatisfied-office-blocks'), value: '' }];
+                        var options = [{ label: __('Select a custom field...', 'realsatisfied-blocks'), value: '' }];
                         if (Array.isArray(data.data)) {
                             options = options.concat(data.data);
                         }
@@ -126,7 +126,7 @@
                     } else {
                         // Add fallback options
                         setCustomFields([
-                            { label: __('Select a custom field...', 'realsatisfied-office-blocks'), value: '' },
+                            { label: __('Select a custom field...', 'realsatisfied-blocks'), value: '' },
                             { label: 'realsatisfied_feed', value: 'realsatisfied_feed' }
                         ]);
                     }
@@ -135,7 +135,7 @@
                 .catch(function(error) {
                     console.error('Error loading custom fields:', error);
                     setCustomFields([
-                        { label: __('Select a custom field...', 'realsatisfied-office-blocks'), value: '' },
+                        { label: __('Select a custom field...', 'realsatisfied-blocks'), value: '' },
                         { label: 'realsatisfied_feed', value: 'realsatisfied_feed' }
                     ]);
                     setLoading(false);
@@ -144,29 +144,29 @@
 
             function getVanityKeyValue() {
                 if (attributes.useCustomField && attributes.customFieldName) {
-                    return __('Custom Field: ', 'realsatisfied-office-blocks') + attributes.customFieldName;
+                    return __('Custom Field: ', 'realsatisfied-blocks') + attributes.customFieldName;
                 } else if (attributes.manualVanityKey) {
                     return attributes.manualVanityKey;
                 }
-                return __('No vanity key set', 'realsatisfied-office-blocks');
+                return __('No vanity key set', 'realsatisfied-blocks');
             }
 
             return el('div', null,
                 el(InspectorControls, null,
                     // Vanity Key Settings
-                    el(PanelBody, { title: __('Vanity Key Settings', 'realsatisfied-office-blocks'), initialOpen: true },
+                    el(PanelBody, { title: __('Vanity Key Settings', 'realsatisfied-blocks'), initialOpen: true },
                         el(ToggleControl, {
-                            label: __('Use Custom Field', 'realsatisfied-office-blocks'),
+                            label: __('Use Custom Field', 'realsatisfied-blocks'),
                             checked: attributes.useCustomField,
                             onChange: function(value) {
                                 setAttributes({ useCustomField: value });
                             },
-                            help: __('Use a custom field value as the vanity key', 'realsatisfied-office-blocks')
+                            help: __('Use a custom field value as the vanity key', 'realsatisfied-blocks')
                         }),
 
                         attributes.useCustomField ? 
                             el(SelectControl, {
-                                label: __('Custom Field', 'realsatisfied-office-blocks'),
+                                label: __('Custom Field', 'realsatisfied-blocks'),
                                 value: attributes.customFieldName,
                                 options: customFields,
                                 onChange: function(value) {
@@ -175,38 +175,38 @@
                                 disabled: loading
                             }) :
                             el(TextControl, {
-                                label: __('Manual Vanity Key', 'realsatisfied-office-blocks'),
+                                label: __('Manual Vanity Key', 'realsatisfied-blocks'),
                                 value: attributes.manualVanityKey,
                                 onChange: function(value) {
                                     setAttributes({ manualVanityKey: value });
                                 },
-                                placeholder: __('e.g., CENTURY21-Masters-11', 'realsatisfied-office-blocks')
+                                placeholder: __('e.g., CENTURY21-Masters-11', 'realsatisfied-blocks')
                             })
                     ),
 
                     // Style Settings
-                    el(PanelBody, { title: __('Style Settings', 'realsatisfied-office-blocks'), initialOpen: false },
+                    el(PanelBody, { title: __('Style Settings', 'realsatisfied-blocks'), initialOpen: false },
                         el(SelectControl, {
-                            label: __('Display Style', 'realsatisfied-office-blocks'),
+                            label: __('Display Style', 'realsatisfied-blocks'),
                             value: attributes.displayStyle,
                             options: [
-                                { label: __('Minimal (Transparent)', 'realsatisfied-office-blocks'), value: 'minimal' },
-                                { label: __('Card (White Background)', 'realsatisfied-office-blocks'), value: 'card' },
-                                { label: __('Bordered', 'realsatisfied-office-blocks'), value: 'bordered' }
+                                { label: __('Minimal (Transparent)', 'realsatisfied-blocks'), value: 'minimal' },
+                                { label: __('Card (White Background)', 'realsatisfied-blocks'), value: 'card' },
+                                { label: __('Bordered', 'realsatisfied-blocks'), value: 'bordered' }
                             ],
                             onChange: function(value) {
                                 setAttributes({ displayStyle: value });
                             },
-                            help: __('Choose how the widget appears on your page', 'realsatisfied-office-blocks')
+                            help: __('Choose how the widget appears on your page', 'realsatisfied-blocks')
                         }),
 
                         el(SelectControl, {
-                            label: __('Text Alignment', 'realsatisfied-office-blocks'),
+                            label: __('Text Alignment', 'realsatisfied-blocks'),
                             value: attributes.textAlignment,
                             options: [
-                                { label: __('Left', 'realsatisfied-office-blocks'), value: 'left' },
-                                { label: __('Center', 'realsatisfied-office-blocks'), value: 'center' },
-                                { label: __('Right', 'realsatisfied-office-blocks'), value: 'right' }
+                                { label: __('Left', 'realsatisfied-blocks'), value: 'left' },
+                                { label: __('Center', 'realsatisfied-blocks'), value: 'center' },
+                                { label: __('Right', 'realsatisfied-blocks'), value: 'right' }
                             ],
                             onChange: function(value) {
                                 setAttributes({ textAlignment: value });
@@ -214,12 +214,12 @@
                         }),
 
                         el(SelectControl, {
-                            label: __('Display Size', 'realsatisfied-office-blocks'),
+                            label: __('Display Size', 'realsatisfied-blocks'),
                             value: attributes.displaySize,
                             options: [
-                                { label: __('Small', 'realsatisfied-office-blocks'), value: 'small' },
-                                { label: __('Medium', 'realsatisfied-office-blocks'), value: 'medium' },
-                                { label: __('Large', 'realsatisfied-office-blocks'), value: 'large' }
+                                { label: __('Small', 'realsatisfied-blocks'), value: 'small' },
+                                { label: __('Medium', 'realsatisfied-blocks'), value: 'medium' },
+                                { label: __('Large', 'realsatisfied-blocks'), value: 'large' }
                             ],
                             onChange: function(value) {
                                 setAttributes({ displaySize: value });
@@ -228,9 +228,9 @@
                     ),
 
                     // Content Settings
-                    el(PanelBody, { title: __('Content Settings', 'realsatisfied-office-blocks'), initialOpen: false },
+                    el(PanelBody, { title: __('Content Settings', 'realsatisfied-blocks'), initialOpen: false },
                         el(ToggleControl, {
-                            label: __('Show Office Name', 'realsatisfied-office-blocks'),
+                            label: __('Show Office Name', 'realsatisfied-blocks'),
                             checked: attributes.showOfficeName,
                             onChange: function(value) {
                                 setAttributes({ showOfficeName: value });
@@ -238,7 +238,7 @@
                         }),
 
                         el(ToggleControl, {
-                            label: __('Show Office Logo', 'realsatisfied-office-blocks'),
+                            label: __('Show Office Logo', 'realsatisfied-blocks'),
                             checked: attributes.showPhoto,
                             onChange: function(value) {
                                 setAttributes({ showPhoto: value });
@@ -246,7 +246,7 @@
                         }),
 
                         el(ToggleControl, {
-                            label: __('Show Overall Rating', 'realsatisfied-office-blocks'),
+                            label: __('Show Overall Rating', 'realsatisfied-blocks'),
                             checked: attributes.showOverallRating,
                             onChange: function(value) {
                                 setAttributes({ showOverallRating: value });
@@ -254,16 +254,16 @@
                         }),
 
                         el(ToggleControl, {
-                            label: __('Show Star Ratings', 'realsatisfied-office-blocks'),
+                            label: __('Show Star Ratings', 'realsatisfied-blocks'),
                             checked: attributes.showStars,
                             onChange: function(value) {
                                 setAttributes({ showStars: value });
                             },
-                            help: __('Show/hide the star rating display', 'realsatisfied-office-blocks')
+                            help: __('Show/hide the star rating display', 'realsatisfied-blocks')
                         }),
 
                         el(ToggleControl, {
-                            label: __('Show Review Count', 'realsatisfied-office-blocks'),
+                            label: __('Show Review Count', 'realsatisfied-blocks'),
                             checked: attributes.showReviewCount,
                             onChange: function(value) {
                                 setAttributes({ showReviewCount: value });
@@ -271,16 +271,16 @@
                         }),
 
                         el(ToggleControl, {
-                            label: __('Show Detailed Ratings', 'realsatisfied-office-blocks'),
+                            label: __('Show Detailed Ratings', 'realsatisfied-blocks'),
                             checked: attributes.showDetailedRatings,
                             onChange: function(value) {
                                 setAttributes({ showDetailedRatings: value });
                             },
-                            help: __('Show individual satisfaction, recommendation, and performance ratings', 'realsatisfied-office-blocks')
+                            help: __('Show individual satisfaction, recommendation, and performance ratings', 'realsatisfied-blocks')
                         }),
 
                         el(ToggleControl, {
-                            label: __('Link to RealSatisfied Profile', 'realsatisfied-office-blocks'),
+                            label: __('Link to RealSatisfied Profile', 'realsatisfied-blocks'),
                             checked: attributes.linkToProfile,
                             onChange: function(value) {
                                 setAttributes({ linkToProfile: value });
@@ -306,7 +306,7 @@
                             className: 'dashicons dashicons-star-filled',
                             style: { fontSize: '48px', color: '#007cba', display: 'block', marginBottom: '10px' }
                         }),
-                        el('h3', { style: { margin: 0, color: '#333' } }, __('Office Overall Ratings', 'realsatisfied-office-blocks'))
+                        el('h3', { style: { margin: 0, color: '#333' } }, __('Office Overall Ratings', 'realsatisfied-blocks'))
                     ),
 
                     el('div', { 
@@ -321,23 +321,23 @@
                         }
                     },
                         el('p', { style: { margin: '5px 0' } },
-                            el('strong', null, __('Vanity Key: ', 'realsatisfied-office-blocks')),
+                            el('strong', null, __('Vanity Key: ', 'realsatisfied-blocks')),
                             getVanityKeyValue()
                         ),
                         el('p', { style: { margin: '5px 0' } },
-                            el('strong', null, __('Style: ', 'realsatisfied-office-blocks')),
+                            el('strong', null, __('Style: ', 'realsatisfied-blocks')),
                             attributes.displayStyle + ' | ' + attributes.textAlignment + ' | ' + attributes.displaySize
                         ),
                         el('p', { style: { margin: '5px 0' } },
-                            el('strong', null, __('Show Elements: ', 'realsatisfied-office-blocks')),
+                            el('strong', null, __('Show Elements: ', 'realsatisfied-blocks')),
                             [
-                                attributes.showOfficeName && __('Name', 'realsatisfied-office-blocks'),
-                                attributes.showPhoto && __('Logo', 'realsatisfied-office-blocks'),
-                                attributes.showOverallRating && __('Rating', 'realsatisfied-office-blocks'),
-                                attributes.showStars && __('Stars', 'realsatisfied-office-blocks'),
-                                attributes.showReviewCount && __('Count', 'realsatisfied-office-blocks'),
-                                attributes.showDetailedRatings && __('Details', 'realsatisfied-office-blocks')
-                            ].filter(Boolean).join(', ') || __('None', 'realsatisfied-office-blocks')
+                                attributes.showOfficeName && __('Name', 'realsatisfied-blocks'),
+                                attributes.showPhoto && __('Logo', 'realsatisfied-blocks'),
+                                attributes.showOverallRating && __('Rating', 'realsatisfied-blocks'),
+                                attributes.showStars && __('Stars', 'realsatisfied-blocks'),
+                                attributes.showReviewCount && __('Count', 'realsatisfied-blocks'),
+                                attributes.showDetailedRatings && __('Details', 'realsatisfied-blocks')
+                            ].filter(Boolean).join(', ') || __('None', 'realsatisfied-blocks')
                         )
                     ),
 
@@ -345,7 +345,7 @@
                         className: 'block-preview',
                         style: { color: '#666', fontStyle: 'italic' }
                     },
-                        __('Office ratings will be displayed here on the frontend', 'realsatisfied-office-blocks')
+                        __('Office ratings will be displayed here on the frontend', 'realsatisfied-blocks')
                     )
                 )
             );
