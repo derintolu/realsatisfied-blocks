@@ -1,161 +1,28 @@
 /**
- * RealSatisfied Office Blocks CSS
+ * RealSatisfied Blocks CSS
  * 
- * Extracted and adapted from the original RealSatisfied Review Widget
- * Optimized for Gutenberg blocks and modern CSS practices
+ * Minimal styling - WordPress block editor handles most styling
  */
 
 /* ===== OFFICE RATINGS BLOCK ===== */
 
 .realsatisfied-office-ratings {
-    margin: 24px auto;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    gap: 24px;
+    gap: 1rem;
     width: 100%;
-    max-width: 400px;
     box-sizing: border-box;
-    padding: 24px;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-/* Card Style Variation */
-.realsatisfied-office-ratings.style-card {
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-}
-
-/* Bordered Style Variation */
-.realsatisfied-office-ratings.style-bordered {
-    border: 2px solid currentColor;
-    border-radius: 8px;
-}
-
-/* Minimal Style Variation (default) */
-.realsatisfied-office-ratings.style-minimal {
-    background: transparent;
-    box-shadow: none;
-    border-radius: 0;
-}
-
-/* Text Alignment */
-.realsatisfied-office-ratings.align-left {
-    align-items: flex-start;
-}
-
-.realsatisfied-office-ratings.align-left .office-info {
-    text-align: left;
-}
-
-.realsatisfied-office-ratings.align-left .overall-rating,
-.realsatisfied-office-ratings.align-left .star-rating {
-    justify-content: flex-start;
-}
-
-.realsatisfied-office-ratings.align-center {
-    align-items: center;
-}
-
-.realsatisfied-office-ratings.align-center .office-info {
-    text-align: center;
-}
-
-.realsatisfied-office-ratings.align-center .overall-rating,
-.realsatisfied-office-ratings.align-center .star-rating {
-    justify-content: center;
-}
-
-.realsatisfied-office-ratings.align-right {
-    align-items: flex-end;
-}
-
-.realsatisfied-office-ratings.align-right .office-info {
-    text-align: right;
-}
-
-.realsatisfied-office-ratings.align-right .overall-rating,
-.realsatisfied-office-ratings.align-right .star-rating {
-    justify-content: flex-end;
-}
-
-/* Size Variations */
-.realsatisfied-office-ratings.size-small {
-    max-width: 280px;
-    padding: 16px;
-    gap: 16px;
-}
-
-.realsatisfied-office-ratings.size-medium {
-    max-width: 400px;
-    padding: 24px;
-    gap: 24px;
-}
-
-.realsatisfied-office-ratings.size-large {
-    max-width: 500px;
-    padding: 32px;
-    gap: 32px;
-}
-
-/* Office Logo */
-.realsatisfied-office-ratings .office-logo {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.realsatisfied-office-ratings .office-logo-img {
-    height: 40px;
-    max-width: 120px;
-    object-fit: contain;
-}
-
-.realsatisfied-office-ratings.size-small .office-logo-img {
-    height: 32px;
-    max-width: 100px;
-}
-
-.realsatisfied-office-ratings.size-large .office-logo-img {
-    height: 48px;
-    max-width: 140px;
 }
 
 /* Office Info Container */
 .realsatisfied-office-ratings .office-info {
-    text-align: center;
     width: 100%;
 }
 
 /* Office Name */
 .realsatisfied-office-ratings .office-name {
-    margin: 0 0 16px 0;
-    color: inherit;
-    text-align: center;
-    font-size: 20px;
-    font-style: normal;
-    font-weight: 700;
-    line-height: 1.4;
-}
-
-/* Hidden elements */
-.realsatisfied-office-ratings .office-name.hidden {
-    display: none;
-}
-
-.realsatisfied-office-ratings.size-small .office-name {
-    font-size: 18px;
-    margin-bottom: 12px;
-}
-
-.realsatisfied-office-ratings.size-large .office-name {
-    font-size: 24px;
-    margin-bottom: 20px;
+    margin: 0 0 1rem 0;
 }
 
 /* Overall Rating Container */
@@ -163,28 +30,16 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: 0.5rem;
 }
 
 .realsatisfied-office-ratings .rating-score {
-    color: inherit;
-    font-size: 28px;
-    font-style: normal;
+    margin: 0;
     font-weight: 700;
     line-height: 1.2;
-    margin: 0;
 }
 
-.realsatisfied-office-ratings.size-small .rating-score {
-    font-size: 24px;
-}
-
-.realsatisfied-office-ratings.size-large .rating-score {
-    font-size: 32px;
-}
-
-/* Star Rating System */
+/* Star Rating System - Essential functionality only */
 .realsatisfied-office-ratings .star-rating {
     display: flex;
     align-items: center;
@@ -199,61 +54,72 @@
 }
 
 .realsatisfied-office-ratings .star {
-    font-size: 20px;
-    line-height: 1;
+    width: 16px;
+    height: 16px;
+    position: relative;
     display: inline-block;
+    color: #ffc107;
 }
 
-.realsatisfied-office-ratings.size-small .star {
-    font-size: 16px;
+.realsatisfied-office-ratings .star-full::before {
+    content: "★";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: #ffc107;
 }
 
-.realsatisfied-office-ratings.size-large .star {
-    font-size: 24px;
-}
-
-.realsatisfied-office-ratings .star-full {
-    color: #F0B64F;
-}
-
-.realsatisfied-office-ratings .star-empty {
-    color: #A0A0A0;
+.realsatisfied-office-ratings .star-empty::before {
+    content: "☆";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: #e0e0e0;
 }
 
 .realsatisfied-office-ratings .star-partial {
     position: relative;
-    color: #A0A0A0;
+    overflow: hidden;
 }
 
 .realsatisfied-office-ratings .star-partial::before {
-    content: '★';
+    content: "☆";
     position: absolute;
-    left: 0;
     top: 0;
-    width: var(--partial, 50%);
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: #e0e0e0;
+}
+
+.realsatisfied-office-ratings .star-partial::after {
+    content: "★";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    color: #ffc107;
     overflow: hidden;
-    color: #F0B64F;
 }
 
 /* Review Count */
 .realsatisfied-office-ratings .review-count {
-    margin-bottom: 16px;
+    margin: 0;
+    font-size: 0.875em;
+    opacity: 0.8;
 }
 
-.realsatisfied-office-ratings .review-count-link,
-.realsatisfied-office-ratings .review-count-text {
+.realsatisfied-office-ratings .review-count-link {
     color: inherit;
-    font-size: 15px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: 1.4;
     text-decoration: none;
-    opacity: 0.8;
 }
 
 .realsatisfied-office-ratings .review-count-link:hover {
     text-decoration: underline;
-    color: var(--wp--preset--color--primary, #007cba);
 }
 
 /* Detailed Ratings */
@@ -261,193 +127,143 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding-top: 16px;
-    border-top: 1px solid #e0e0e0;
+    gap: 0.5rem;
 }
 
 .realsatisfied-office-ratings .rating-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
 .realsatisfied-office-ratings .rating-label {
-    color: inherit;
-    font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
     flex: 1;
-    text-align: left;
-    opacity: 0.8;
 }
 
 .realsatisfied-office-ratings .rating-value {
-    color: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    margin: 0 8px;
-    min-width: 32px;
+    font-weight: 700;
+    min-width: 2em;
     text-align: center;
 }
 
 .realsatisfied-office-ratings .rating-stars {
     display: flex;
-    align-items: center;
+    gap: 1px;
 }
 
 .realsatisfied-office-ratings .rating-stars .star {
-    font-size: 14px;
+    width: 12px;
+    height: 12px;
 }
 
-/* ===== ERROR MESSAGES ===== */
-
+/* Error State */
 .realsatisfied-office-ratings-error {
-    padding: 16px;
-    margin: 16px 0;
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
+    padding: 1rem;
+    border: 1px solid #dc3545;
     border-radius: 4px;
-    color: #856404;
-}
-
-.realsatisfied-office-ratings-error p {
-    margin: 0;
-    font-size: 14px;
-}
-
-/* ===== RESPONSIVE DESIGN ===== */
-
-@media (max-width: 768px) {
-    .realsatisfied-office-ratings {
-        max-width: 100%;
-        margin: 16px auto;
-        padding: 16px;
-    }
-
-    .realsatisfied-office-ratings.size-large {
-        padding: 24px;
-    }
-
-    .realsatisfied-office-ratings .office-name {
-        font-size: 18px;
-    }
-
-    .realsatisfied-office-ratings .rating-score {
-        font-size: 24px;
-    }
-
-    .realsatisfied-office-ratings .detailed-ratings {
-        gap: 8px;
-    }
-
-    .realsatisfied-office-ratings .rating-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-
-    .realsatisfied-office-ratings .rating-value {
-        margin: 0;
-        text-align: left;
-    }
-}
-
-@media (max-width: 480px) {
-    .realsatisfied-office-ratings {
-        padding: 12px;
-    }
-
-    .realsatisfied-office-ratings .office-name {
-        font-size: 16px;
-    }
-
-    .realsatisfied-office-ratings .rating-score {
-        font-size: 20px;
-    }
-
-    .realsatisfied-office-ratings .star {
-        font-size: 16px;
-    }
-}
-
-/* ===== BLOCK EDITOR STYLES ===== */
-
-.realsatisfied-office-ratings-editor {
-    border: 2px dashed #ddd;
-    padding: 30px;
+    background: #f8d7da;
+    color: #721c24;
     text-align: center;
-    background: #fafafa;
+}
+
+/* Editor State */
+.realsatisfied-office-ratings-editor {
+    padding: 2rem;
+    border: 2px dashed #8b949e;
     border-radius: 8px;
-    margin: 20px 0;
+    text-align: center;
+    background: #f6f8fa;
 }
 
 .realsatisfied-office-ratings-editor .block-icon {
-    margin-bottom: 20px;
-}
-
-.realsatisfied-office-ratings-editor .dashicons {
     font-size: 48px;
-    color: #007cba;
-    margin-bottom: 10px;
-    display: block;
+    margin-bottom: 1rem;
+    color: #8b949e;
 }
 
-.realsatisfied-office-ratings-editor h3 {
-    margin: 0;
-    color: #333;
-    font-size: 18px;
+/* Alignment Classes - WordPress Standard */
+.realsatisfied-office-ratings.has-text-align-left {
+    align-items: flex-start;
 }
 
-.realsatisfied-office-ratings-editor .block-info {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 15px;
-    margin: 15px 0;
+.realsatisfied-office-ratings.has-text-align-left .office-info {
     text-align: left;
 }
 
-.realsatisfied-office-ratings-editor .block-info p {
-    margin: 5px 0;
-    font-size: 14px;
+.realsatisfied-office-ratings.has-text-align-left .overall-rating,
+.realsatisfied-office-ratings.has-text-align-left .star-rating {
+    align-items: flex-start;
 }
 
-.realsatisfied-office-ratings-editor .block-preview {
-    color: #666;
-    font-style: italic;
-    font-size: 14px;
+.realsatisfied-office-ratings.has-text-align-center {
+    align-items: center;
 }
 
-/* ===== WIDGET COMPATIBILITY ===== */
-
-/* Ensure our blocks don't conflict with the original widget */
-.widget_real_satisfied_review_widget .realsatisfied-office-ratings {
-    margin: 0;
-    box-shadow: none;
-    background: transparent;
+.realsatisfied-office-ratings.has-text-align-center .office-info {
+    text-align: center;
 }
 
-/* ===== ACCESSIBILITY ===== */
+.realsatisfied-office-ratings.has-text-align-center .overall-rating,
+.realsatisfied-office-ratings.has-text-align-center .star-rating {
+    align-items: center;
+}
 
+.realsatisfied-office-ratings.has-text-align-right {
+    align-items: flex-end;
+}
+
+.realsatisfied-office-ratings.has-text-align-right .office-info {
+    text-align: right;
+}
+
+.realsatisfied-office-ratings.has-text-align-right .overall-rating,
+.realsatisfied-office-ratings.has-text-align-right .star-rating {
+    align-items: flex-end;
+}
+
+/* Hidden Elements */
+.realsatisfied-office-ratings .office-logo.hidden,
+.realsatisfied-office-ratings .office-name.hidden,
+.realsatisfied-office-ratings .overall-rating.hidden,
+.realsatisfied-office-ratings .star-rating.hidden,
+.realsatisfied-office-ratings .review-count.hidden,
+.realsatisfied-office-ratings .detailed-ratings.hidden {
+    display: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .realsatisfied-office-ratings .rating-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .realsatisfied-office-ratings .rating-value {
+        min-width: auto;
+    }
+}
+
+/* Accessibility */
 .realsatisfied-office-ratings .star[aria-hidden="true"] {
-    speak: none;
+    pointer-events: none;
 }
 
 .realsatisfied-office-ratings .review-count-link:focus {
-    outline: 2px solid var(--wp--preset--color--primary, #007cba);
+    outline: 2px solid #005cee;
     outline-offset: 2px;
 }
 
-/* ===== PRINT STYLES ===== */
-
+/* Print Styles */
 @media print {
     .realsatisfied-office-ratings {
-        box-shadow: none;
-        border: 1px solid #ccc;
+        break-inside: avoid;
     }
     
     .realsatisfied-office-ratings .review-count-link {
-        text-decoration: underline;
+        color: inherit !important;
+        text-decoration: none !important;
     }
 } 

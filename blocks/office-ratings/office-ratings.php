@@ -50,6 +50,49 @@ class RealSatisfied_Office_Ratings_Block {
 
         register_block_type($this->block_name, array(
             'render_callback' => array($this, 'render_block'),
+            'supports' => array(
+                'html' => false,
+                'align' => array('left', 'center', 'right', 'wide', 'full'),
+                'alignWide' => false,
+                'anchor' => true,
+                'customClassName' => true,
+                'color' => array(
+                    'gradients' => true,
+                    'link' => true,
+                    'text' => true,
+                    'background' => true
+                ),
+                'typography' => array(
+                    'fontSize' => true,
+                    'lineHeight' => true,
+                    'fontFamily' => true,
+                    'fontWeight' => true,
+                    'fontStyle' => true,
+                    'textTransform' => true,
+                    'textDecoration' => true,
+                    'letterSpacing' => true
+                ),
+                'spacing' => array(
+                    'margin' => true,
+                    'padding' => true,
+                    'blockGap' => true
+                ),
+                'border' => array(
+                    'color' => true,
+                    'radius' => true,
+                    'style' => true,
+                    'width' => true
+                ),
+                'dimensions' => array(
+                    'minHeight' => true
+                ),
+                'layout' => array(
+                    'default' => array(
+                        'type' => 'flex',
+                        'orientation' => 'vertical'
+                    )
+                )
+            ),
             'attributes' => array(
                 'useCustomField' => array(
                     'type' => 'boolean',
@@ -90,18 +133,6 @@ class RealSatisfied_Office_Ratings_Block {
                 'linkToProfile' => array(
                     'type' => 'boolean',
                     'default' => true
-                ),
-                'displaySize' => array(
-                    'type' => 'string',
-                    'default' => 'medium' // small, medium, large
-                ),
-                'displayStyle' => array(
-                    'type' => 'string',
-                    'default' => 'minimal' // minimal, card, bordered
-                ),
-                'textAlignment' => array(
-                    'type' => 'string',
-                    'default' => 'center' // left, center, right
                 )
             )
         ));
@@ -141,18 +172,15 @@ class RealSatisfied_Office_Ratings_Block {
             $channel['performance_rating']
         );
 
-        // Build CSS classes
-        $css_classes = array(
-            'realsatisfied-office-ratings',
-            'size-' . $attributes['displaySize'],
-            'style-' . $attributes['displayStyle'],
-            'align-' . $attributes['textAlignment']
-        );
+        // Get block wrapper attributes
+        $wrapper_attributes = get_block_wrapper_attributes(array(
+            'class' => 'realsatisfied-office-ratings'
+        ));
 
         // Start building output
         ob_start();
         ?>
-        <div class="<?php echo esc_attr(implode(' ', $css_classes)); ?>">
+        <div <?php echo $wrapper_attributes; ?>>
             
             <?php if ($attributes['showPhoto'] && !empty($channel['logo'])): ?>
                 <div class="office-logo">
