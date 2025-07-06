@@ -76,11 +76,13 @@
     font-weight: bold;
     color: var(--text-color, inherit);
     justify-content: center;
+    align-items: center;
 }
 
 /* div2 - Overall rating stars */
 .realsatisfied-office-ratings .div2 {
     justify-content: flex-start;
+    align-items: center;
 }
 
 /* div3 - "OVERALL SATISFACTION" */
@@ -102,6 +104,7 @@
 /* div5 - Trust badge */
 .realsatisfied-office-ratings .div5 {
     justify-content: center;
+    align-items: flex-end;
 }
 
 /* Rating labels (div6, div9, div12) */
