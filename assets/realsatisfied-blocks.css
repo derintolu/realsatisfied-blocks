@@ -12,17 +12,41 @@
     max-width: 500px;
 }
 
-/* Main grid container */
+/* Main grid container - Base layout */
 .realsatisfied-office-ratings .parent {
     display: grid;
-    grid-template-columns: repeat(3, 1fr) repeat(3, .5fr) repeat(2, 1fr);
-    grid-template-rows: .3fr .25fr repeat(4, .15fr);
     grid-column-gap: 6px;
     grid-row-gap: 10px;
     width: 100%;
 }
 
-/* Grid area assignments */
+/* Full layout with all elements (default) */
+.realsatisfied-office-ratings .parent.has-rating.has-stars.has-office-name.has-review-count.has-trust-badge.has-detailed-ratings {
+    grid-template-columns: repeat(3, 1fr) repeat(3, .5fr) repeat(2, 1fr);
+    grid-template-rows: .3fr .25fr repeat(4, .15fr);
+}
+
+/* Compact layout - basic elements only (rating, stars, office name, review count) */
+.realsatisfied-office-ratings .parent.has-rating.has-stars.has-office-name.has-review-count:not(.has-trust-badge):not(.has-detailed-ratings) {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: .3fr .25fr .2fr;
+}
+
+.realsatisfied-office-ratings .parent.has-rating.has-stars.has-office-name.has-review-count:not(.has-trust-badge):not(.has-detailed-ratings) .div1 { grid-area: 1 / 1 / 2 / 2; }
+.realsatisfied-office-ratings .parent.has-rating.has-stars.has-office-name.has-review-count:not(.has-trust-badge):not(.has-detailed-ratings) .div2 { grid-area: 1 / 2 / 2 / 4; }
+.realsatisfied-office-ratings .parent.has-rating.has-stars.has-office-name.has-review-count:not(.has-trust-badge):not(.has-detailed-ratings) .div3 { grid-area: 2 / 1 / 3 / 4; }
+.realsatisfied-office-ratings .parent.has-rating.has-stars.has-office-name.has-review-count:not(.has-trust-badge):not(.has-detailed-ratings) .div4 { grid-area: 3 / 1 / 4 / 3; }
+
+/* Very compact layout - rating and stars only */
+.realsatisfied-office-ratings .parent.has-rating.has-stars:not(.has-office-name):not(.has-review-count):not(.has-trust-badge):not(.has-detailed-ratings) {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: 1fr;
+}
+
+.realsatisfied-office-ratings .parent.has-rating.has-stars:not(.has-office-name):not(.has-review-count):not(.has-trust-badge):not(.has-detailed-ratings) .div1 { grid-area: 1 / 1 / 2 / 2; }
+.realsatisfied-office-ratings .parent.has-rating.has-stars:not(.has-office-name):not(.has-review-count):not(.has-trust-badge):not(.has-detailed-ratings) .div2 { grid-area: 1 / 2 / 2 / 3; }
+
+/* Default grid assignments for full layout */
 .realsatisfied-office-ratings .div1 { grid-area: 1 / 1 / 2 / 3; }
 .realsatisfied-office-ratings .div2 { grid-area: 1 / 3 / 2 / 6; }
 .realsatisfied-office-ratings .div3 { grid-area: 2 / 1 / 3 / 5; }
