@@ -493,7 +493,8 @@
                         ServerSideRender,
                         {
                             block: 'realsatisfied-blocks/office-testimonials',
-                            attributes: attributes
+                            attributes: attributes,
+                            key: JSON.stringify(attributes)
                         }
                     )
                 )

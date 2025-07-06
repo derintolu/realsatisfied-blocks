@@ -274,7 +274,8 @@
                         ServerSideRender,
                         {
                             block: 'realsatisfied-blocks/office-ratings',
-                            attributes: attributes
+                            attributes: attributes,
+                            key: JSON.stringify(attributes)
                         }
                     )
                 )
