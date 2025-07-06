@@ -47,10 +47,10 @@
 .realsatisfied-office-ratings .parent.has-rating.has-stars:not(.has-office-name):not(.has-review-count):not(.has-trust-badge):not(.has-detailed-ratings) .div2 { grid-area: 1 / 2 / 2 / 3; }
 
 /* Default grid assignments for full layout */
-.realsatisfied-office-ratings .div1 { grid-area: 2 / 1 / 3 / 3; }
-.realsatisfied-office-ratings .div2 { grid-area: 2 / 3 / 3 / 6; }
-.realsatisfied-office-ratings .div3 { grid-area: 1 / 1 / 2 / 6; }
-.realsatisfied-office-ratings .div4 { grid-area: 3 / 1 / 4 / 3; }
+.realsatisfied-office-ratings .div1 { grid-area: 1 / 1 / 3 / 3; }
+.realsatisfied-office-ratings .div2 { grid-area: 1 / 3 / 3 / 6; }
+.realsatisfied-office-ratings .div3 { grid-area: 3 / 1 / 4 / 6; }
+.realsatisfied-office-ratings .div4 { grid-area: 4 / 1 / 5 / 3; }
 .realsatisfied-office-ratings .div5 { grid-area: 1 / 7 / 3 / 9; }
 .realsatisfied-office-ratings .div6 { grid-area: 4 / 1 / 5 / 4; }
 .realsatisfied-office-ratings .div7 { grid-area: 4 / 4 / 5 / 6; }
