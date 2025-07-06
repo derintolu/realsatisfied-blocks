@@ -52,6 +52,14 @@
                 type: 'number',
                 default: 6
             },
+            enablePagination: {
+                type: 'boolean',
+                default: false
+            },
+            itemsPerPage: {
+                type: 'number',
+                default: 6
+            },
             showAgentPhoto: {
                 type: 'boolean',
                 default: true
@@ -107,6 +115,22 @@
             borderRadius: {
                 type: 'string',
                 default: ''
+            },
+            paginationBackgroundColor: {
+                type: 'string',
+                default: '#007cba'
+            },
+            paginationTextColor: {
+                type: 'string',
+                default: '#ffffff'
+            },
+            paginationHoverBackgroundColor: {
+                type: 'string',
+                default: '#005a87'
+            },
+            paginationBorderRadius: {
+                type: 'string',
+                default: '5px'
             }
         },
 
@@ -194,6 +218,17 @@
                         }
                     ),
                     wp.element.createElement(
+                        ToggleControl,
+                        {
+                            label: __('Enable Pagination', 'realsatisfied-blocks'),
+                            help: __('Add pagination controls to navigate through testimonials.', 'realsatisfied-blocks'),
+                            checked: attributes.enablePagination,
+                            onChange: function(value) {
+                                setAttributes({ enablePagination: value });
+                            }
+                        }
+                    ),
+                    !attributes.enablePagination && wp.element.createElement(
                         RangeControl,
                         {
                             label: __('Number of Testimonials', 'realsatisfied-blocks'),
@@ -203,6 +238,19 @@
                                 setAttributes({ testimonialCount: value });
                             },
                             min: 0,
+                            max: 20
+                        }
+                    ),
+                    attributes.enablePagination && wp.element.createElement(
+                        RangeControl,
+                        {
+                            label: __('Items per Page', 'realsatisfied-blocks'),
+                            help: __('Number of testimonials to show per page.', 'realsatisfied-blocks'),
+                            value: attributes.itemsPerPage,
+                            onChange: function(value) {
+                                setAttributes({ itemsPerPage: value });
+                            },
+                            min: 1,
                             max: 20
                         }
                     ),
@@ -383,6 +431,50 @@
                             placeholder: __('8px', 'realsatisfied-blocks'),
                             onChange: function(value) {
                                 setAttributes({ borderRadius: value });
+                            }
+                        }
+                    ),
+                    attributes.enablePagination && wp.element.createElement('hr', {}),
+                    attributes.enablePagination && wp.element.createElement('h3', {}, __('Pagination Styling', 'realsatisfied-blocks')),
+                    attributes.enablePagination && wp.element.createElement('p', {}, __('Button Background Color', 'realsatisfied-blocks')),
+                    attributes.enablePagination && wp.element.createElement(
+                        ColorPicker,
+                        {
+                            color: attributes.paginationBackgroundColor || '#007cba',
+                            onChangeComplete: function(color) {
+                                setAttributes({ paginationBackgroundColor: color.hex });
+                            }
+                        }
+                    ),
+                    attributes.enablePagination && wp.element.createElement('p', {}, __('Button Text Color', 'realsatisfied-blocks')),
+                    attributes.enablePagination && wp.element.createElement(
+                        ColorPicker,
+                        {
+                            color: attributes.paginationTextColor || '#ffffff',
+                            onChangeComplete: function(color) {
+                                setAttributes({ paginationTextColor: color.hex });
+                            }
+                        }
+                    ),
+                    attributes.enablePagination && wp.element.createElement('p', {}, __('Button Hover Background Color', 'realsatisfied-blocks')),
+                    attributes.enablePagination && wp.element.createElement(
+                        ColorPicker,
+                        {
+                            color: attributes.paginationHoverBackgroundColor || '#005a87',
+                            onChangeComplete: function(color) {
+                                setAttributes({ paginationHoverBackgroundColor: color.hex });
+                            }
+                        }
+                    ),
+                    attributes.enablePagination && wp.element.createElement(
+                        TextControl,
+                        {
+                            label: __('Button Border Radius', 'realsatisfied-blocks'),
+                            help: __('CSS border radius for pagination buttons (e.g., "5px", "0.25rem").', 'realsatisfied-blocks'),
+                            value: attributes.paginationBorderRadius,
+                            placeholder: __('5px', 'realsatisfied-blocks'),
+                            onChange: function(value) {
+                                setAttributes({ paginationBorderRadius: value });
                             }
                         }
                     )

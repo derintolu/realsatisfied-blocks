@@ -36,6 +36,7 @@ class RealSatisfied_Office_Testimonials_Block {
     private function init_hooks() {
         add_action('init', array($this, 'register_block'));
         add_action('enqueue_block_editor_assets', array($this, 'enqueue_editor_assets'));
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
     }
 
     /**
@@ -112,6 +113,14 @@ class RealSatisfied_Office_Testimonials_Block {
                     'type' => 'number',
                     'default' => 6
                 ),
+                'enablePagination' => array(
+                    'type' => 'boolean',
+                    'default' => false
+                ),
+                'itemsPerPage' => array(
+                    'type' => 'number',
+                    'default' => 6
+                ),
                 'showAgentPhoto' => array(
                     'type' => 'boolean',
                     'default' => true
@@ -167,6 +176,22 @@ class RealSatisfied_Office_Testimonials_Block {
                 'borderRadius' => array(
                     'type' => 'string',
                     'default' => ''
+                ),
+                'paginationBackgroundColor' => array(
+                    'type' => 'string',
+                    'default' => '#007cba'
+                ),
+                'paginationTextColor' => array(
+                    'type' => 'string',
+                    'default' => '#ffffff'
+                ),
+                'paginationHoverBackgroundColor' => array(
+                    'type' => 'string',
+                    'default' => '#005a87'
+                ),
+                'paginationBorderRadius' => array(
+                    'type' => 'string',
+                    'default' => '5px'
                 )
             )
         ));
@@ -206,10 +231,24 @@ class RealSatisfied_Office_Testimonials_Block {
         // Filter and sort testimonials
         $filtered_testimonials = $this->filter_and_sort_testimonials($testimonials, $attributes);
         
-        // Limit testimonials count
-        $testimonial_count = intval($attributes['testimonialCount'] ?? 6);
-        if ($testimonial_count > 0) {
-            $filtered_testimonials = array_slice($filtered_testimonials, 0, $testimonial_count);
+        // Handle pagination or simple count limit
+        $enable_pagination = $attributes['enablePagination'] ?? false;
+        $total_testimonials = count($filtered_testimonials);
+        
+        if ($enable_pagination) {
+            $items_per_page = intval($attributes['itemsPerPage'] ?? 6);
+            $current_page = 1; // Default to first page for initial render
+            $total_pages = ceil($total_testimonials / $items_per_page);
+            $offset = ($current_page - 1) * $items_per_page;
+            $paged_testimonials = array_slice($filtered_testimonials, $offset, $items_per_page);
+        } else {
+            // Simple count limit (original behavior)
+            $testimonial_count = intval($attributes['testimonialCount'] ?? 6);
+            if ($testimonial_count > 0) {
+                $filtered_testimonials = array_slice($filtered_testimonials, 0, $testimonial_count);
+            }
+            $paged_testimonials = $filtered_testimonials;
+            $total_pages = 1;
         }
 
         // Get block wrapper attributes
@@ -225,7 +264,24 @@ class RealSatisfied_Office_Testimonials_Block {
         ob_start();
         ?>
         <div <?php echo $wrapper_attributes; ?> <?php echo $style_attr; ?>>
-            <?php echo $this->render_testimonials($filtered_testimonials, $attributes); ?>
+            <div class="testimonials-container" 
+                 data-testimonials="<?php echo esc_attr(json_encode($filtered_testimonials)); ?>"
+                 data-items-per-page="<?php echo esc_attr($enable_pagination ? ($attributes['itemsPerPage'] ?? 6) : 0); ?>"
+                 data-total-pages="<?php echo esc_attr($total_pages); ?>">
+                <?php echo $this->render_testimonials($paged_testimonials, $attributes); ?>
+            </div>
+            
+            <?php if ($enable_pagination && $total_pages > 1): ?>
+                <div class="testimonials-pagination" style="<?php echo $this->get_pagination_style($attributes); ?>">
+                    <button class="pagination-btn pagination-prev" disabled>&larr; <?php _e('Previous', 'realsatisfied-blocks'); ?></button>
+                    <div class="pagination-numbers">
+                        <span class="pagination-info">
+                            <?php printf(__('Page <span class="current-page">1</span> of <span class="total-pages">%d</span>', 'realsatisfied-blocks'), $total_pages); ?>
+                        </span>
+                    </div>
+                    <button class="pagination-btn pagination-next" <?php echo $total_pages <= 1 ? 'disabled' : ''; ?>><?php _e('Next', 'realsatisfied-blocks'); ?> &rarr;</button>
+                </div>
+            <?php endif; ?>
         </div>
         <?php
         
@@ -532,6 +588,29 @@ class RealSatisfied_Office_Testimonials_Block {
     }
 
     /**
+     * Get pagination styles
+     *
+     * @param array $attributes Block attributes
+     * @return string CSS styles for pagination
+     */
+    private function get_pagination_style($attributes) {
+        $pagination_bg = $attributes['paginationBackgroundColor'] ?? '#007cba';
+        $pagination_text = $attributes['paginationTextColor'] ?? '#ffffff';
+        $pagination_hover_bg = $attributes['paginationHoverBackgroundColor'] ?? '#005a87';
+        $pagination_border_radius = $attributes['paginationBorderRadius'] ?? '5px';
+        
+        // Generate CSS custom properties for pagination
+        $styles = array(
+            '--pagination-bg-color: ' . esc_attr($pagination_bg),
+            '--pagination-text-color: ' . esc_attr($pagination_text),
+            '--pagination-hover-bg-color: ' . esc_attr($pagination_hover_bg),
+            '--pagination-border-radius: ' . esc_attr($pagination_border_radius)
+        );
+        
+        return implode('; ', $styles);
+    }
+
+    /**
      * Get vanity key from attributes
      *
      * @param array $attributes Block attributes
@@ -581,6 +660,19 @@ class RealSatisfied_Office_Testimonials_Block {
             RSOB_PLUGIN_URL . 'assets/realsatisfied-blocks.css',
             array(),
             RSOB_PLUGIN_VERSION
+        );
+    }
+
+    /**
+     * Enqueue frontend assets
+     */
+    public function enqueue_frontend_assets() {
+        wp_enqueue_script(
+            'realsatisfied-office-testimonials-frontend',
+            RSOB_PLUGIN_URL . 'blocks/office-testimonials/office-testimonials-frontend.js',
+            array('jquery'),
+            RSOB_PLUGIN_VERSION,
+            true
         );
     }
 }
