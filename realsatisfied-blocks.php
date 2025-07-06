@@ -102,6 +102,15 @@ class RealSatisfied_Blocks {
             RealSatisfied_Widget_Compatibility::get_instance();
         }
 
+        // Initialize blocks
+        if (class_exists('RealSatisfied_Office_Ratings_Block')) {
+            new RealSatisfied_Office_Ratings_Block();
+        }
+        
+        if (class_exists('RealSatisfied_Office_Testimonials_Block')) {
+            new RealSatisfied_Office_Testimonials_Block();
+        }
+        
         // Register blocks
         $this->register_blocks();
         
@@ -153,14 +162,6 @@ class RealSatisfied_Blocks {
             array(),
             RSOB_PLUGIN_VERSION
         );
-
-        wp_enqueue_script(
-            'realsatisfied-blocks',
-            RSOB_PLUGIN_URL . 'assets/realsatisfied-blocks.js',
-            array('jquery'),
-            RSOB_PLUGIN_VERSION,
-            true
-        );
     }
 
     /**
@@ -169,7 +170,7 @@ class RealSatisfied_Blocks {
     public function enqueue_editor_assets() {
         wp_enqueue_style(
             'realsatisfied-blocks-editor',
-            RSOB_PLUGIN_URL . 'assets/realsatisfied-blocks-editor.css',
+            RSOB_PLUGIN_URL . 'assets/realsatisfied-blocks.css',
             array(),
             RSOB_PLUGIN_VERSION
         );

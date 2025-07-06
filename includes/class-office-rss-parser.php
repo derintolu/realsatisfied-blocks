@@ -167,6 +167,7 @@ class RealSatisfied_Office_RSS_Parser {
 
     /**
      * Calculate overall rating from satisfaction, recommendation, and performance
+     * Uses original RSS feed calculation method
      *
      * @param int $satisfaction Satisfaction rating (0-100)
      * @param int $recommendation Recommendation rating (0-100)
@@ -174,6 +175,7 @@ class RealSatisfied_Office_RSS_Parser {
      * @return float Overall rating (0.0-5.0)
      */
     public function calculate_overall_rating($satisfaction, $recommendation, $performance) {
+        // Use original RSS feed calculation: sum all ratings and divide by 60
         return number_format((($satisfaction + $recommendation + $performance) / 60), 1);
     }
 
