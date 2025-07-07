@@ -435,4 +435,214 @@
     border: 1px solid #ffeaa7;
     border-radius: 4px;
     color: #856404;
+}
+
+/* =================================================
+   AGENT TESTIMONIALS BLOCK STYLES
+   ================================================= */
+
+.realsatisfied-agent-testimonials {
+    margin: 1rem 0;
+}
+
+/* Agent Information Header */
+.agent-info-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+}
+
+.agent-info-header .agent-photo {
+    flex-shrink: 0;
+}
+
+.agent-info-header .agent-photo img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #f0b64f;
+}
+
+.agent-info-header .agent-details {
+    flex: 1;
+}
+
+.agent-info-header .agent-name {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.agent-info-header .agent-office {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.agent-info-header .agent-review-count {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #f0b64f;
+    font-weight: 600;
+}
+
+/* Agent testimonials use the same testimonial card styles as office testimonials */
+.realsatisfied-agent-testimonials .testimonial-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.realsatisfied-agent-testimonials .testimonial-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.realsatisfied-agent-testimonials .testimonial-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    font-style: italic;
+    color: #333;
+}
+
+.realsatisfied-agent-testimonials .testimonial-meta {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.realsatisfied-agent-testimonials .testimonial-details {
+    flex: 1;
+}
+
+.realsatisfied-agent-testimonials .customer-name {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+.realsatisfied-agent-testimonials .customer-type {
+    color: #f0b64f;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.realsatisfied-agent-testimonials .testimonial-date {
+    color: #999;
+    font-size: 0.85rem;
+}
+
+.realsatisfied-agent-testimonials .testimonial-ratings {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #eee;
+}
+
+.realsatisfied-agent-testimonials .testimonials-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.realsatisfied-agent-testimonials .testimonials-list .testimonial-card {
+    border-left: 4px solid #f0b64f;
+}
+
+.realsatisfied-agent-testimonials .testimonials-slider {
+    position: relative;
+    overflow: hidden;
+}
+
+.realsatisfied-agent-testimonials .slider-container {
+    position: relative;
+}
+
+.realsatisfied-agent-testimonials .slider-slide {
+    display: none;
+}
+
+.realsatisfied-agent-testimonials .slider-slide.active {
+    display: block;
+}
+
+.realsatisfied-agent-testimonials .slider-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.realsatisfied-agent-testimonials .slider-prev,
+.realsatisfied-agent-testimonials .slider-next {
+    background: #f0b64f;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.realsatisfied-agent-testimonials .slider-prev:hover,
+.realsatisfied-agent-testimonials .slider-next:hover {
+    background: #e6a347;
+}
+
+/* Responsive Design for Agent Testimonials */
+@media (max-width: 768px) {
+    .agent-info-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .agent-info-header .agent-photo img {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .agent-info-header .agent-name {
+        font-size: 1.25rem;
+    }
+    
+    .realsatisfied-agent-testimonials .testimonials-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .realsatisfied-agent-testimonials .testimonial-card {
+        padding: 1rem;
+    }
+    
+    .realsatisfied-agent-testimonials .testimonial-text {
+        font-size: 1rem;
+    }
+}
+
+/* Error States for Agent Testimonials */
+.realsatisfied-agent-testimonials-error {
+    padding: 1rem;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    color: #856404;
 } 

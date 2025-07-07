@@ -110,6 +110,37 @@ class RealSatisfied_Office_RSS_Parser {
     }
 
     /**
+     * Fetch and parse RSS feed for agent
+     *
+     * @param string $vanity_key The agent vanity key
+     * @return array|WP_Error Array with channel data and testimonials, or WP_Error on failure
+     */
+    public function fetch_agent_data($vanity_key) {
+        if (empty($vanity_key)) {
+            return new WP_Error('missing_vanity_key', __('No vanity key provided', 'realsatisfied-blocks'));
+        }
+
+        // Build feed URL
+        $feed_url = $this->feed_urls['agent'] . $vanity_key . '/page=1&source=wp_agent_blocks';
+        
+        // Fetch RSS feed
+        $rss_feed = fetch_feed($feed_url);
+        
+        if (is_wp_error($rss_feed)) {
+            return $rss_feed;
+        }
+
+        // Extract data
+        $agent_data = $this->extract_agent_data($rss_feed);
+        
+        if (is_wp_error($agent_data)) {
+            return $agent_data;
+        }
+
+        return $agent_data;
+    }
+
+    /**
      * Extract office data from RSS feed
      *
      * @param SimplePie $rss_feed The RSS feed object
@@ -136,6 +167,63 @@ class RealSatisfied_Office_RSS_Parser {
         // Validate we have data
         if (empty($channel_data['response_count']) || $channel_data['response_count'] == 0) {
             return new WP_Error('no_reviews', __('No reviews found for this office', 'realsatisfied-blocks'));
+        }
+
+        // Extract testimonials
+        $testimonials = array();
+        foreach ($rss_items as $rss_item) {
+            $testimonial = array(
+                'title' => $rss_item->get_title(),
+                'customer_type' => $this->obtain_item_tag_data($rss_item, $namespace, 'customer_type'),
+                'pubDate' => $this->obtain_item_tag_data($rss_item, '', 'pubDate'),
+                'description' => $rss_item->get_description(),
+                'satisfaction' => $this->obtain_item_tag_data($rss_item, $namespace, 'satisfaction'),
+                'recommendation' => $this->obtain_item_tag_data($rss_item, $namespace, 'recommendation'),
+                'performance' => $this->obtain_item_tag_data($rss_item, $namespace, 'performance'),
+                'display_name' => $this->obtain_item_tag_data($rss_item, $namespace, 'display_name'),
+                'avatar' => $this->obtain_item_tag_data($rss_item, $namespace, 'avatar', '')
+            );
+
+            $testimonials[] = $testimonial;
+        }
+
+        // Shuffle testimonials for variety (as done in original widget)
+        shuffle($testimonials);
+
+        return array(
+            'channel' => $channel_data,
+            'testimonials' => $testimonials
+        );
+    }
+
+    /**
+     * Extract agent data from RSS feed
+     *
+     * @param SimplePie $rss_feed The RSS feed object
+     * @return array|WP_Error Array with channel data and testimonials, or WP_Error on failure
+     */
+    private function extract_agent_data($rss_feed) {
+        $namespace = $this->namespaces['agent'];
+        
+        // Get maximum items (up to 50)
+        $max_items = $rss_feed->get_item_quantity(50);
+        $rss_items = $rss_feed->get_items(0, $max_items);
+
+        // Extract channel data (agent-wide information)
+        $channel_data = array(
+            'link' => $rss_feed->get_link(),
+            'agent_name' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'display_name'),
+            'avatar' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'avatar'),
+            'office' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'office'),
+            'overall_satisfaction' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'overall_satisfaction'),
+            'recommendation_rating' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'recommendation_rating'),
+            'performance_rating' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'performance_rating'),
+            'response_count' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'responseCount')
+        );
+
+        // Validate we have data
+        if (empty($channel_data['response_count']) || $channel_data['response_count'] == 0) {
+            return new WP_Error('no_reviews', __('No reviews found for this agent', 'realsatisfied-blocks'));
         }
 
         // Extract testimonials
