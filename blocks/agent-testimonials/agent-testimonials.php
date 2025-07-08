@@ -2,24 +2,13 @@
 /**
  * RealSatisfied Agent Testimonials Block
  * 
- * Displays customer testimonials for a specific agent with layout options
- * (slider, grid, list), and filtering capabilities
+ * Clean implementation using agent vanity key from ACF field "realsatisfied-agent-vanity"
+ * Fetches testimonials directly from agent RSS feed
  */
 
-// Ensure this file is executed within the WordPress context
+// Prevent direct access
 if (!defined('ABSPATH')) {
     exit;
-}
-
-// Ensure WordPress functions are available
-if (!function_exists('get_post_meta')) {
-    require_once(ABSPATH . 'wp-includes/post.php');
-}
-if (!function_exists('is_wp_error')) {
-    require_once(ABSPATH . 'wp-includes/class-wp-error.php');
-}
-if (!function_exists('esc_html')) {
-    require_once(ABSPATH . 'wp-includes/formatting.php');
 }
 
 /**
@@ -54,9 +43,8 @@ class RealSatisfied_Agent_Testimonials_Block {
      * Register the block
      */
     public function register_block() {
-        // Check if required classes exist
-        if (!class_exists('RealSatisfied_Office_RSS_Parser') || 
-            !class_exists('RealSatisfied_Custom_Fields')) {
+        // Check if required class exists
+        if (!class_exists('RealSatisfied_Agent_RSS_Parser')) {
             return;
         }
 
@@ -68,49 +56,15 @@ class RealSatisfied_Agent_Testimonials_Block {
                 'alignWide' => true,
                 'anchor' => true,
                 'customClassName' => true,
-                'color' => array(
-                    'gradients' => true,
-                    'link' => true,
-                    'text' => true,
-                    'background' => true
-                ),
-                'typography' => array(
-                    'fontSize' => true,
-                    'lineHeight' => true,
-                    'fontFamily' => true,
-                    'fontWeight' => true,
-                    'fontStyle' => true,
-                    'textTransform' => true,
-                    'textDecoration' => true,
-                    'letterSpacing' => true
-                ),
-                'spacing' => array(
-                    'margin' => true,
-                    'padding' => true,
-                    'blockGap' => true
-                ),
-                'border' => array(
-                    'color' => true,
-                    'radius' => true,
-                    'style' => true,
-                    'width' => true
-                ),
-                'dimensions' => array(
-                    'minHeight' => true
-                )
             ),
             'attributes' => array(
-                'useCustomField' => array(
+                'agentId' => array(
+                    'type' => 'number',
+                    'default' => null
+                ),
+                'contextAware' => array(
                     'type' => 'boolean',
-                    'default' => false
-                ),
-                'customFieldName' => array(
-                    'type' => 'string',
-                    'default' => 'realsatisfied_agent_key'
-                ),
-                'manualVanityKey' => array(
-                    'type' => 'string',
-                    'default' => ''
+                    'default' => true
                 ),
                 'layout' => array(
                     'type' => 'string',
@@ -123,34 +77,6 @@ class RealSatisfied_Agent_Testimonials_Block {
                 'testimonialCount' => array(
                     'type' => 'number',
                     'default' => 6
-                ),
-                'enablePagination' => array(
-                    'type' => 'boolean',
-                    'default' => false
-                ),
-                'itemsPerPage' => array(
-                    'type' => 'number',
-                    'default' => 6
-                ),
-                'showAgentInfo' => array(
-                    'type' => 'boolean',
-                    'default' => true
-                ),
-                'showAgentPhoto' => array(
-                    'type' => 'boolean',
-                    'default' => true
-                ),
-                'showAgentName' => array(
-                    'type' => 'boolean',
-                    'default' => true
-                ),
-                'showOffice' => array(
-                    'type' => 'boolean',
-                    'default' => true
-                ),
-                'showCustomerName' => array(
-                    'type' => 'boolean',
-                    'default' => true
                 ),
                 'showDate' => array(
                     'type' => 'boolean',
@@ -175,38 +101,6 @@ class RealSatisfied_Agent_Testimonials_Block {
                 'sortOrder' => array(
                     'type' => 'string',
                     'default' => 'desc'
-                ),
-                'backgroundColor' => array(
-                    'type' => 'string',
-                    'default' => ''
-                ),
-                'textColor' => array(
-                    'type' => 'string',
-                    'default' => ''
-                ),
-                'borderColor' => array(
-                    'type' => 'string',
-                    'default' => ''
-                ),
-                'borderRadius' => array(
-                    'type' => 'string',
-                    'default' => ''
-                ),
-                'paginationBackgroundColor' => array(
-                    'type' => 'string',
-                    'default' => '#007cba'
-                ),
-                'paginationTextColor' => array(
-                    'type' => 'string',
-                    'default' => '#ffffff'
-                ),
-                'paginationHoverBackgroundColor' => array(
-                    'type' => 'string',
-                    'default' => '#005a87'
-                ),
-                'paginationBorderRadius' => array(
-                    'type' => 'string',
-                    'default' => '5px'
                 )
             )
         ));
@@ -219,392 +113,220 @@ class RealSatisfied_Agent_Testimonials_Block {
      * @return string Block HTML
      */
     public function render_block($attributes) {
-        // Get vanity key
-        $vanity_key = $this->get_vanity_key($attributes);
+        // Get agent ID and vanity key
+        $agent_id = $this->get_agent_id($attributes);
         
-        if (empty($vanity_key)) {
-            return $this->render_error(__('No agent vanity key specified.', 'realsatisfied-blocks'));
+        if (!$agent_id) {
+            return $this->render_error(__('No agent specified or found in current context.', 'realsatisfied-blocks'));
+        }
+
+        // Get agent vanity key from ACF field
+        $agent_vanity_key = get_post_meta($agent_id, 'realsatisfied-agent-vanity', true);
+        
+        if (empty($agent_vanity_key)) {
+            return $this->render_error(__('No agent vanity key found. Please set the "realsatisfied-agent-vanity" field for this agent.', 'realsatisfied-blocks'));
         }
 
         // Get agent RSS parser instance
         $agent_parser = RealSatisfied_Agent_RSS_Parser::get_instance();
         
         // Fetch agent data
-        $agent_data = $agent_parser->fetch_agent_data($vanity_key);
+        $agent_data = $agent_parser->fetch_agent_data($agent_vanity_key);
         
         if (is_wp_error($agent_data)) {
             return $this->render_error($agent_data->get_error_message());
         }
 
-        // Retrieve the related office post ID using the relationship field
-        $office_post_id = get_post_meta($agent_post_id, 'related_office', true);
-
-        // Check if an office is related
-        if ($office_post_id) {
-            // Fetch the office vanity key from the office post's custom fields
-            $office_vanity_key = get_post_meta($office_post_id, 'office_vanity_key', true);
-
-            // Fetch office data using the office vanity key
-            if ($office_vanity_key) {
-                $office_parser = RealSatisfied_Office_RSS_Parser::get_instance();
-                $office_data = $office_parser->fetch_office_data($office_vanity_key);
-
-                // Render agent and office data
-                echo '<div class="agent-testimonials">';
-                echo '<h3>' . esc_html($agent_data['channel']['display_name']) . '</h3>';
-                echo '<p>Office: ' . esc_html($office_data['channel']['office_name']) . '</p>';
-                // Display agent testimonials and office data...
-                echo '</div>';
-            } else {
-                echo '<p>No office data available for this agent.</p>';
-            }
-        } else {
-            echo '<p>No related office found for this agent.</p>';
+        if (empty($agent_data['testimonials'])) {
+            return $this->render_error(__('No testimonials found for this agent.', 'realsatisfied-blocks'));
         }
 
-        // Extract channel and testimonials
-        $channel = $agent_data['channel'];
-        $testimonials = $agent_data['testimonials'];
+        // Process testimonials
+        $testimonials = $this->process_testimonials($agent_data['testimonials'], $attributes);
         
-        // Sort testimonials
-        $testimonials = $this->sort_testimonials($testimonials, $attributes);
-        
-        // Build wrapper styles
-        $wrapper_styles = $this->build_wrapper_styles($attributes);
-        
-        // Get block wrapper attributes
-        $wrapper_attributes = get_block_wrapper_attributes(array(
-            'class' => 'realsatisfied-agent-testimonials',
-            'style' => implode('; ', $wrapper_styles)
-        ));
-
-        // Start output
-        ob_start();
-        ?>
-        <div <?php echo $wrapper_attributes; ?>>
-            
-            <?php if ($attributes['showAgentInfo'] ?? true): ?>
-            <!-- Agent Information Header -->
-            <div class="agent-info-header">
-                <?php if ($attributes['showAgentPhoto'] ?? true && !empty($channel['avatar'])): ?>
-                    <div class="agent-photo">
-                        <img src="<?php echo esc_url($channel['avatar']); ?>" alt="<?php echo esc_attr($channel['display_name']); ?>" />
-                    </div>
-                <?php endif; ?>
-                
-                <div class="agent-details">
-                    <?php if ($attributes['showAgentName'] ?? true): ?>
-                        <h3 class="agent-name"><?php echo esc_html($channel['display_name']); ?></h3>
-                    <?php endif; ?>
-                    
-                    <?php if ($attributes['showOffice'] ?? true && !empty($channel['office'])): ?>
-                        <p class="agent-office"><?php echo esc_html($channel['office']); ?></p>
-                    <?php endif; ?>
-                    
-                    <p class="agent-review-count">
-                        <?php echo esc_html($channel['response_count']); ?> <?php echo _n('review', 'reviews', $channel['response_count'], 'realsatisfied-blocks'); ?>
-                    </p>
-                </div>
-            </div>
-            <?php endif; ?>
-            
-            <!-- Testimonials -->
-            <?php echo $this->render_testimonials($testimonials, $attributes); ?>
-            
-        </div>
-        <?php
-        
-        return ob_get_clean();
+        // Generate HTML output
+        return $this->generate_html_output($testimonials, $attributes, $agent_data['channel']);
     }
 
     /**
-     * Sort testimonials based on attributes
+     * Get agent ID from attributes or current context
      *
-     * @param array $testimonials Array of testimonials
      * @param array $attributes Block attributes
-     * @return array Sorted testimonials
+     * @return int|null Agent ID
      */
-    private function sort_testimonials($testimonials, $attributes) {
-        $sort_by = $attributes['sortBy'] ?? 'date';
-        $sort_order = $attributes['sortOrder'] ?? 'desc';
+    private function get_agent_id($attributes) {
+        // First check if agent ID is explicitly set in block attributes
+        if (!empty($attributes['agentId'])) {
+            return intval($attributes['agentId']);
+        }
+
+        // If context-aware is disabled, return null
+        if (isset($attributes['contextAware']) && !$attributes['contextAware']) {
+            return null;
+        }
+
+        // Try to get agent ID from current context
+        global $post;
         
-        usort($testimonials, function($a, $b) use ($sort_by, $sort_order) {
-            switch ($sort_by) {
-                case 'date':
-                    $comparison = strtotime($a['pubDate']) - strtotime($b['pubDate']);
-                    break;
-                case 'rating':
-                    $a_rating = ($a['satisfaction'] + $a['recommendation'] + $a['performance']) / 3;
-                    $b_rating = ($b['satisfaction'] + $b['recommendation'] + $b['performance']) / 3;
-                    $comparison = $a_rating - $b_rating;
-                    break;
-                case 'customer_type':
-                    $comparison = strcmp($a['customer_type'], $b['customer_type']);
-                    break;
-                default:
-                    $comparison = 0;
+        // Check if we're on a single agent page
+        if (is_singular('agent') && $post) {
+            return $post->ID;
+        }
+
+        // Check if we're in a query loop context
+        if (in_the_loop() || is_main_query()) {
+            $current_post = get_post();
+            if ($current_post && $current_post->post_type === 'agent') {
+                return $current_post->ID;
             }
-            
-            return $sort_order === 'desc' ? -$comparison : $comparison;
-        });
+        }
+
+        return null;
+    }
+
+    /**
+     * Process testimonials based on attributes
+     *
+     * @param array $testimonials Raw testimonials data
+     * @param array $attributes Block attributes
+     * @return array Processed testimonials
+     */
+    private function process_testimonials($testimonials, $attributes) {
+        // Sort testimonials
+        $sort_by = isset($attributes['sortBy']) ? $attributes['sortBy'] : 'date';
+        $sort_order = isset($attributes['sortOrder']) ? $attributes['sortOrder'] : 'desc';
         
+        if ($sort_by === 'date') {
+            usort($testimonials, function($a, $b) use ($sort_order) {
+                $date_a = strtotime($a['pubDate']);
+                $date_b = strtotime($b['pubDate']);
+                return $sort_order === 'desc' ? $date_b - $date_a : $date_a - $date_b;
+            });
+        }
+
+        // Limit testimonials count
+        $count = isset($attributes['testimonialCount']) ? intval($attributes['testimonialCount']) : 6;
+        if ($count > 0) {
+            $testimonials = array_slice($testimonials, 0, $count);
+        }
+
+        // Truncate excerpts
+        $excerpt_length = isset($attributes['excerptLength']) ? intval($attributes['excerptLength']) : 150;
+        foreach ($testimonials as &$testimonial) {
+            if (strlen($testimonial['description']) > $excerpt_length) {
+                $testimonial['description'] = substr($testimonial['description'], 0, $excerpt_length) . '...';
+            }
+        }
+
         return $testimonials;
     }
 
     /**
-     * Render testimonials based on layout
+     * Generate HTML output
      *
-     * @param array $testimonials Array of testimonials
+     * @param array $testimonials Processed testimonials
      * @param array $attributes Block attributes
-     * @return string Testimonials HTML
+     * @param array $channel_data Agent channel data
+     * @return string HTML output
      */
-    private function render_testimonials($testimonials, $attributes) {
-        $layout = $attributes['layout'] ?? 'grid';
-        $count = $attributes['testimonialCount'] ?? 6;
-        
-        // Limit testimonials if not using pagination
-        if (!($attributes['enablePagination'] ?? false) && $count > 0) {
-            $testimonials = array_slice($testimonials, 0, $count);
-        }
-        
-        switch ($layout) {
-            case 'list':
-                return $this->render_list_layout($testimonials, $attributes);
-            case 'slider':
-                return $this->render_slider_layout($testimonials, $attributes);
-            case 'grid':
-            default:
-                return $this->render_grid_layout($testimonials, $attributes);
-        }
-    }
+    private function generate_html_output($testimonials, $attributes, $channel_data) {
+        $layout = isset($attributes['layout']) ? $attributes['layout'] : 'grid';
+        $columns = isset($attributes['columns']) ? intval($attributes['columns']) : 2;
+        $show_date = isset($attributes['showDate']) ? $attributes['showDate'] : true;
+        $show_ratings = isset($attributes['showRatings']) ? $attributes['showRatings'] : false;
+        $show_customer_type = isset($attributes['showCustomerType']) ? $attributes['showCustomerType'] : true;
 
-    /**
-     * Render grid layout
-     *
-     * @param array $testimonials Array of testimonials
-     * @param array $attributes Block attributes
-     * @return string Grid HTML
-     */
-    private function render_grid_layout($testimonials, $attributes) {
-        $columns = $attributes['columns'] ?? 2;
+        $output = '<div class="realsatisfied-agent-testimonials layout-' . esc_attr($layout) . '">';
         
-        $html = '<div class="testimonials-grid" style="grid-template-columns: repeat(' . $columns . ', 1fr);">';
-        
+        if ($layout === 'grid') {
+            $output .= '<div class="testimonials-grid columns-' . esc_attr($columns) . '">';
+        } else {
+            $output .= '<div class="testimonials-list">';
+        }
+
         foreach ($testimonials as $testimonial) {
-            $html .= $this->render_testimonial_card($testimonial, $attributes);
+            $output .= '<div class="testimonial-item">';
+            
+            // Customer name/title
+            if (!empty($testimonial['title'])) {
+                $output .= '<h4 class="customer-name">' . esc_html($testimonial['title']) . '</h4>';
+            }
+            
+            // Customer type
+            if ($show_customer_type && !empty($testimonial['customer_type'])) {
+                $output .= '<p class="customer-type">' . esc_html($testimonial['customer_type']) . '</p>';
+            }
+            
+            // Testimonial content
+            if (!empty($testimonial['description'])) {
+                $output .= '<div class="testimonial-content">' . wp_kses_post($testimonial['description']) . '</div>';
+            }
+            
+            // Ratings
+            if ($show_ratings) {
+                $output .= '<div class="testimonial-ratings">';
+                if (!empty($testimonial['satisfaction'])) {
+                    $satisfaction_stars = $this->calculate_stars($testimonial['satisfaction']);
+                    $output .= '<div class="rating satisfaction">Satisfaction: ' . $this->render_stars($satisfaction_stars) . '</div>';
+                }
+                if (!empty($testimonial['recommendation'])) {
+                    $recommendation_stars = $this->calculate_stars($testimonial['recommendation']);
+                    $output .= '<div class="rating recommendation">Recommendation: ' . $this->render_stars($recommendation_stars) . '</div>';
+                }
+                if (!empty($testimonial['performance'])) {
+                    $performance_stars = $this->calculate_stars($testimonial['performance']);
+                    $output .= '<div class="rating performance">Performance: ' . $this->render_stars($performance_stars) . '</div>';
+                }
+                $output .= '</div>';
+            }
+            
+            // Date
+            if ($show_date && !empty($testimonial['pubDate'])) {
+                $date = date('F j, Y', strtotime($testimonial['pubDate']));
+                $output .= '<p class="testimonial-date">' . esc_html($date) . '</p>';
+            }
+            
+            $output .= '</div>';
         }
-        
-        $html .= '</div>';
-        
-        return $html;
+
+        $output .= '</div></div>';
+
+        return $output;
     }
 
     /**
-     * Render list layout
+     * Calculate star rating from percentage
      *
-     * @param array $testimonials Array of testimonials
-     * @param array $attributes Block attributes
-     * @return string List HTML
+     * @param int $percentage Rating percentage (0-100)
+     * @return float Star rating (0-5)
      */
-    private function render_list_layout($testimonials, $attributes) {
-        $html = '<div class="testimonials-list">';
-        
-        foreach ($testimonials as $testimonial) {
-            $html .= $this->render_testimonial_card($testimonial, $attributes);
-        }
-        
-        $html .= '</div>';
-        
-        return $html;
+    private function calculate_stars($percentage) {
+        return round(($percentage / 100) * 5, 1);
     }
 
     /**
-     * Render slider layout
+     * Render star rating
      *
-     * @param array $testimonials Array of testimonials
-     * @param array $attributes Block attributes
-     * @return string Slider HTML
-     */
-    private function render_slider_layout($testimonials, $attributes) {
-        $html = '<div class="testimonials-slider">';
-        $html .= '<div class="slider-container">';
-        
-        foreach ($testimonials as $index => $testimonial) {
-            $active_class = $index === 0 ? ' active' : '';
-            $html .= '<div class="slider-slide' . $active_class . '">';
-            $html .= $this->render_testimonial_card($testimonial, $attributes);
-            $html .= '</div>';
-        }
-        
-        $html .= '</div>';
-        
-        if (count($testimonials) > 1) {
-            $html .= '<div class="slider-controls">';
-            $html .= '<button class="slider-prev" type="button">❮</button>';
-            $html .= '<button class="slider-next" type="button">❯</button>';
-            $html .= '</div>';
-        }
-        
-        $html .= '</div>';
-        
-        return $html;
-    }
-
-    /**
-     * Render testimonial card
-     *
-     * @param array $testimonial Testimonial data
-     * @param array $attributes Block attributes
-     * @return string Testimonial card HTML
-     */
-    private function render_testimonial_card($testimonial, $attributes) {
-        $excerpt_length = $attributes['excerptLength'] ?? 150;
-        $description = $testimonial['description'];
-        
-        if ($excerpt_length > 0 && strlen($description) > $excerpt_length) {
-            $description = substr($description, 0, $excerpt_length) . '...';
-        }
-        
-        $html = '<div class="testimonial-card">';
-        
-        // Testimonial text
-        $html .= '<div class="testimonial-text">' . esc_html($description) . '</div>';
-        
-        // Testimonial meta
-        $html .= '<div class="testimonial-meta">';
-        
-        // Customer info
-        $html .= '<div class="testimonial-details">';
-        
-        if ($attributes['showCustomerName'] ?? true) {
-            $html .= '<div class="customer-name">' . esc_html($testimonial['title']) . '</div>';
-        }
-        
-        if ($attributes['showCustomerType'] ?? true && !empty($testimonial['customer_type'])) {
-            $html .= '<div class="customer-type">' . esc_html($testimonial['customer_type']) . '</div>';
-        }
-        
-        if ($attributes['showDate'] ?? true) {
-            $html .= '<div class="testimonial-date">' . esc_html(date('F j, Y', strtotime($testimonial['pubDate']))) . '</div>';
-        }
-        
-        if ($attributes['showRatings'] ?? false) {
-            $html .= $this->render_testimonial_ratings($testimonial);
-        }
-        
-        $html .= '</div>';
-        $html .= '</div>';
-        $html .= '</div>';
-        
-        return $html;
-    }
-
-    /**
-     * Render testimonial ratings
-     *
-     * @param array $testimonial Testimonial data
-     * @return string Ratings HTML
-     */
-    private function render_testimonial_ratings($testimonial) {
-        $html = '<div class="testimonial-ratings">';
-        
-        if (!empty($testimonial['satisfaction'])) {
-            $html .= '<div class="rating-item">';
-            $html .= '<span class="rating-label">Satisfaction:</span>';
-            $html .= '<span class="rating-stars">' . $this->render_stars($testimonial['satisfaction'] / 20) . '</span>';
-            $html .= '</div>';
-        }
-        
-        if (!empty($testimonial['recommendation'])) {
-            $html .= '<div class="rating-item">';
-            $html .= '<span class="rating-label">Recommendation:</span>';
-            $html .= '<span class="rating-stars">' . $this->render_stars($testimonial['recommendation'] / 20) . '</span>';
-            $html .= '</div>';
-        }
-        
-        if (!empty($testimonial['performance'])) {
-            $html .= '<div class="rating-item">';
-            $html .= '<span class="rating-label">Performance:</span>';
-            $html .= '<span class="rating-stars">' . $this->render_stars($testimonial['performance'] / 20) . '</span>';
-            $html .= '</div>';
-        }
-        
-        $html .= '</div>';
-        
-        return $html;
-    }
-
-    /**
-     * Render stars for rating
-     *
-     * @param float $rating Rating value (0-5)
-     * @return string Stars HTML
+     * @param float $rating Star rating (0-5)
+     * @return string Star HTML
      */
     private function render_stars($rating) {
-        $html = '';
+        $output = '<span class="stars">';
+        $full_stars = floor($rating);
+        $half_star = ($rating - $full_stars) >= 0.5;
         
         for ($i = 1; $i <= 5; $i++) {
-            $filled = $rating >= $i;
-            $half_filled = !$filled && $rating >= ($i - 0.5);
-            
-            if ($filled) {
-                $html .= '<span class="star filled">★</span>';
-            } elseif ($half_filled) {
-                $html .= '<span class="star half">★</span>';
+            if ($i <= $full_stars) {
+                $output .= '<span class="star full">★</span>';
+            } elseif ($i == $full_stars + 1 && $half_star) {
+                $output .= '<span class="star half">☆</span>';
             } else {
-                $html .= '<span class="star empty">☆</span>';
+                $output .= '<span class="star empty">☆</span>';
             }
         }
         
-        return $html;
-    }
-
-    /**
-     * Build wrapper styles
-     *
-     * @param array $attributes Block attributes
-     * @return array Style strings
-     */
-    private function build_wrapper_styles($attributes) {
-        $styles = array();
-        
-        if (!empty($attributes['backgroundColor'])) {
-            $styles[] = 'background-color: ' . esc_attr($attributes['backgroundColor']);
-        }
-        
-        if (!empty($attributes['textColor'])) {
-            $styles[] = 'color: ' . esc_attr($attributes['textColor']);
-        }
-        
-        if (!empty($attributes['borderColor'])) {
-            $styles[] = 'border-color: ' . esc_attr($attributes['borderColor']);
-        }
-        
-        if (!empty($attributes['borderRadius'])) {
-            $styles[] = 'border-radius: ' . esc_attr($attributes['borderRadius']);
-        }
-        
-        return $styles;
-    }
-
-    /**
-     * Get vanity key from attributes
-     *
-     * @param array $attributes Block attributes
-     * @return string|false Vanity key or false if not found
-     */
-    private function get_vanity_key($attributes) {
-        if ($attributes['useCustomField'] && !empty($attributes['customFieldName'])) {
-            $custom_fields = RealSatisfied_Custom_Fields::get_instance();
-            $vanity_key = $custom_fields->get_custom_field_value($attributes['customFieldName']);
-            if ($vanity_key) {
-                return trim($vanity_key);
-            }
-        } elseif (!empty($attributes['manualVanityKey'])) {
-            return trim($attributes['manualVanityKey']);
-        }
-        
-        return false;
+        $output .= '</span>';
+        return $output;
     }
 
     /**
@@ -614,7 +336,9 @@ class RealSatisfied_Agent_Testimonials_Block {
      * @return string Error HTML
      */
     private function render_error($message) {
-        return '<div class="realsatisfied-agent-testimonials-error">' . esc_html($message) . '</div>';
+        return '<div class="realsatisfied-agent-testimonials-error notice notice-warning">' .
+               '<p>' . esc_html($message) . '</p>' .
+               '</div>';
     }
 
     /**
@@ -623,16 +347,81 @@ class RealSatisfied_Agent_Testimonials_Block {
     public function enqueue_editor_assets() {
         wp_enqueue_script(
             'realsatisfied-agent-testimonials-editor',
-            RSOB_PLUGIN_URL . 'blocks/agent-testimonials/agent-testimonials-editor.js',
-            array('wp-blocks', 'wp-i18n', 'wp-element', 'wp-editor', 'wp-components'),
-            filemtime(RSOB_PLUGIN_PATH . 'blocks/agent-testimonials/agent-testimonials-editor.js')
+            plugin_dir_url(__FILE__) . 'agent-testimonials-editor.js',
+            array('wp-blocks', 'wp-element', 'wp-i18n', 'wp-components', 'wp-data'),
+            '1.0.0'
         );
+
+        wp_localize_script('realsatisfied-agent-testimonials-editor', 'realSatisfiedAgentTestimonials', array(
+            'pluginUrl' => plugin_dir_url(dirname(dirname(__FILE__))),
+            'nonce' => wp_create_nonce('realsatisfied_nonce')
+        ));
     }
 
     /**
      * Enqueue frontend assets
      */
     public function enqueue_frontend_assets() {
-        // Frontend assets handled by main plugin
+        // Basic CSS for the block
+        wp_add_inline_style(
+            'wp-block-library',
+            '
+            .realsatisfied-agent-testimonials {
+                margin: 20px 0;
+            }
+            .realsatisfied-agent-testimonials .testimonials-grid {
+                display: grid;
+                gap: 20px;
+            }
+            .realsatisfied-agent-testimonials .testimonials-grid.columns-1 {
+                grid-template-columns: 1fr;
+            }
+            .realsatisfied-agent-testimonials .testimonials-grid.columns-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .realsatisfied-agent-testimonials .testimonials-grid.columns-3 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .realsatisfied-agent-testimonials .testimonial-item {
+                border: 1px solid #ddd;
+                padding: 20px;
+                border-radius: 5px;
+                background: #f9f9f9;
+            }
+            .realsatisfied-agent-testimonials .customer-name {
+                margin: 0 0 10px 0;
+                font-size: 1.1em;
+                font-weight: bold;
+            }
+            .realsatisfied-agent-testimonials .customer-type {
+                margin: 0 0 10px 0;
+                font-style: italic;
+                color: #666;
+            }
+            .realsatisfied-agent-testimonials .testimonial-content {
+                margin: 10px 0;
+                line-height: 1.5;
+            }
+            .realsatisfied-agent-testimonials .testimonial-date {
+                margin: 10px 0 0 0;
+                font-size: 0.9em;
+                color: #888;
+            }
+            .realsatisfied-agent-testimonials .stars {
+                color: #ffa500;
+            }
+            .realsatisfied-agent-testimonials-error {
+                padding: 10px;
+                margin: 10px 0;
+                border-left: 4px solid #ffba00;
+                background: #fff8e5;
+            }
+            @media (max-width: 768px) {
+                .realsatisfied-agent-testimonials .testimonials-grid {
+                    grid-template-columns: 1fr !important;
+                }
+            }
+            '
+        );
     }
-} 
+}
