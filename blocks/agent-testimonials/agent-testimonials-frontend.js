@@ -127,7 +127,15 @@
                 switch (layout) {
                     case 'grid':
                         containerClass = 'testimonials-grid columns-' + columns;
-                        wrapperStart = '<div class="' + containerClass + '">';
+                        
+                        // Apply custom grid columns if needed
+                        var containerStyles = [];
+                        if (columns && columns !== 2) {
+                            containerStyles.push('grid-template-columns: repeat(' + columns + ', 1fr)');
+                        }
+                        
+                        wrapperStart = '<div class="' + containerClass + '"' + 
+                                     (containerStyles.length > 0 ? ' style="' + containerStyles.join('; ') + '"' : '') + '>';
                         wrapperEnd = '</div>';
                         break;
                     case 'list':
@@ -179,7 +187,27 @@
                 var showRatingValues = attributes.showRatingValues !== false;
                 var excerptLength = parseInt(attributes.excerptLength) || 150;
                 
-                var html = '<div class="testimonial-item testimonial-card">';
+                // Build card styles (matching PHP build_card_styles function)
+                var cardStyles = [];
+                if (attributes.backgroundColor) {
+                    cardStyles.push('background-color: ' + attributes.backgroundColor);
+                }
+                if (attributes.borderColor) {
+                    cardStyles.push('border-color: ' + attributes.borderColor);
+                }
+                if (attributes.borderRadius) {
+                    cardStyles.push('border-radius: ' + attributes.borderRadius);
+                }
+                var cardStyleAttr = cardStyles.length > 0 ? ' style="' + cardStyles.join('; ') + '"' : '';
+                
+                var html = '<div class="testimonial-item testimonial-card"' + cardStyleAttr + '>';
+                
+                // Build text styles (matching PHP build_text_styles function)
+                var textStyles = [];
+                if (attributes.textColor) {
+                    textStyles.push('color: ' + attributes.textColor);
+                }
+                var textStyleAttr = textStyles.length > 0 ? ' style="' + textStyles.join('; ') + '"' : '';
                 
                 // Testimonial text with optional quotation marks
                 var description = testimonial.description || '';
@@ -188,9 +216,9 @@
                 }
                 
                 if (showQuotationMarks) {
-                    html += '<div class="testimonial-text">"' + escapeHtml(description) + '"</div>';
+                    html += '<div class="testimonial-text"' + textStyleAttr + '>"' + escapeHtml(description) + '"</div>';
                 } else {
-                    html += '<div class="testimonial-text">' + escapeHtml(description) + '</div>';
+                    html += '<div class="testimonial-text"' + textStyleAttr + '>' + escapeHtml(description) + '</div>';
                 }
                 
                 // Meta section
