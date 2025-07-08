@@ -752,8 +752,23 @@ class RealSatisfied_Agent_Testimonials_Block {
      * Enqueue frontend assets
      */
     public function enqueue_frontend_assets() {
-        // Frontend assets are now handled centrally by the main plugin class
-        // This method is kept for backwards compatibility but does nothing
+        // Only enqueue on pages that have the block
+        if (has_block($this->block_name)) {
+            wp_enqueue_style(
+                'realsatisfied-agent-testimonials',
+                plugin_dir_url(dirname(dirname(__FILE__))) . 'assets/realsatisfied-blocks.css',
+                array(),
+                '1.0.0'
+            );
+            
+            wp_enqueue_script(
+                'realsatisfied-agent-testimonials-frontend',
+                plugin_dir_url(__FILE__) . 'agent-testimonials-frontend.js',
+                array('jquery'),
+                '1.0.0',
+                true
+            );
+        }
     }
 }
 
