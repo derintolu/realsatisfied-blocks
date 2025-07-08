@@ -209,8 +209,8 @@ class RealSatisfied_Blocks {
         if ($should_load_agent_script) {
             wp_enqueue_script(
                 'realsatisfied-agent-testimonials-frontend',
-                RSOB_PLUGIN_URL . 'blocks/agent-testimonials/agent-testimonials-frontend.js',
-                array('jquery'),
+                RSOB_PLUGIN_URL . 'blocks/agent-testimonials/agent-testimonials-frontend-vanilla.js',
+                array(), // No dependencies - vanilla JS
                 RSOB_PLUGIN_VERSION,
                 true
             );
