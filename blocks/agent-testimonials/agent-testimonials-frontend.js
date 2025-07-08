@@ -1,8 +1,11 @@
 (function($) {
     'use strict';
 
+    console.log('RealSatisfied Agent Testimonials Frontend Script Loaded');
+
     // Initialize pagination when document is ready
     $(document).ready(function() {
+        console.log('Document ready, jQuery version:', $.fn.jquery);
         initAgentTestimonialsPagination();
     });
 
