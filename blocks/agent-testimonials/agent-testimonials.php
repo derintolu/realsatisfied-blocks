@@ -114,11 +114,11 @@ class RealSatisfied_Agent_Testimonials_Block {
                 ),
                 'enablePagination' => array(
                     'type' => 'boolean',
-                    'default' => false
+                    'default' => true
                 ),
                 'itemsPerPage' => array(
                     'type' => 'number',
-                    'default' => 6
+                    'default' => 3
                 ),
                 'showCustomerName' => array(
                     'type' => 'boolean',
