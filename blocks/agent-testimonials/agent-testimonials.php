@@ -113,39 +113,11 @@ class RealSatisfied_Agent_Testimonials_Block {
      * @return string Block HTML
      */
     public function render_block($attributes) {
-        // Get agent ID and vanity key
-        $agent_id = $this->get_agent_id($attributes);
-        
-        if (!$agent_id) {
-            return $this->render_error(__('No agent specified or found in current context.', 'realsatisfied-blocks'));
-        }
-
-        // Get agent vanity key from ACF field
-        $agent_vanity_key = get_post_meta($agent_id, 'realsatisfied-agent-vanity', true);
-        
-        if (empty($agent_vanity_key)) {
-            return $this->render_error(__('No agent vanity key found. Please set the "realsatisfied-agent-vanity" field for this agent.', 'realsatisfied-blocks'));
-        }
-
-        // Get agent RSS parser instance
-        $agent_parser = RealSatisfied_Agent_RSS_Parser::get_instance();
-        
-        // Fetch agent data
-        $agent_data = $agent_parser->fetch_agent_data($agent_vanity_key);
-        
-        if (is_wp_error($agent_data)) {
-            return $this->render_error($agent_data->get_error_message());
-        }
-
-        if (empty($agent_data['testimonials'])) {
-            return $this->render_error(__('No testimonials found for this agent.', 'realsatisfied-blocks'));
-        }
-
-        // Process testimonials
-        $testimonials = $this->process_testimonials($agent_data['testimonials'], $attributes);
-        
-        // Generate HTML output
-        return $this->generate_html_output($testimonials, $attributes, $agent_data['channel']);
+        // Simple test first - just return a basic message
+        return '<div class="realsatisfied-agent-testimonials-test">' .
+               '<p>Agent Testimonials Block - Test Mode</p>' .
+               '<p>Attributes: ' . wp_json_encode($attributes) . '</p>' .
+               '</div>';
     }
 
     /**
