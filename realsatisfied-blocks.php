@@ -185,7 +185,28 @@ class RealSatisfied_Blocks {
             );
         }
         
+        // Load agent testimonials script - improved detection for custom post types and templates
+        $should_load_agent_script = false;
+        
+        // Check for block in post content
         if (has_block('realsatisfied-blocks/agent-testimonials')) {
+            $should_load_agent_script = true;
+        }
+        
+        // Additional checks for custom post types and templates where has_block() might fail
+        if (!$should_load_agent_script) {
+            global $post;
+            if ($post) {
+                // Check if this is a person/agent post type or template that might use the block
+                if ($post->post_type === 'person' || 
+                    get_post_meta($post->ID, 'realsatified-agent-vanity', true) ||
+                    (function_exists('get_field') && get_field('realsatified-agent-vanity', $post->ID))) {
+                    $should_load_agent_script = true;
+                }
+            }
+        }
+        
+        if ($should_load_agent_script) {
             wp_enqueue_script(
                 'realsatisfied-agent-testimonials-frontend',
                 RSOB_PLUGIN_URL . 'blocks/agent-testimonials/agent-testimonials-frontend.js',

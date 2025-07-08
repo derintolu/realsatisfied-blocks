@@ -35,7 +35,7 @@ class RealSatisfied_Agent_Testimonials_Block {
     private function init_hooks() {
         add_action('init', array($this, 'register_block'));
         add_action('enqueue_block_editor_assets', array($this, 'enqueue_editor_assets'));
-        add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
+        // Frontend assets are handled by the main plugin file
     }
 
     /**
@@ -748,28 +748,6 @@ class RealSatisfied_Agent_Testimonials_Block {
         );
     }
 
-    /**
-     * Enqueue frontend assets
-     */
-    public function enqueue_frontend_assets() {
-        // Only enqueue on pages that have the block
-        if (has_block($this->block_name)) {
-            wp_enqueue_style(
-                'realsatisfied-agent-testimonials',
-                plugin_dir_url(dirname(dirname(__FILE__))) . 'assets/realsatisfied-blocks.css',
-                array(),
-                '1.0.0'
-            );
-            
-            wp_enqueue_script(
-                'realsatisfied-agent-testimonials-frontend',
-                plugin_dir_url(__FILE__) . 'agent-testimonials-frontend.js',
-                array('jquery'),
-                '1.0.0',
-                true
-            );
-        }
-    }
 }
 
 // Initialize the block
