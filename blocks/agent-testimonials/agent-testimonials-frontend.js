@@ -7,12 +7,19 @@
     });
 
     function initAgentTestimonialsPagination() {
+        console.log('RealSatisfied Agent Testimonials: Initializing pagination...');
+        
         $('.realsatisfied-agent-testimonials').each(function() {
             var $container = $(this);
             var $testimonialsContainer = $container.find('.testimonials-container');
             var $pagination = $container.find('.testimonials-pagination');
             
+            console.log('Container found:', $container.length);
+            console.log('Testimonials container found:', $testimonialsContainer.length);
+            console.log('Pagination found:', $pagination.length);
+            
             if ($testimonialsContainer.length === 0 || $pagination.length === 0) {
+                console.log('No pagination elements found, skipping...');
                 return; // No pagination needed
             }
 
@@ -21,6 +28,9 @@
                 var attributes_data = $testimonialsContainer.data('attributes');
                 var allTestimonials = [];
                 var blockAttributes = {};
+                
+                console.log('Raw testimonials data:', testimonials_data);
+                console.log('Raw attributes data:', attributes_data);
                 
                 // Parse testimonials data
                 if (typeof testimonials_data === 'string') {
@@ -41,9 +51,15 @@
                     blockAttributes = {}; // Use defaults
                 }
                 
+                console.log('Parsed testimonials:', allTestimonials.length);
+                console.log('Parsed attributes:', blockAttributes);
+                
                 var itemsPerPage = parseInt($testimonialsContainer.data('items-per-page')) || 6;
                 var totalPages = parseInt($testimonialsContainer.data('total-pages')) || 1;
                 var currentPage = 1;
+
+                console.log('Items per page:', itemsPerPage);
+                console.log('Total pages:', totalPages);
 
                 // Ensure we have testimonials to paginate
                 if (!allTestimonials || allTestimonials.length === 0) {
@@ -68,46 +84,70 @@
                 // Bind pagination events
                 $pagination.find('.pagination-prev').on('click', function(e) {
                     e.preventDefault();
+                    console.log('Previous button clicked, current page:', currentPage);
                     if (currentPage > 1) {
                         currentPage--;
+                        console.log('Moving to page:', currentPage);
                         updateTestimonials();
                     }
                 });
 
                 $pagination.find('.pagination-next').on('click', function(e) {
                     e.preventDefault();
+                    console.log('Next button clicked, current page:', currentPage);
                     if (currentPage < totalPages) {
                         currentPage++;
+                        console.log('Moving to page:', currentPage);
                         updateTestimonials();
                     }
                 });
+                
+                console.log('Pagination events bound successfully');
             } catch (error) {
                 console.error('RealSatisfied Agent Testimonials: Error initializing pagination', error);
                 return;
             }
 
             function updateTestimonials() {
+                console.log('updateTestimonials called for page:', currentPage);
+                
                 var startIndex = (currentPage - 1) * itemsPerPage;
                 var endIndex = startIndex + itemsPerPage;
                 var pageTestimonials = allTestimonials.slice(startIndex, endIndex);
 
+                console.log('Showing testimonials', startIndex, 'to', endIndex, '(', pageTestimonials.length, 'items)');
+
                 // Generate new HTML for current page
                 var html = generateTestimonialsHTML(pageTestimonials, layout, columns, blockAttributes);
+                
+                console.log('Generated HTML length:', html.length);
                 
                 // Update the testimonials display with minimal animation
                 var $testimonialsDisplay = $testimonialsContainer.find('.testimonials-grid, .testimonials-list, .testimonials-slider');
                 
+                console.log('Found display containers:', $testimonialsDisplay.length);
+                
                 // Simple replacement without fade for better performance
                 $testimonialsDisplay.replaceWith(html);
+                
+                console.log('Content replaced');
 
                 // Update pagination controls
                 updatePaginationControls();
+                
+                console.log('Pagination controls updated');
             }
 
             function updatePaginationControls() {
+                console.log('updatePaginationControls called');
+                
                 var $prevBtn = $pagination.find('.pagination-prev');
                 var $nextBtn = $pagination.find('.pagination-next');
                 var $currentPageSpan = $pagination.find('.current-page');
+
+                console.log('Found prev button:', $prevBtn.length);
+                console.log('Found next button:', $nextBtn.length);
+                console.log('Found current page span:', $currentPageSpan.length);
 
                 // Update page number
                 $currentPageSpan.text(currentPage);
@@ -115,6 +155,10 @@
                 // Update button states
                 $prevBtn.prop('disabled', currentPage <= 1);
                 $nextBtn.prop('disabled', currentPage >= totalPages);
+                
+                console.log('Updated page to:', currentPage, 'of', totalPages);
+                console.log('Prev disabled:', currentPage <= 1);
+                console.log('Next disabled:', currentPage >= totalPages);
             }
 
             function generateTestimonialsHTML(testimonials, layout, columns, attributes) {
