@@ -31,18 +31,24 @@ class RealSatisfied_Office_RSS_Parser {
     private $cache_duration = 43200;
 
     /**
-     * Office RSS feed URL
+     * RSS feed URLs
      *
-     * @var string
+     * @var array
      */
-    private $office_feed_url = 'https://rss.realsatisfied.com/rss/v3/office/';
+    private $feed_urls = array(
+        'agent'  => 'https://rss.realsatisfied.com/rss/v3/agent/detailed/',
+        'office' => 'https://rss.realsatisfied.com/rss/v3/office/'
+    );
 
     /**
-     * Office XML namespace
+     * XML namespaces
      *
-     * @var string
+     * @var array
      */
-    private $office_namespace = 'https://rss.realsatisfied.com/ns/realsatisfied/';
+    private $namespaces = array(
+        'agent'  => 'https://rss.realsatisfied.com/ns/realsatisfied/',
+        'office' => 'https://rss.realsatisfied.com/ns/realsatisfied/'
+    );
 
     /**
      * Get plugin instance
@@ -84,7 +90,7 @@ class RealSatisfied_Office_RSS_Parser {
         }
 
         // Build feed URL
-        $feed_url = $this->office_feed_url . $vanity_key . '/page=1&source=wp_office_blocks';
+        $feed_url = $this->feed_urls['office'] . $vanity_key . '/page=1&source=wp_office_blocks';
         
         // Fetch RSS feed
         $rss_feed = fetch_feed($feed_url);
@@ -103,8 +109,6 @@ class RealSatisfied_Office_RSS_Parser {
         return $office_data;
     }
 
-
-
     /**
      * Extract office data from RSS feed
      *
@@ -112,7 +116,7 @@ class RealSatisfied_Office_RSS_Parser {
      * @return array|WP_Error Array with channel data and testimonials, or WP_Error on failure
      */
     private function extract_office_data($rss_feed) {
-        $namespace = $this->office_namespace;
+        $namespace = $this->namespaces['office'];
         
         // Get maximum items (up to 50)
         $max_items = $rss_feed->get_item_quantity(50);
@@ -160,8 +164,6 @@ class RealSatisfied_Office_RSS_Parser {
             'testimonials' => $testimonials
         );
     }
-
-
 
     /**
      * Calculate overall rating from satisfaction, recommendation, and performance
@@ -236,21 +238,21 @@ class RealSatisfied_Office_RSS_Parser {
     }
 
     /**
-     * Get office feed URL
+     * Get feed URLs
      *
-     * @return string Office feed URL
+     * @return array Feed URLs
      */
-    public function get_office_feed_url() {
-        return $this->office_feed_url;
+    public function get_feed_urls() {
+        return $this->feed_urls;
     }
 
     /**
-     * Get office namespace
+     * Get namespaces
      *
-     * @return string Office XML namespace
+     * @return array XML namespaces
      */
-    public function get_office_namespace() {
-        return $this->office_namespace;
+    public function get_namespaces() {
+        return $this->namespaces;
     }
 
     /**
