@@ -280,8 +280,16 @@ class RealSatisfied_Office_Testimonials_Block {
                     $initials = '?';
                 }
                 
-                // Create a colored background based on the agent name
-                $colors = ['#f0b64f', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#e67e22', '#1abc9c', '#34495e'];
+                // Create a colored background - use button color as primary, with variations for multiple agents
+                $button_color = $attributes['paginationBackgroundColor'] ?? '#007cba';
+                $colors = [
+                    $button_color, // Primary button color
+                    $this->adjust_color_brightness($button_color, -20), // Darker variant
+                    $this->adjust_color_brightness($button_color, 20),  // Lighter variant
+                    $this->adjust_color_hue($button_color, 30),         // Hue shifted variant
+                    $this->adjust_color_hue($button_color, -30),        // Hue shifted variant (other direction)
+                    '#e74c3c', '#2ecc71', '#9b59b6' // Fallback colors
+                ];
                 $color_index = crc32($display_name) % count($colors);
                 $bg_color = $colors[$color_index];
                 
@@ -343,6 +351,11 @@ class RealSatisfied_Office_Testimonials_Block {
 
         // Build wrapper styles
         $wrapper_styles = $this->build_wrapper_styles($attributes);
+        
+        // Add button color as CSS custom property for agent photo borders
+        $button_color = $attributes['paginationBackgroundColor'] ?? '#007cba';
+        $wrapper_styles[] = '--rs-button-color: ' . esc_attr($button_color);
+        
         $style_attr = !empty($wrapper_styles) ? 'style="' . implode('; ', $wrapper_styles) . '"' : '';
 
         // Start building output
@@ -362,7 +375,8 @@ class RealSatisfied_Office_Testimonials_Block {
                  'error' => null,
                  'expandedTestimonials' => array(),
                  'activeFilter' => null,
-                 'sortBy' => $attributes['sortBy'] ?? 'date'
+                 'sortBy' => $attributes['sortBy'] ?? 'date',
+                 'buttonColor' => $attributes['paginationBackgroundColor'] ?? '#007cba'
              )); ?>
              data-wp-init="callbacks.initTestimonials">
             
@@ -988,6 +1002,95 @@ class RealSatisfied_Office_Testimonials_Block {
             array(),
             RSOB_PLUGIN_VERSION
         );
+    }
+    
+    /**
+     * Adjust color brightness
+     * 
+     * @param string $hex_color Hex color (e.g., #007cba)
+     * @param int $percent Percentage to adjust (-100 to 100)
+     * @return string Adjusted hex color
+     */
+    private function adjust_color_brightness($hex_color, $percent) {
+        // Remove # if present
+        $hex_color = ltrim($hex_color, '#');
+        
+        // Convert to RGB
+        $r = hexdec(substr($hex_color, 0, 2));
+        $g = hexdec(substr($hex_color, 2, 2));
+        $b = hexdec(substr($hex_color, 4, 2));
+        
+        // Adjust brightness
+        $r = max(0, min(255, $r + ($r * $percent / 100)));
+        $g = max(0, min(255, $g + ($g * $percent / 100)));
+        $b = max(0, min(255, $b + ($b * $percent / 100)));
+        
+        // Convert back to hex
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
+    
+    /**
+     * Adjust color hue
+     * 
+     * @param string $hex_color Hex color (e.g., #007cba)
+     * @param int $degrees Degrees to shift hue (-360 to 360)
+     * @return string Adjusted hex color
+     */
+    private function adjust_color_hue($hex_color, $degrees) {
+        // Remove # if present
+        $hex_color = ltrim($hex_color, '#');
+        
+        // Convert to RGB
+        $r = hexdec(substr($hex_color, 0, 2)) / 255;
+        $g = hexdec(substr($hex_color, 2, 2)) / 255;
+        $b = hexdec(substr($hex_color, 4, 2)) / 255;
+        
+        // Convert RGB to HSL
+        $max = max($r, $g, $b);
+        $min = min($r, $g, $b);
+        $l = ($max + $min) / 2;
+        
+        if ($max == $min) {
+            $h = $s = 0; // achromatic
+        } else {
+            $d = $max - $min;
+            $s = $l > 0.5 ? $d / (2 - $max - $min) : $d / ($max + $min);
+            
+            switch ($max) {
+                case $r: $h = ($g - $b) / $d + ($g < $b ? 6 : 0); break;
+                case $g: $h = ($b - $r) / $d + 2; break;
+                case $b: $h = ($r - $g) / $d + 4; break;
+            }
+            $h /= 6;
+        }
+        
+        // Adjust hue
+        $h += $degrees / 360;
+        if ($h > 1) $h -= 1;
+        if ($h < 0) $h += 1;
+        
+        // Convert HSL back to RGB
+        if ($s == 0) {
+            $r = $g = $b = $l; // achromatic
+        } else {
+            $hue_to_rgb = function($p, $q, $t) {
+                if ($t < 0) $t += 1;
+                if ($t > 1) $t -= 1;
+                if ($t < 1/6) return $p + ($q - $p) * 6 * $t;
+                if ($t < 1/2) return $q;
+                if ($t < 2/3) return $p + ($q - $p) * (2/3 - $t) * 6;
+                return $p;
+            };
+            
+            $q = $l < 0.5 ? $l * (1 + $s) : $l + $s - $l * $s;
+            $p = 2 * $l - $q;
+            $r = $hue_to_rgb($p, $q, $h + 1/3);
+            $g = $hue_to_rgb($p, $q, $h);
+            $b = $hue_to_rgb($p, $q, $h - 1/3);
+        }
+        
+        // Convert back to hex
+        return sprintf('#%02x%02x%02x', round($r * 255), round($g * 255), round($b * 255));
     }
 }
 

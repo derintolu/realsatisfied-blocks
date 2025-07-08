@@ -209,9 +209,8 @@
     height: 60px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #f0b64f;
+    border: 2px solid var(--rs-button-color, #f0b64f);
     display: block;
-    background-color: #f0f4f7; /* Fallback background */
 }
 
 .testimonial-details {
@@ -570,6 +569,33 @@
     font-size: 0.9rem;
     color: #f0b64f;
     font-weight: 600;
+}
+
+/* Agent info container */
+.agent-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.agent-photo {
+    flex-shrink: 0;
+}
+
+.agent-photo img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--rs-button-color, #f0b64f);
+    display: block;
+}
+
+.agent-name {
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 /* Agent testimonials use the same testimonial card styles as office testimonials */
