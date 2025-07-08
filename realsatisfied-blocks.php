@@ -83,6 +83,7 @@ class RealSatisfied_Blocks {
         require_once RSOB_PLUGIN_PATH . 'blocks/office-ratings/office-ratings.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/office-testimonials/office-testimonials.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/agent-testimonials/agent-testimonials.php';
+        require_once RSOB_PLUGIN_PATH . 'blocks/agent-testimonials/agent-testimonials-v2.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/office-stats/office-stats.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/office-agents/office-agents.php';
     }
@@ -119,6 +120,10 @@ class RealSatisfied_Blocks {
         
         if (class_exists('RealSatisfied_Agent_Testimonials_Block')) {
             new RealSatisfied_Agent_Testimonials_Block();
+        }
+        
+        if (class_exists('RealSatisfied_Agent_Testimonials_V2_Block')) {
+            new RealSatisfied_Agent_Testimonials_V2_Block();
         }
         
         // Register blocks
