@@ -6,9 +6,20 @@
  * (slider, grid, list), and filtering capabilities
  */
 
-// Prevent direct access
+// Ensure this file is executed within the WordPress context
 if (!defined('ABSPATH')) {
     exit;
+}
+
+// Ensure WordPress functions are available
+if (!function_exists('get_post_meta')) {
+    require_once(ABSPATH . 'wp-includes/post.php');
+}
+if (!function_exists('is_wp_error')) {
+    require_once(ABSPATH . 'wp-includes/class-wp-error.php');
+}
+if (!function_exists('esc_html')) {
+    require_once(ABSPATH . 'wp-includes/formatting.php');
 }
 
 /**
@@ -223,6 +234,32 @@ class RealSatisfied_Agent_Testimonials_Block {
         
         if (is_wp_error($agent_data)) {
             return $this->render_error($agent_data->get_error_message());
+        }
+
+        // Retrieve the related office post ID using the relationship field
+        $office_post_id = get_post_meta($agent_post_id, 'related_office', true);
+
+        // Check if an office is related
+        if ($office_post_id) {
+            // Fetch the office vanity key from the office post's custom fields
+            $office_vanity_key = get_post_meta($office_post_id, 'office_vanity_key', true);
+
+            // Fetch office data using the office vanity key
+            if ($office_vanity_key) {
+                $office_parser = RealSatisfied_Office_RSS_Parser::get_instance();
+                $office_data = $office_parser->fetch_office_data($office_vanity_key);
+
+                // Render agent and office data
+                echo '<div class="agent-testimonials">';
+                echo '<h3>' . esc_html($agent_data['channel']['display_name']) . '</h3>';
+                echo '<p>Office: ' . esc_html($office_data['channel']['office_name']) . '</p>';
+                // Display agent testimonials and office data...
+                echo '</div>';
+            } else {
+                echo '<p>No office data available for this agent.</p>';
+            }
+        } else {
+            echo '<p>No related office found for this agent.</p>';
         }
 
         // Extract channel and testimonials
