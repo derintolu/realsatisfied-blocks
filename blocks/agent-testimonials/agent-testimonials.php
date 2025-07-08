@@ -269,13 +269,34 @@ class RealSatisfied_Agent_Testimonials_Block {
 
         // Start building output
         ob_start();
+        
+        // Prepare minimal attributes for frontend (only what's needed for pagination)
+        $frontend_attributes = array(
+            'layout' => $attributes['layout'] ?? 'grid',
+            'columns' => $attributes['columns'] ?? 2,
+            'showCustomerName' => $attributes['showCustomerName'] ?? true,
+            'showDate' => $attributes['showDate'] ?? true,
+            'showRatings' => $attributes['showRatings'] ?? false,
+            'showCustomerType' => $attributes['showCustomerType'] ?? true,
+            'showQuotationMarks' => $attributes['showQuotationMarks'] ?? true,
+            'showSatisfactionRating' => $attributes['showSatisfactionRating'] ?? true,
+            'showRecommendationRating' => $attributes['showRecommendationRating'] ?? true,
+            'showPerformanceRating' => $attributes['showPerformanceRating'] ?? true,
+            'showRatingValues' => $attributes['showRatingValues'] ?? true,
+            'excerptLength' => $attributes['excerptLength'] ?? 150,
+            'backgroundColor' => $attributes['backgroundColor'] ?? '',
+            'textColor' => $attributes['textColor'] ?? '',
+            'borderColor' => $attributes['borderColor'] ?? '',
+            'borderRadius' => $attributes['borderRadius'] ?? ''
+        );
+        
         ?>
         <div <?php echo $wrapper_attributes; ?> <?php echo $style_attr; ?>>
             <div class="testimonials-container" 
                  data-testimonials="<?php echo esc_attr(json_encode($filtered_testimonials)); ?>"
                  data-items-per-page="<?php echo esc_attr($enable_pagination ? ($attributes['itemsPerPage'] ?? 6) : 0); ?>"
                  data-total-pages="<?php echo esc_attr($total_pages); ?>"
-                 data-attributes="<?php echo esc_attr(json_encode($attributes)); ?>">
+                 data-attributes="<?php echo esc_attr(json_encode($frontend_attributes)); ?>">
                 <?php echo $this->render_testimonials($paged_testimonials, $attributes); ?>
             </div>
             
@@ -731,23 +752,8 @@ class RealSatisfied_Agent_Testimonials_Block {
      * Enqueue frontend assets
      */
     public function enqueue_frontend_assets() {
-        // Only enqueue on pages that have the block
-        if (has_block($this->block_name)) {
-            wp_enqueue_style(
-                'realsatisfied-agent-testimonials',
-                plugin_dir_url(dirname(dirname(__FILE__))) . 'assets/realsatisfied-blocks.css',
-                array(),
-                '1.0.0'
-            );
-            
-            wp_enqueue_script(
-                'realsatisfied-agent-testimonials-frontend',
-                plugin_dir_url(__FILE__) . 'agent-testimonials-frontend.js',
-                array('jquery'),
-                '1.0.0',
-                true
-            );
-        }
+        // Frontend assets are now handled centrally by the main plugin class
+        // This method is kept for backwards compatibility but does nothing
     }
 }
 

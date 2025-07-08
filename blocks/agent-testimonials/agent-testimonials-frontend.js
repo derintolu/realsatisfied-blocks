@@ -94,12 +94,11 @@
                 // Generate new HTML for current page
                 var html = generateTestimonialsHTML(pageTestimonials, layout, columns, blockAttributes);
                 
-                // Update the testimonials display
+                // Update the testimonials display with minimal animation
                 var $testimonialsDisplay = $testimonialsContainer.find('.testimonials-grid, .testimonials-list, .testimonials-slider');
-                $testimonialsDisplay.fadeOut(200, function() {
-                    $(this).replaceWith(html);
-                    $testimonialsContainer.find('.testimonials-grid, .testimonials-list, .testimonials-slider').fadeIn(200);
-                });
+                
+                // Simple replacement without fade for better performance
+                $testimonialsDisplay.replaceWith(html);
 
                 // Update pagination controls
                 updatePaginationControls();

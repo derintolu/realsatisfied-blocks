@@ -173,22 +173,49 @@ class RealSatisfied_Blocks {
             RSOB_PLUGIN_VERSION
         );
 
-        // Enqueue frontend JavaScript for testimonials blocks
-        wp_enqueue_script(
-            'realsatisfied-office-testimonials-frontend',
-            RSOB_PLUGIN_URL . 'blocks/office-testimonials/office-testimonials-frontend.js',
-            array('jquery'),
-            RSOB_PLUGIN_VERSION,
-            true
-        );
-
-        wp_enqueue_script(
-            'realsatisfied-agent-testimonials-frontend',
-            RSOB_PLUGIN_URL . 'blocks/agent-testimonials/agent-testimonials-frontend.js',
-            array('jquery'),
-            RSOB_PLUGIN_VERSION,
-            true
-        );
+        // Only enqueue testimonials frontend JS if testimonials blocks are present and have pagination
+        global $post;
+        if ($post && (has_block('realsatisfied-blocks/office-testimonials', $post) || 
+                     has_block('realsatisfied-blocks/agent-testimonials', $post))) {
+            
+            $blocks = parse_blocks($post->post_content);
+            $needs_office_js = false;
+            $needs_agent_js = false;
+            
+            foreach ($blocks as $block) {
+                if ($block['blockName'] === 'realsatisfied-blocks/office-testimonials' && 
+                    isset($block['attrs']['enablePagination']) && 
+                    $block['attrs']['enablePagination'] === true) {
+                    $needs_office_js = true;
+                }
+                
+                if ($block['blockName'] === 'realsatisfied-blocks/agent-testimonials' && 
+                    isset($block['attrs']['enablePagination']) && 
+                    $block['attrs']['enablePagination'] === true) {
+                    $needs_agent_js = true;
+                }
+            }
+            
+            if ($needs_office_js) {
+                wp_enqueue_script(
+                    'realsatisfied-office-testimonials-frontend',
+                    RSOB_PLUGIN_URL . 'blocks/office-testimonials/office-testimonials-frontend.js',
+                    array('jquery'),
+                    RSOB_PLUGIN_VERSION,
+                    true
+                );
+            }
+            
+            if ($needs_agent_js) {
+                wp_enqueue_script(
+                    'realsatisfied-agent-testimonials-frontend',
+                    RSOB_PLUGIN_URL . 'blocks/agent-testimonials/agent-testimonials-frontend.js',
+                    array('jquery'),
+                    RSOB_PLUGIN_VERSION,
+                    true
+                );
+            }
+        }
     }
 
     /**
