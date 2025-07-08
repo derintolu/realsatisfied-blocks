@@ -243,7 +243,7 @@ class RealSatisfied_Agent_Testimonials_Block {
         $processed_testimonials = array();
         foreach ($filtered_testimonials as $testimonial) {
             $excerpt_length = intval($attributes['excerptLength'] ?? 150);
-            $description = $testimonial['description'] ?? '';
+            $description = $this->clean_rss_text($testimonial['description'] ?? '');
             
             // Truncate description if needed
             if ($excerpt_length > 0 && strlen($description) > $excerpt_length) {
@@ -263,7 +263,7 @@ class RealSatisfied_Agent_Testimonials_Block {
             
             // Create processed testimonial
             $processed_testimonial = array(
-                'title' => $testimonial['title'] ?? '',
+                'title' => $this->clean_rss_text($testimonial['title'] ?? ''),
                 'description' => $description,
                 'quotedDescription' => '"' . $description . '"',
                 'customer_type' => $testimonial['customer_type'] ?? '',
@@ -272,7 +272,7 @@ class RealSatisfied_Agent_Testimonials_Block {
                 'satisfaction' => $testimonial['satisfaction'] ?? '',
                 'recommendation' => $testimonial['recommendation'] ?? '',
                 'performance' => $testimonial['performance'] ?? '',
-                'display_name' => $testimonial['display_name'] ?? '',
+                'display_name' => $this->clean_rss_text($testimonial['display_name'] ?? ''),
                 'avatar' => $testimonial['avatar'] ?? '',
                 'hasRatings' => !empty($testimonial['satisfaction']) || !empty($testimonial['recommendation']) || !empty($testimonial['performance']),
                 'satisfactionStars' => $this->generate_stars($testimonial['satisfaction'] ?? ''),
@@ -959,6 +959,65 @@ class RealSatisfied_Agent_Testimonials_Block {
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Clean RSS text content by decoding HTML entities and removing unwanted characters
+     *
+     * @param string $text The text to clean
+     * @return string The cleaned text
+     */
+    private function clean_rss_text($text) {
+        if (empty($text)) {
+            return '';
+        }
+        
+        // First decode HTML entities multiple times to handle nested encoding
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        
+        // Handle any remaining common encoded characters
+        $replacements = array(
+            '&amp;' => '&',
+            '&lt;' => '<',
+            '&gt;' => '>',
+            '&quot;' => '"',
+            '&#39;' => "'",
+            '&#8217;' => "'", // Right single quotation mark
+            '&#8216;' => "'", // Left single quotation mark
+            '&#8220;' => '"', // Left double quotation mark
+            '&#8221;' => '"', // Right double quotation mark
+            '&#8211;' => '–', // En dash
+            '&#8212;' => '—', // Em dash
+            '&#8230;' => '…', // Horizontal ellipsis
+            // Additional common problematic sequences
+            '&lsquo;' => "'",
+            '&rsquo;' => "'",
+            '&ldquo;' => '"',
+            '&rdquo;' => '"',
+            '&ndash;' => '–',
+            '&mdash;' => '—',
+            '&hellip;' => '…',
+            // Fix common encoding issues
+            'â€™' => "'", // Common UTF-8 encoding issue for apostrophe
+            'â€œ' => '"', // Common UTF-8 encoding issue for left quote
+            'â€' => '"',  // Common UTF-8 encoding issue for right quote
+            'â€"' => '—', // Common UTF-8 encoding issue for em dash
+            'â€"' => '–', // Common UTF-8 encoding issue for en dash
+        );
+        
+        $text = str_replace(array_keys($replacements), array_values($replacements), $text);
+        
+        // Remove any remaining HTML tags
+        $text = strip_tags($text);
+        
+        // Normalize whitespace
+        $text = preg_replace('/\s+/', ' ', trim($text));
+        
+        // Final pass to remove any remaining weird characters
+        $text = preg_replace('/[^\x20-\x7E\xA0-\xFF]/', '', $text);
+        
+        return $text;
     }
 
 }
