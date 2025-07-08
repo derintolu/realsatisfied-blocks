@@ -272,7 +272,7 @@ class RealSatisfied_Office_Testimonials_Block {
                 'display_name' => $testimonial['display_name'] ?? '',
                 'agent_id' => $testimonial['display_name'] ?? '', // Use display_name as agent_id for filtering
                 'agent_name' => $testimonial['display_name'] ?? '',
-                'agent_photo' => $testimonial['avatar'] ?? '', // Map avatar to agent_photo
+                'agent_photo' => !empty($testimonial['avatar']) ? $testimonial['avatar'] : "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23f0b64f'/%3E%3Ctext x='30' y='37' text-anchor='middle' fill='white' font-size='20' font-family='Arial'%3E?%3C/text%3E%3C/svg%3E", // Map avatar to agent_photo with fallback
                 'avatar' => $testimonial['avatar'] ?? '',
                 'hasRatings' => !empty($testimonial['satisfaction']) || !empty($testimonial['recommendation']) || !empty($testimonial['performance']),
                 'satisfactionStars' => $this->generate_stars($testimonial['satisfaction'] ?? ''),
@@ -839,7 +839,7 @@ class RealSatisfied_Office_Testimonials_Block {
                     <div class="agent-info">
                         <?php if ($attributes['showAgentPhoto'] ?? true): ?>
                             <div class="agent-photo">
-                                <img data-wp-bind--src="context.item.agent_photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMzAiIGZpbGw9IiNmMGY0ZjciLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNi41VjE5SDIwVjIwQzIwIDIxLjEgMTkuMSAyMiAxOCAyMkg2QzQuOSAyMiA0IDIxLjEgNCAyMFYxOUgzVjE2LjVDMyAxNS4xIDQuMSAxNCA1LjUgMTRIOC41QzguOCAxNCA5LjEgMTQuMSA5LjMgMTQuM0wxMCAxNUwxMC43IDE0LjNDMTAuOSAxNC4xIDExLjIgMTQgMTEuNSAxNEgyMS41QzIxLjkgMTQgMjIgMTQuMSAyMiAxNi41VjE5WiIgZmlsbD0iIzllYTNhOCIvPgo8L3N2Zz4KPC9zdmc+'" 
+                                <img data-wp-bind--src="context.item.agent_photo" 
                                      data-wp-bind--alt="context.item.agent_name" />
                             </div>
                         <?php endif; ?>
@@ -955,4 +955,4 @@ class RealSatisfied_Office_Testimonials_Block {
 }
 
 // Initialize the block
-new RealSatisfied_Office_Testimonials_Block(); 
+new RealSatisfied_Office_Testimonials_Block();

@@ -210,6 +210,8 @@
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #f0b64f;
+    display: block;
+    background-color: #f0f4f7; /* Fallback background */
 }
 
 .testimonial-details {

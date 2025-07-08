@@ -228,7 +228,7 @@ store('realsatisfied-office-testimonials', {
             // Apply agent filter if active
             if (context.activeFilter && context.activeFilter.type === 'agent') {
                 filtered = filtered.filter(testimonial => 
-                    testimonial.agent_id === context.activeFilter.value
+                    testimonial.display_name === context.activeFilter.value
                 );
             }
             
