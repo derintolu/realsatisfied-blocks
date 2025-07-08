@@ -284,6 +284,30 @@
     gap: 1.5rem;
 }
 
+.testimonials-grid.columns-1 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+.testimonials-grid.columns-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.testimonials-grid.columns-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.testimonials-grid.columns-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
 @media (max-width: 768px) {
     .testimonials-grid {
         grid-template-columns: 1fr !important;
@@ -336,6 +360,48 @@
     background: #e6a347;
 }
 
+/* Testimonials Controls (Filtering & Sorting) */
+.testimonials-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.testimonials-filters,
+.testimonials-sorting {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.agent-filter,
+.sort-control {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.agent-filter:hover,
+.sort-control:hover {
+    border-color: #f0b64f;
+}
+
+.agent-filter:focus,
+.sort-control:focus {
+    outline: none;
+    border-color: #f0b64f;
+    box-shadow: 0 0 0 2px rgba(240, 182, 79, 0.2);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .testimonial-meta {
@@ -353,6 +419,29 @@
     
     .testimonial-text {
         font-size: 1rem;
+    }
+    
+    .testimonials-controls {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .testimonials-filters,
+    .testimonials-sorting {
+        justify-content: center;
+    }
+    
+    .agent-filter,
+    .sort-control {
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .testimonials-grid.columns-2,
+    .testimonials-grid.columns-3,
+    .testimonials-grid.columns-4 {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -413,19 +502,6 @@
 .pagination-info .total-pages {
     color: #333;
     font-weight: 600;
-}
-
-/* Responsive pagination adjustments */
-@media (max-width: 768px) {
-    .testimonials-pagination {
-        flex-direction: column;
-        gap: 15px;
-    }
-    
-    .pagination-btn {
-        padding: 8px 15px;
-        font-size: 13px;
-    }
 }
 
 /* Error States */
@@ -784,4 +860,4 @@
     border: 1px solid #ffeaa7;
     border-radius: 4px;
     color: #856404;
-} 
+}

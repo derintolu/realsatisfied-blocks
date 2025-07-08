@@ -270,9 +270,9 @@ class RealSatisfied_Office_Testimonials_Block {
                 'recommendation' => $testimonial['recommendation'] ?? '',
                 'performance' => $testimonial['performance'] ?? '',
                 'display_name' => $testimonial['display_name'] ?? '',
-                'agent_id' => $testimonial['agent_id'] ?? '',
-                'agent_name' => $testimonial['agent_name'] ?? $testimonial['display_name'] ?? '',
-                'agent_photo' => $testimonial['agent_photo'] ?? '',
+                'agent_id' => $testimonial['display_name'] ?? '', // Use display_name as agent_id for filtering
+                'agent_name' => $testimonial['display_name'] ?? '',
+                'agent_photo' => $testimonial['avatar'] ?? '', // Map avatar to agent_photo
                 'avatar' => $testimonial['avatar'] ?? '',
                 'hasRatings' => !empty($testimonial['satisfaction']) || !empty($testimonial['recommendation']) || !empty($testimonial['performance']),
                 'satisfactionStars' => $this->generate_stars($testimonial['satisfaction'] ?? ''),
@@ -838,8 +838,9 @@ class RealSatisfied_Office_Testimonials_Block {
                 <?php if ($attributes['showAgentPhoto'] ?? true || $attributes['showAgentName'] ?? true): ?>
                     <div class="agent-info">
                         <?php if ($attributes['showAgentPhoto'] ?? true): ?>
-                            <div class="agent-photo" data-wp-show="context.item.agent_photo">
-                                <img data-wp-bind--src="context.item.agent_photo" data-wp-bind--alt="context.item.agent_name" />
+                            <div class="agent-photo">
+                                <img data-wp-bind--src="context.item.agent_photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMzAiIGZpbGw9IiNmMGY0ZjciLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDMTMuMSAyIDE0IDIuOSAxNCA0QzE0IDUuMSAxMy4xIDYgMTIgNkMxMC45IDYgMTAgNS4xIDEwIDRDMTAgMi45IDEwLjkgMiAxMiAyWk0yMSAxNi41VjE5SDIwVjIwQzIwIDIxLjEgMTkuMSAyMiAxOCAyMkg2QzQuOSAyMiA0IDIxLjEgNCAyMFYxOUgzVjE2LjVDMyAxNS4xIDQuMSAxNCA1LjUgMTRIOC41QzguOCAxNCA5LjEgMTQuMSA5LjMgMTQuM0wxMCAxNUwxMC43IDE0LjNDMTAuOSAxNC4xIDExLjIgMTQgMTEuNSAxNEgyMS41QzIxLjkgMTQgMjIgMTQuMSAyMiAxNi41VjE5WiIgZmlsbD0iIzllYTNhOCIvPgo8L3N2Zz4KPC9zdmc+'" 
+                                     data-wp-bind--alt="context.item.agent_name" />
                             </div>
                         <?php endif; ?>
                         

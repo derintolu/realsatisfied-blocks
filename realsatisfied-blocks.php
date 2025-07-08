@@ -173,17 +173,7 @@ class RealSatisfied_Blocks {
             RSOB_PLUGIN_VERSION
         );
 
-        // Always enqueue frontend JavaScript for testimonials blocks if they exist
-        // The JavaScript itself will check if pagination is needed
-        if (has_block('realsatisfied-blocks/office-testimonials')) {
-            wp_enqueue_script(
-                'realsatisfied-office-testimonials-frontend',
-                RSOB_PLUGIN_URL . 'blocks/office-testimonials/office-testimonials-frontend.js',
-                array('jquery'),
-                RSOB_PLUGIN_VERSION,
-                true
-            );
-        }
+        // Office testimonials frontend script is now handled by Interactivity API modules below
         
         // Load agent testimonials script - improved detection for custom post types and templates
         $should_load_agent_script = false;

@@ -2,8 +2,26 @@
  * WordPress Interactivity API store for Office Testimonials block
  * 
  * This replaces the legacy jQuery implementation and provides:
- * - Pagination functionality (next/previous page navigation)
- * - Dynamic testimonial display based on current page
+ * - Pagination functionality (next/previous page naviga        get totalPages() {
+            const context = getContext();
+            
+            if (!context.enablePagination) {
+                return 1;
+            }
+            
+            // Calculate filtered testimonials count for pagination
+            if (!context.testimonials || !Array.isArray(context.testimonials)) {
+                return 1;
+            }
+
+            let filtered = [...context.testimonials];
+
+            // Apply agent filter if active
+            if (context.activeFilter && context.activeFilter.type === 'agent') {
+                filtered = filtered.filter(testimonial => 
+                    testimonial.display_name === context.activeFilter.value
+                );
+            }estimonial display based on current page
  * - Agent filtering and sorting capabilities
  * - Context-aware state management for office testimonial data
  * - Grid, list, and slider layout support
@@ -149,7 +167,7 @@ store('realsatisfied-office-testimonials', {
             // Apply agent filter if active
             if (context.activeFilter && context.activeFilter.type === 'agent') {
                 filtered = filtered.filter(testimonial => 
-                    testimonial.agent_id === context.activeFilter.value
+                    testimonial.display_name === context.activeFilter.value
                 );
             }
 
@@ -170,7 +188,7 @@ store('realsatisfied-office-testimonials', {
                         result = ratingB - ratingA; // Higher ratings first
                         break;
                     case 'agent':
-                        result = (a.agent_name || '').localeCompare(b.agent_name || '');
+                        result = (a.display_name || '').localeCompare(b.display_name || '');
                         break;
                     default:
                         result = 0;
@@ -269,11 +287,11 @@ store('realsatisfied-office-testimonials', {
             const seenAgents = new Set();
 
             context.testimonials.forEach(testimonial => {
-                if (testimonial.agent_id && !seenAgents.has(testimonial.agent_id)) {
-                    seenAgents.add(testimonial.agent_id);
+                if (testimonial.display_name && !seenAgents.has(testimonial.display_name)) {
+                    seenAgents.add(testimonial.display_name);
                     agents.push({
-                        id: testimonial.agent_id,
-                        name: testimonial.agent_name || testimonial.agent_id,
+                        id: testimonial.display_name,
+                        name: testimonial.display_name,
                         photo: testimonial.agent_photo || ''
                     });
                 }
