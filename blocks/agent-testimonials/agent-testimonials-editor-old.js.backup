@@ -1,0 +1,211 @@
+(function() {
+    'use strict';
+
+    var registerBlockType = wp.blocks.registerBlockType;
+    var __ = wp.i18n.__;
+    var Fragment = wp.element.Fragment;
+    var InspectorControls = wp.blockEditor.InspectorControls;
+    var PanelBody = wp.components.PanelBody;
+    var ToggleControl = wp.components.ToggleControl;
+    var TextControl = wp.components.TextControl;
+    var SelectControl = wp.components.SelectControl;
+    var RangeControl = wp.components.RangeControl;
+    var useBlockProps = wp.blockEditor.useBlockProps;
+    var ServerSideRender = wp.serverSideRender;
+
+    registerBlockType('realsatisfied-blocks/agent-testimonials', {
+        title: __('Agent Testimonials', 'realsatisfied-blocks'),
+        icon: 'format-quote',
+        category: 'widgets',
+        keywords: [
+            __('realsatisfied', 'realsatisfied-blocks'),
+            __('testimonials', 'realsatisfied-blocks'),
+            __('reviews', 'realsatisfied-blocks'),
+            __('agent', 'realsatisfied-blocks'),
+            __('customers', 'realsatisfied-blocks')
+        ],
+        description: __('Display customer testimonials for a specific agent using the agent vanity key from ACF field.', 'realsatisfied-blocks'),
+        
+        attributes: {
+            contextAware: {
+                type: 'boolean',
+                default: true
+            },
+            layout: {
+                type: 'string',
+                default: 'grid'
+            },
+            columns: {
+                type: 'number',
+                default: 2
+            },
+            testimonialCount: {
+                type: 'number',
+                default: 6
+            },
+            showDate: {
+                type: 'boolean',
+                default: true
+            },
+            showRatings: {
+                type: 'boolean',
+                default: false
+            },
+            showCustomerType: {
+                type: 'boolean',
+                default: true
+            },
+            excerptLength: {
+                type: 'number',
+                default: 150
+            },
+            sortBy: {
+                type: 'string',
+                default: 'date'
+            },
+            sortOrder: {
+                type: 'string',
+                default: 'desc'
+            }
+        },
+
+        edit: function(props) {
+            var attributes = props.attributes;
+            var setAttributes = props.setAttributes;
+            var blockProps = useBlockProps();
+
+            return Fragment({},
+                wp.element.createElement(InspectorControls, {},
+                    wp.element.createElement(PanelBody, {
+                        title: __('Agent Settings', 'realsatisfied-blocks'),
+                        initialOpen: true
+                    },
+                        wp.element.createElement(ToggleControl, {
+                            label: __('Context Aware', 'realsatisfied-blocks'),
+                            help: __('Automatically detect agent from current page context', 'realsatisfied-blocks'),
+                            checked: attributes.contextAware,
+                            onChange: function(value) {
+                                setAttributes({ contextAware: value });
+                            }
+                        })
+                    ),
+                    
+                    wp.element.createElement(PanelBody, {
+                        title: __('Display Settings', 'realsatisfied-blocks'),
+                        initialOpen: true
+                    },
+                        wp.element.createElement(SelectControl, {
+                            label: __('Layout', 'realsatisfied-blocks'),
+                            value: attributes.layout,
+                            options: [
+                                { label: __('Grid', 'realsatisfied-blocks'), value: 'grid' },
+                                { label: __('List', 'realsatisfied-blocks'), value: 'list' }
+                            ],
+                            onChange: function(value) {
+                                setAttributes({ layout: value });
+                            }
+                        }),
+                        
+                        attributes.layout === 'grid' && wp.element.createElement(RangeControl, {
+                            label: __('Columns', 'realsatisfied-blocks'),
+                            value: attributes.columns,
+                            onChange: function(value) {
+                                setAttributes({ columns: value });
+                            },
+                            min: 1,
+                            max: 4
+                        }),
+                        
+                        wp.element.createElement(RangeControl, {
+                            label: __('Number of Testimonials', 'realsatisfied-blocks'),
+                            value: attributes.testimonialCount,
+                            onChange: function(value) {
+                                setAttributes({ testimonialCount: value });
+                            },
+                            min: 1,
+                            max: 20
+                        }),
+                        
+                        wp.element.createElement(RangeControl, {
+                            label: __('Excerpt Length', 'realsatisfied-blocks'),
+                            value: attributes.excerptLength,
+                            onChange: function(value) {
+                                setAttributes({ excerptLength: value });
+                            },
+                            min: 50,
+                            max: 500
+                        })
+                    ),
+                    
+                    wp.element.createElement(PanelBody, {
+                        title: __('Content Options', 'realsatisfied-blocks'),
+                        initialOpen: false
+                    },
+                        wp.element.createElement(ToggleControl, {
+                            label: __('Show Date', 'realsatisfied-blocks'),
+                            checked: attributes.showDate,
+                            onChange: function(value) {
+                                setAttributes({ showDate: value });
+                            }
+                        }),
+                        
+                        wp.element.createElement(ToggleControl, {
+                            label: __('Show Ratings', 'realsatisfied-blocks'),
+                            checked: attributes.showRatings,
+                            onChange: function(value) {
+                                setAttributes({ showRatings: value });
+                            }
+                        }),
+                        
+                        wp.element.createElement(ToggleControl, {
+                            label: __('Show Customer Type', 'realsatisfied-blocks'),
+                            checked: attributes.showCustomerType,
+                            onChange: function(value) {
+                                setAttributes({ showCustomerType: value });
+                            }
+                        })
+                    ),
+                    
+                    wp.element.createElement(PanelBody, {
+                        title: __('Sorting', 'realsatisfied-blocks'),
+                        initialOpen: false
+                    },
+                        wp.element.createElement(SelectControl, {
+                            label: __('Sort By', 'realsatisfied-blocks'),
+                            value: attributes.sortBy,
+                            options: [
+                                { label: __('Date', 'realsatisfied-blocks'), value: 'date' }
+                            ],
+                            onChange: function(value) {
+                                setAttributes({ sortBy: value });
+                            }
+                        }),
+                        
+                        wp.element.createElement(SelectControl, {
+                            label: __('Sort Order', 'realsatisfied-blocks'),
+                            value: attributes.sortOrder,
+                            options: [
+                                { label: __('Newest First', 'realsatisfied-blocks'), value: 'desc' },
+                                { label: __('Oldest First', 'realsatisfied-blocks'), value: 'asc' }
+                            ],
+                            onChange: function(value) {
+                                setAttributes({ sortOrder: value });
+                            }
+                        })
+                    )
+                ),
+                
+                wp.element.createElement('div', blockProps,
+                    wp.element.createElement(ServerSideRender, {
+                        block: 'realsatisfied-blocks/agent-testimonials',
+                        attributes: attributes
+                    })
+                )
+            );
+        },
+
+        save: function() {
+            return null;
+        }
+    });
+})();
