@@ -258,6 +258,36 @@ class RealSatisfied_Office_Testimonials_Block {
                 }
             }
             
+            // Create agent photo URL - if no avatar, create initials-based placeholder
+            $agent_photo = '';
+            if (!empty($testimonial['avatar'])) {
+                $agent_photo = $testimonial['avatar'];
+            } else {
+                // Generate initials-based placeholder
+                $display_name = $testimonial['display_name'] ?? '';
+                $initials = '';
+                if (!empty($display_name)) {
+                    $name_parts = explode(' ', trim($display_name));
+                    $initials = '';
+                    foreach ($name_parts as $part) {
+                        if (!empty($part)) {
+                            $initials .= strtoupper(substr($part, 0, 1));
+                            if (strlen($initials) >= 2) break; // Limit to 2 initials
+                        }
+                    }
+                }
+                if (empty($initials)) {
+                    $initials = '?';
+                }
+                
+                // Create a colored background based on the agent name
+                $colors = ['#f0b64f', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#e67e22', '#1abc9c', '#34495e'];
+                $color_index = crc32($display_name) % count($colors);
+                $bg_color = $colors[$color_index];
+                
+                $agent_photo = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='" . urlencode($bg_color) . "'/%3E%3Ctext x='30' y='37' text-anchor='middle' fill='white' font-size='18' font-weight='bold' font-family='Arial'%3E" . urlencode($initials) . "%3C/text%3E%3C/svg%3E";
+            }
+
             // Create processed testimonial
             $processed_testimonial = array(
                 'title' => $testimonial['title'] ?? '',
@@ -272,7 +302,7 @@ class RealSatisfied_Office_Testimonials_Block {
                 'display_name' => $testimonial['display_name'] ?? '',
                 'agent_id' => $testimonial['display_name'] ?? '', // Use display_name as agent_id for filtering
                 'agent_name' => $testimonial['display_name'] ?? '',
-                'agent_photo' => !empty($testimonial['avatar']) ? $testimonial['avatar'] : "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23f0b64f'/%3E%3Ctext x='30' y='37' text-anchor='middle' fill='white' font-size='20' font-family='Arial'%3E?%3C/text%3E%3C/svg%3E", // Map avatar to agent_photo with fallback
+                'agent_photo' => $agent_photo, // Use computed agent photo
                 'avatar' => $testimonial['avatar'] ?? '',
                 'hasRatings' => !empty($testimonial['satisfaction']) || !empty($testimonial['recommendation']) || !empty($testimonial['performance']),
                 'satisfactionStars' => $this->generate_stars($testimonial['satisfaction'] ?? ''),
@@ -338,15 +368,22 @@ class RealSatisfied_Office_Testimonials_Block {
             
             <?php 
             // Show filtering and sorting controls if there are multiple testimonials
-            if (count($processed_testimonials) > 1): 
+            $unique_agents = array();
+            foreach ($processed_testimonials as $testimonial) {
+                if (!empty($testimonial['display_name']) && !in_array($testimonial['display_name'], $unique_agents)) {
+                    $unique_agents[] = $testimonial['display_name'];
+                }
+            }
+            
+            if (count($processed_testimonials) > 1 && count($unique_agents) > 1): 
             ?>
                 <div class="testimonials-controls">
                     <div class="testimonials-filters">
                         <select data-wp-on--change="actions.filterByAgent" class="agent-filter">
                             <option value="all"><?php _e('All Agents', 'realsatisfied-blocks'); ?></option>
-                            <template data-wp-each="state.availableAgents">
-                                <option data-wp-bind--value="context.item.id" data-wp-text="context.item.name"></option>
-                            </template>
+                            <?php foreach ($unique_agents as $agent): ?>
+                                <option value="<?php echo esc_attr($agent); ?>"><?php echo esc_html($agent); ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     

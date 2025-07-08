@@ -183,8 +183,8 @@ store('realsatisfied-office-testimonials', {
                         result = new Date(b.pubDate) - new Date(a.pubDate);
                         break;
                     case 'rating':
-                        const ratingA = (a.satisfaction + a.recommendation + a.performance) / 3;
-                        const ratingB = (b.satisfaction + b.recommendation + b.performance) / 3;
+                        const ratingA = (parseInt(a.satisfaction || 0) + parseInt(a.recommendation || 0) + parseInt(a.performance || 0)) / 3;
+                        const ratingB = (parseInt(b.satisfaction || 0) + parseInt(b.recommendation || 0) + parseInt(b.performance || 0)) / 3;
                         result = ratingB - ratingA; // Higher ratings first
                         break;
                     case 'agent':
