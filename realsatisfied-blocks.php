@@ -75,12 +75,14 @@ class RealSatisfied_Blocks {
     private function load_dependencies() {
         // Load includes
         require_once RSOB_PLUGIN_PATH . 'includes/class-office-rss-parser.php';
+        require_once RSOB_PLUGIN_PATH . 'includes/class-agent-rss-parser.php';
         require_once RSOB_PLUGIN_PATH . 'includes/class-custom-fields.php';
         require_once RSOB_PLUGIN_PATH . 'includes/class-widget-compatibility.php';
         
         // Load blocks
         require_once RSOB_PLUGIN_PATH . 'blocks/office-ratings/office-ratings.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/office-testimonials/office-testimonials.php';
+        require_once RSOB_PLUGIN_PATH . 'blocks/agent-testimonials/agent-testimonials.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/office-stats/office-stats.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/office-agents/office-agents.php';
     }
@@ -92,6 +94,10 @@ class RealSatisfied_Blocks {
         // Initialize components
         if (class_exists('RealSatisfied_Office_RSS_Parser')) {
             RealSatisfied_Office_RSS_Parser::get_instance();
+        }
+        
+        if (class_exists('RealSatisfied_Agent_RSS_Parser')) {
+            RealSatisfied_Agent_RSS_Parser::get_instance();
         }
         
         if (class_exists('RealSatisfied_Custom_Fields')) {
@@ -109,6 +115,10 @@ class RealSatisfied_Blocks {
         
         if (class_exists('RealSatisfied_Office_Testimonials_Block')) {
             new RealSatisfied_Office_Testimonials_Block();
+        }
+        
+        if (class_exists('RealSatisfied_Agent_Testimonials_Block')) {
+            new RealSatisfied_Agent_Testimonials_Block();
         }
         
         // Register blocks

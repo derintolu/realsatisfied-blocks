@@ -218,116 +218,107 @@ class RealSatisfied_Office_Ratings_Block {
             'class' => 'realsatisfied-office-ratings'
         ));
 
+        // Build CSS classes based on visible elements
+        $layout_classes = array();
+        if ($attributes['showOverallRating'] ?? true) $layout_classes[] = 'has-rating';
+        if ($attributes['showStars'] ?? true) $layout_classes[] = 'has-stars';
+        if ($attributes['showOfficeName'] ?? true) $layout_classes[] = 'has-office-name';
+        if ($attributes['showReviewCount'] ?? true) $layout_classes[] = 'has-review-count';
+        if ($attributes['showTrustBadge'] ?? false) $layout_classes[] = 'has-trust-badge';
+        if ($attributes['showDetailedRatings'] ?? false) $layout_classes[] = 'has-detailed-ratings';
+        
+        $layout_class = implode(' ', $layout_classes);
+
         // Start building output
         ob_start();
         ?>
         <div <?php echo $wrapper_attributes; ?> <?php echo $style_attr; ?>>
-            <div class="parent">
+            <div class="parent <?php echo esc_attr($layout_class); ?>">
+                
+                <?php if ($attributes['showOverallRating'] ?? true): ?>
                 <!-- div1: Large rating number -->
                 <div class="div1">
-                    <?php if ($attributes['showOverallRating'] ?? true): ?>
-                        <?php echo esc_html(number_format($overall_rating, 1)); ?>
-                    <?php endif; ?>
+                    <?php echo esc_html(number_format($overall_rating, 1)); ?>
                 </div>
+                <?php endif; ?>
                 
+                <?php if ($attributes['showStars'] ?? true): ?>
                 <!-- div2: Stars -->
                 <div class="div2">
-                    <?php if ($attributes['showStars'] ?? true): ?>
-                        <?php echo $this->render_gold_stars($overall_rating); ?>
-                    <?php endif; ?>
+                    <?php echo $this->render_gold_stars($overall_rating); ?>
                 </div>
+                <?php endif; ?>
                 
+                <?php if ($attributes['showOfficeName'] ?? true): ?>
                 <!-- div3: Office name -->
                 <div class="div3">
-                    <?php if ($attributes['showOfficeName'] ?? true): ?>
-                        <?php echo esc_html($channel['office']); ?>
-                    <?php endif; ?>
+                    <?php echo esc_html($channel['office']); ?>
                 </div>
+                <?php endif; ?>
                 
+                <?php if ($attributes['showReviewCount'] ?? true): ?>
                 <!-- div4: Review count -->
                 <div class="div4">
-                    <?php if ($attributes['showReviewCount'] ?? true): ?>
-                        <?php if ($attributes['linkToProfile'] ?? true): ?>
-                            <a href="https://www.realsatisfied.com/office/<?php echo esc_attr($vanity_key); ?>" target="_blank" rel="noopener noreferrer" class="realsatisfied-review-link">
-                                <?php echo esc_html($channel['response_count']); ?> reviews
-                            </a>
-                        <?php else: ?>
+                    <?php if ($attributes['linkToProfile'] ?? true): ?>
+                        <a href="https://www.realsatisfied.com/office/<?php echo esc_attr($vanity_key); ?>" target="_blank" rel="noopener noreferrer" class="realsatisfied-review-link">
                             <?php echo esc_html($channel['response_count']); ?> reviews
-                        <?php endif; ?>
+                        </a>
+                    <?php else: ?>
+                        <?php echo esc_html($channel['response_count']); ?> reviews
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
                 
+                <?php if ($attributes['showTrustBadge'] ?? false): ?>
                 <!-- div5: Trust badge -->
                 <div class="div5">
-                    <?php if ($attributes['showTrustBadge'] ?? false): ?>
-                        <a href="https://www.realsatisfied.com/" target="_blank" rel="noopener noreferrer" class="realsatisfied-trust-link">
-                            <img src="<?php echo esc_url(RSOB_PLUGIN_URL . 'assets/images/RealSatisfied-Trust-Seal-80pix.png'); ?>" alt="<?php echo esc_attr(__('RealSatisfied Trust Seal', 'realsatisfied-blocks')); ?>" class="realsatisfied-trust-image" />
-                        </a>
-                    <?php endif; ?>
+                    <a href="https://www.realsatisfied.com/" target="_blank" rel="noopener noreferrer" class="realsatisfied-trust-link">
+                        <img src="<?php echo esc_url(RSOB_PLUGIN_URL . 'assets/images/RealSatisfied-Trust-Seal-80pix.png'); ?>" alt="<?php echo esc_attr(__('RealSatisfied Trust Seal', 'realsatisfied-blocks')); ?>" class="realsatisfied-trust-image" />
+                    </a>
                 </div>
+                <?php endif; ?>
                 
+                <?php if ($attributes['showDetailedRatings'] ?? false): ?>
                 <!-- div6: Satisfaction label -->
-                <div class="div6">
-                    <?php if ($attributes['showDetailedRatings'] ?? false): ?>
-                        Satisfaction
-                    <?php endif; ?>
-                </div>
+                <div class="div6">Satisfaction</div>
                 
                 <!-- div7: Satisfaction rating -->
                 <div class="div7">
-                    <?php if ($attributes['showDetailedRatings'] ?? false): ?>
-                        <?php echo esc_html(number_format($this->round_to_website_style($channel['overall_satisfaction'] / 20), 1)); ?>
-                    <?php endif; ?>
+                    <?php echo esc_html(number_format($this->round_to_website_style($channel['overall_satisfaction'] / 20), 1)); ?>
                 </div>
                 
                 <!-- div8: Satisfaction stars -->
                 <div class="div8">
-                    <?php if ($attributes['showDetailedRatings'] ?? false): ?>
-                        <?php echo $this->render_gold_stars($this->round_to_website_style($channel['overall_satisfaction'] / 20)); ?>
-                    <?php endif; ?>
+                    <?php echo $this->render_gold_stars($this->round_to_website_style($channel['overall_satisfaction'] / 20)); ?>
                 </div>
                 
                 <!-- div9: Recommendation label -->
-                <div class="div9">
-                    <?php if ($attributes['showDetailedRatings'] ?? false): ?>
-                        Recommendation
-                    <?php endif; ?>
-                </div>
+                <div class="div9">Recommendation</div>
                 
                 <!-- div10: Recommendation rating -->
                 <div class="div10">
-                    <?php if ($attributes['showDetailedRatings'] ?? false): ?>
-                        <?php echo esc_html(number_format($this->round_to_website_style($channel['recommendation_rating'] / 20), 1)); ?>
-                    <?php endif; ?>
+                    <?php echo esc_html(number_format($this->round_to_website_style($channel['recommendation_rating'] / 20), 1)); ?>
                 </div>
                 
                 <!-- div11: Recommendation stars -->
                 <div class="div11">
-                    <?php if ($attributes['showDetailedRatings'] ?? false): ?>
-                        <?php echo $this->render_gold_stars($this->round_to_website_style($channel['recommendation_rating'] / 20)); ?>
-                    <?php endif; ?>
+                    <?php echo $this->render_gold_stars($this->round_to_website_style($channel['recommendation_rating'] / 20)); ?>
                 </div>
                 
                 <!-- div12: Performance label -->
-                <div class="div12">
-                    <?php if ($attributes['showDetailedRatings'] ?? false): ?>
-                        Performance
-                    <?php endif; ?>
-                </div>
+                <div class="div12">Performance</div>
                 
                 <!-- div13: Performance rating -->
                 <div class="div13">
-                    <?php if ($attributes['showDetailedRatings'] ?? false): ?>
-                        <?php echo esc_html(number_format($this->round_to_website_style($channel['performance_rating'] / 20), 1)); ?>
-                    <?php endif; ?>
+                    <?php echo esc_html(number_format($this->round_to_website_style($channel['performance_rating'] / 20), 1)); ?>
                 </div>
                 
                 <!-- div14: Performance stars -->
                 <div class="div14">
-                    <?php if ($attributes['showDetailedRatings'] ?? false): ?>
-                        <?php echo $this->render_gold_stars($this->round_to_website_style($channel['performance_rating'] / 20)); ?>
-                    <?php endif; ?>
+                    <?php echo $this->render_gold_stars($this->round_to_website_style($channel['performance_rating'] / 20)); ?>
                 </div>
+                <?php endif; ?>
+                
             </div>
         </div>
         <?php
