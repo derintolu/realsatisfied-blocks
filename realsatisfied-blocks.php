@@ -172,6 +172,23 @@ class RealSatisfied_Blocks {
             array(),
             RSOB_PLUGIN_VERSION
         );
+
+        // Enqueue frontend JavaScript for testimonials blocks
+        wp_enqueue_script(
+            'realsatisfied-office-testimonials-frontend',
+            RSOB_PLUGIN_URL . 'blocks/office-testimonials/office-testimonials-frontend.js',
+            array('jquery'),
+            RSOB_PLUGIN_VERSION,
+            true
+        );
+
+        wp_enqueue_script(
+            'realsatisfied-agent-testimonials-frontend',
+            RSOB_PLUGIN_URL . 'blocks/agent-testimonials/agent-testimonials-frontend.js',
+            array('jquery'),
+            RSOB_PLUGIN_VERSION,
+            true
+        );
     }
 
     /**

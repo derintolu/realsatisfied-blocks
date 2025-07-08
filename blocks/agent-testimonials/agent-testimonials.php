@@ -94,7 +94,7 @@ class RealSatisfied_Agent_Testimonials_Block {
                 ),
                 'customFieldName' => array(
                     'type' => 'string',
-                    'default' => 'realsatisfied-agent-vanity'
+                    'default' => 'realsatified-agent-vanity'
                 ),
                 'manualVanityKey' => array(
                     'type' => 'string',
@@ -131,6 +131,26 @@ class RealSatisfied_Agent_Testimonials_Block {
                 'showRatings' => array(
                     'type' => 'boolean',
                     'default' => false
+                ),
+                'showSatisfactionRating' => array(
+                    'type' => 'boolean',
+                    'default' => true
+                ),
+                'showRecommendationRating' => array(
+                    'type' => 'boolean',
+                    'default' => true
+                ),
+                'showPerformanceRating' => array(
+                    'type' => 'boolean',
+                    'default' => true
+                ),
+                'showRatingValues' => array(
+                    'type' => 'boolean',
+                    'default' => true
+                ),
+                'showQuotationMarks' => array(
+                    'type' => 'boolean',
+                    'default' => true
                 ),
                 'showCustomerType' => array(
                     'type' => 'boolean',
@@ -195,7 +215,7 @@ class RealSatisfied_Agent_Testimonials_Block {
         $vanity_key = $this->get_vanity_key($attributes);
         
         if (empty($vanity_key)) {
-            return $this->render_error(__('No vanity key specified for agent testimonials.', 'realsatisfied-blocks'));
+            return $this->render_error(__('No agent vanity key found. Please set the "realsatified-agent-vanity" ACF field for this page, or enter a manual vanity key in the block settings.', 'realsatisfied-blocks'));
         }
 
         // Get RSS parser instance
@@ -254,7 +274,8 @@ class RealSatisfied_Agent_Testimonials_Block {
             <div class="testimonials-container" 
                  data-testimonials="<?php echo esc_attr(json_encode($filtered_testimonials)); ?>"
                  data-items-per-page="<?php echo esc_attr($enable_pagination ? ($attributes['itemsPerPage'] ?? 6) : 0); ?>"
-                 data-total-pages="<?php echo esc_attr($total_pages); ?>">
+                 data-total-pages="<?php echo esc_attr($total_pages); ?>"
+                 data-attributes="<?php echo esc_attr(json_encode($attributes)); ?>">
                 <?php echo $this->render_testimonials($paged_testimonials, $attributes); ?>
             </div>
             
@@ -292,8 +313,19 @@ class RealSatisfied_Agent_Testimonials_Block {
             global $post;
             
             if ($post) {
-                $field_name = $attributes['customFieldName'] ?? 'realsatisfied-agent-vanity';
-                $vanity_key = get_field($field_name, $post->ID);
+                $field_name = $attributes['customFieldName'] ?? 'realsatified-agent-vanity';
+                
+                // Try ACF function first
+                if (function_exists('get_field')) {
+                    $vanity_key = get_field($field_name, $post->ID);
+                    
+                    if (!empty($vanity_key)) {
+                        return trim($vanity_key);
+                    }
+                }
+                
+                // Fallback to get_post_meta
+                $vanity_key = get_post_meta($post->ID, $field_name, true);
                 
                 if (!empty($vanity_key)) {
                     return trim($vanity_key);
@@ -435,19 +467,36 @@ class RealSatisfied_Agent_Testimonials_Block {
         $show_date = $attributes['showDate'] ?? true;
         $show_ratings = $attributes['showRatings'] ?? false;
         $show_customer_type = $attributes['showCustomerType'] ?? true;
+        $show_quotation_marks = $attributes['showQuotationMarks'] ?? true;
         $excerpt_length = intval($attributes['excerptLength'] ?? 150);
 
-        $html = '<div class="testimonial-item">';
+        // Build individual card styles
+        $card_styles = $this->build_card_styles($attributes);
+        $card_style_attr = !empty($card_styles) ? 'style="' . implode('; ', $card_styles) . '"' : '';
+
+        $html = '<div class="testimonial-item testimonial-card" ' . $card_style_attr . '>';
         
-        // Content
+        // Testimonial text with optional quotation marks
         $content = $testimonial['description'];
         if ($excerpt_length > 0 && strlen($content) > $excerpt_length) {
             $content = substr($content, 0, $excerpt_length) . '...';
         }
-        $html .= '<div class="testimonial-content">' . esc_html($content) . '</div>';
+        
+        // Build text styles
+        $text_styles = $this->build_text_styles($attributes);
+        $text_style_attr = !empty($text_styles) ? 'style="' . implode('; ', $text_styles) . '"' : '';
+        
+        if ($show_quotation_marks) {
+            $html .= '<div class="testimonial-text" ' . $text_style_attr . '>"' . esc_html($content) . '"</div>';
+        } else {
+            $html .= '<div class="testimonial-text" ' . $text_style_attr . '>' . esc_html($content) . '</div>';
+        }
 
-        // Meta
+        // Meta section
         $html .= '<div class="testimonial-meta">';
+        
+        // Customer info section
+        $html .= '<div class="testimonial-details">';
         
         if ($show_customer_name && !empty($testimonial['title'])) {
             $html .= '<div class="customer-name">' . esc_html($testimonial['title']) . '</div>';
@@ -462,16 +511,70 @@ class RealSatisfied_Agent_Testimonials_Block {
             $html .= '<div class="testimonial-date">' . esc_html($formatted_date) . '</div>';
         }
         
+        // Detailed ratings section
         if ($show_ratings && isset($testimonial['satisfaction'])) {
-            $avg_rating = ($testimonial['satisfaction'] + $testimonial['recommendation'] + $testimonial['performance']) / 3;
-            $html .= '<div class="testimonial-rating">';
-            $html .= '<div class="stars">' . $this->render_stars($avg_rating) . '</div>';
-            $html .= '<span class="rating-text">' . number_format($avg_rating, 1) . '/5</span>';
+            $html .= '<div class="testimonial-ratings">';
+            $html .= $this->render_testimonial_ratings($testimonial, $attributes);
             $html .= '</div>';
         }
         
+        $html .= '</div>'; // testimonial-details
         $html .= '</div>'; // testimonial-meta
         $html .= '</div>'; // testimonial-item
+        
+        return $html;
+    }
+
+    /**
+     * Render detailed testimonial ratings
+     *
+     * @param array $testimonial Testimonial data
+     * @param array $attributes Block attributes
+     * @return string Ratings HTML
+     */
+    private function render_testimonial_ratings($testimonial, $attributes) {
+        $satisfaction = intval($testimonial['satisfaction'] ?? 0);
+        $recommendation = intval($testimonial['recommendation'] ?? 0);
+        $performance = intval($testimonial['performance'] ?? 0);
+        
+        $show_satisfaction = $attributes['showSatisfactionRating'] ?? true;
+        $show_recommendation = $attributes['showRecommendationRating'] ?? true;
+        $show_performance = $attributes['showPerformanceRating'] ?? true;
+        $show_values = $attributes['showRatingValues'] ?? true;
+        
+        $html = '<div class="ratings-grid">';
+        
+        if ($show_satisfaction && $satisfaction > 0) {
+            $html .= '<div class="rating-item">';
+            $html .= '<span class="rating-label">Satisfaction:</span>';
+            $html .= '<span class="rating-stars">' . $this->render_stars($satisfaction / 20) . '</span>';
+            if ($show_values) {
+                $html .= '<span class="rating-value">(' . $satisfaction . '%)</span>';
+            }
+            $html .= '</div>';
+        }
+        
+        if ($show_recommendation && $recommendation > 0) {
+            $html .= '<div class="rating-item">';
+            $html .= '<span class="rating-label">Recommendation:</span>';
+            $html .= '<span class="rating-stars">' . $this->render_stars($recommendation / 20) . '</span>';
+            if ($show_values) {
+                $html .= '<span class="rating-value">(' . $recommendation . '%)</span>';
+            }
+            $html .= '</div>';
+        }
+        
+        if ($show_performance && $performance > 0) {
+            $html .= '<div class="rating-item">';
+            $html .= '<span class="rating-label">Performance:</span>';
+            $html .= '<span class="rating-stars">' . $this->render_stars($performance / 20) . '</span>';
+            if ($show_values) {
+                $html .= '<span class="rating-value">(' . $performance . '%)</span>';
+            }
+            $html .= '</div>';
+        }
+        
+        $html .= '</div>';
         
         return $html;
     }
@@ -529,6 +632,46 @@ class RealSatisfied_Agent_Testimonials_Block {
 
         if (!empty($attributes['borderRadius'])) {
             $styles[] = 'border-radius: ' . esc_attr($attributes['borderRadius']);
+        }
+
+        return $styles;
+    }
+
+    /**
+     * Build individual card styles
+     *
+     * @param array $attributes Block attributes
+     * @return array Array of CSS styles
+     */
+    private function build_card_styles($attributes) {
+        $styles = array();
+
+        if (!empty($attributes['backgroundColor'])) {
+            $styles[] = 'background-color: ' . esc_attr($attributes['backgroundColor']);
+        }
+
+        if (!empty($attributes['borderColor'])) {
+            $styles[] = 'border-color: ' . esc_attr($attributes['borderColor']);
+        }
+
+        if (!empty($attributes['borderRadius'])) {
+            $styles[] = 'border-radius: ' . esc_attr($attributes['borderRadius']);
+        }
+
+        return $styles;
+    }
+
+    /**
+     * Build text styles
+     *
+     * @param array $attributes Block attributes
+     * @return array Array of CSS styles
+     */
+    private function build_text_styles($attributes) {
+        $styles = array();
+
+        if (!empty($attributes['textColor'])) {
+            $styles[] = 'color: ' . esc_attr($attributes['textColor']);
         }
 
         return $styles;

@@ -34,7 +34,7 @@
             },
             customFieldName: {
                 type: 'string',
-                default: 'realsatisfied-agent-vanity'
+                default: 'realsatified-agent-vanity'
             },
             manualVanityKey: {
                 type: 'string',
@@ -71,6 +71,26 @@
             showRatings: {
                 type: 'boolean',
                 default: false
+            },
+            showSatisfactionRating: {
+                type: 'boolean',
+                default: true
+            },
+            showRecommendationRating: {
+                type: 'boolean',
+                default: true
+            },
+            showPerformanceRating: {
+                type: 'boolean',
+                default: true
+            },
+            showRatingValues: {
+                type: 'boolean',
+                default: true
+            },
+            showQuotationMarks: {
+                type: 'boolean',
+                default: true
             },
             showCustomerType: {
                 type: 'boolean',
@@ -274,6 +294,62 @@
                             checked: attributes.showRatings,
                             onChange: function(value) {
                                 setAttributes({ showRatings: value });
+                            }
+                        }
+                    ),
+                    attributes.showRatings && wp.element.createElement(
+                        'div',
+                        { style: { marginLeft: '20px', paddingLeft: '15px', borderLeft: '3px solid #ccc' } },
+                        wp.element.createElement(
+                            ToggleControl,
+                            {
+                                label: __('Show Satisfaction Rating', 'realsatisfied-blocks'),
+                                checked: attributes.showSatisfactionRating,
+                                onChange: function(value) {
+                                    setAttributes({ showSatisfactionRating: value });
+                                }
+                            }
+                        ),
+                        wp.element.createElement(
+                            ToggleControl,
+                            {
+                                label: __('Show Recommendation Rating', 'realsatisfied-blocks'),
+                                checked: attributes.showRecommendationRating,
+                                onChange: function(value) {
+                                    setAttributes({ showRecommendationRating: value });
+                                }
+                            }
+                        ),
+                        wp.element.createElement(
+                            ToggleControl,
+                            {
+                                label: __('Show Performance Rating', 'realsatisfied-blocks'),
+                                checked: attributes.showPerformanceRating,
+                                onChange: function(value) {
+                                    setAttributes({ showPerformanceRating: value });
+                                }
+                            }
+                        ),
+                        wp.element.createElement(
+                            ToggleControl,
+                            {
+                                label: __('Show Rating Percentages', 'realsatisfied-blocks'),
+                                help: __('Display percentage values next to star ratings.', 'realsatisfied-blocks'),
+                                checked: attributes.showRatingValues,
+                                onChange: function(value) {
+                                    setAttributes({ showRatingValues: value });
+                                }
+                            }
+                        )
+                    ),
+                    wp.element.createElement(
+                        ToggleControl,
+                        {
+                            label: __('Show Quotation Marks', 'realsatisfied-blocks'),
+                            help: __('Display quotation marks around testimonial text.', 'realsatisfied-blocks'),
+                            checked: attributes.showQuotationMarks,
+                            onChange: function(value) {
+                                setAttributes({ showQuotationMarks: value });
                             }
                         }
                     ),

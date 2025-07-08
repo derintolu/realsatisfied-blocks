@@ -503,6 +503,21 @@
     margin-bottom: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Apply custom styles when set */
+.realsatisfied-agent-testimonials .testimonial-card[style*="background-color"] {
+    background: inherit !important;
+}
+
+.realsatisfied-agent-testimonials .testimonial-card[style*="border-color"] {
+    border-color: inherit !important;
+}
+
+.realsatisfied-agent-testimonials .testimonial-card[style*="border-radius"] {
+    border-radius: inherit !important;
 }
 
 .realsatisfied-agent-testimonials .testimonial-card:hover {
@@ -554,9 +569,87 @@
     border-top: 1px solid #eee;
 }
 
+/* Detailed ratings grid */
+.realsatisfied-agent-testimonials .ratings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.realsatisfied-agent-testimonials .rating-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.realsatisfied-agent-testimonials .rating-label {
+    font-weight: 600;
+    color: #555;
+    min-width: 100px;
+}
+
+.realsatisfied-agent-testimonials .rating-stars {
+    color: #f0b64f;
+}
+
+.realsatisfied-agent-testimonials .rating-value {
+    color: #888;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Stars styling */
+.realsatisfied-agent-testimonials .star {
+    color: #f0b64f;
+    font-size: 1rem;
+    margin-right: 1px;
+}
+
+.realsatisfied-agent-testimonials .star-full {
+    opacity: 1;
+}
+
+.realsatisfied-agent-testimonials .star-half,
+.realsatisfied-agent-testimonials .star-empty {
+    opacity: 0.3;
+}
+
 .realsatisfied-agent-testimonials .testimonials-grid {
     display: grid;
     gap: 1.5rem;
+}
+
+/* Dynamic grid columns */
+.realsatisfied-agent-testimonials .testimonials-grid.columns-1 {
+    grid-template-columns: 1fr;
+}
+
+.realsatisfied-agent-testimonials .testimonials-grid.columns-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.realsatisfied-agent-testimonials .testimonials-grid.columns-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.realsatisfied-agent-testimonials .testimonials-grid.columns-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Responsive grid */
+@media (max-width: 768px) {
+    .realsatisfied-agent-testimonials .testimonials-grid.columns-3,
+    .realsatisfied-agent-testimonials .testimonials-grid.columns-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .realsatisfied-agent-testimonials .testimonials-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .realsatisfied-agent-testimonials .testimonials-list .testimonial-card {
@@ -606,6 +699,52 @@
 .realsatisfied-agent-testimonials .slider-prev:hover,
 .realsatisfied-agent-testimonials .slider-next:hover {
     background: #e6a347;
+}
+
+/* Pagination Styles */
+.realsatisfied-agent-testimonials .testimonials-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding: 1rem;
+}
+
+.realsatisfied-agent-testimonials .pagination-btn {
+    background: var(--pagination-bg-color, #f0b64f);
+    color: var(--pagination-text-color, #ffffff);
+    border: none;
+    border-radius: var(--pagination-border-radius, 5px);
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.realsatisfied-agent-testimonials .pagination-btn:hover:not(:disabled) {
+    background: var(--pagination-hover-bg-color, #e6a347);
+    transform: translateY(-1px);
+}
+
+.realsatisfied-agent-testimonials .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.realsatisfied-agent-testimonials .pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.realsatisfied-agent-testimonials .pagination-info {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
 }
 
 /* Responsive Design for Agent Testimonials */
