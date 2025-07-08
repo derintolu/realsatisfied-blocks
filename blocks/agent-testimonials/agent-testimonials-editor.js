@@ -14,27 +14,27 @@
     var useBlockProps = wp.blockEditor.useBlockProps;
     var ServerSideRender = wp.serverSideRender;
 
-    registerBlockType('realsatisfied-blocks/office-testimonials', {
-        title: __('Office Testimonials', 'realsatisfied-blocks'),
-        icon: 'format-quote',
+    registerBlockType('realsatisfied-blocks/agent-testimonials', {
+        title: __('Agent Testimonials', 'realsatisfied-blocks'),
+        icon: 'admin-users',
         category: 'widgets',
         keywords: [
             __('realsatisfied', 'realsatisfied-blocks'),
+            __('agent', 'realsatisfied-blocks'),
             __('testimonials', 'realsatisfied-blocks'),
             __('reviews', 'realsatisfied-blocks'),
-            __('office', 'realsatisfied-blocks'),
             __('customers', 'realsatisfied-blocks')
         ],
-        description: __('Display customer testimonials with layout options (slider, grid, list) and filtering capabilities.', 'realsatisfied-blocks'),
+        description: __('Display customer testimonials for a specific agent with layout options (slider, grid, list) and filtering capabilities.', 'realsatisfied-blocks'),
         
         attributes: {
             useCustomField: {
                 type: 'boolean',
-                default: true
+                default: false
             },
             customFieldName: {
                 type: 'string',
-                default: 'realsatisfied_feed'
+                default: 'realsatisfied_agent_key'
             },
             manualVanityKey: {
                 type: 'string',
@@ -60,11 +60,19 @@
                 type: 'number',
                 default: 6
             },
+            showAgentInfo: {
+                type: 'boolean',
+                default: true
+            },
             showAgentPhoto: {
                 type: 'boolean',
                 default: true
             },
             showAgentName: {
+                type: 'boolean',
+                default: true
+            },
+            showOffice: {
                 type: 'boolean',
                 default: true
             },
@@ -87,10 +95,6 @@
             excerptLength: {
                 type: 'number',
                 default: 150
-            },
-            filterByAgent: {
-                type: 'string',
-                default: ''
             },
             sortBy: {
                 type: 'string',
@@ -153,7 +157,7 @@
                         ToggleControl,
                         {
                             label: __('Use Custom Field', 'realsatisfied-blocks'),
-                            help: __('Get vanity key from custom field or enter manually.', 'realsatisfied-blocks'),
+                            help: __('Get agent vanity key from custom field or enter manually.', 'realsatisfied-blocks'),
                             checked: attributes.useCustomField,
                             onChange: function(value) {
                                 setAttributes({ useCustomField: value });
@@ -164,7 +168,7 @@
                         TextControl,
                         {
                             label: __('Custom Field Name', 'realsatisfied-blocks'),
-                            help: __('Name of custom field containing vanity key.', 'realsatisfied-blocks'),
+                            help: __('Name of custom field containing agent vanity key.', 'realsatisfied-blocks'),
                             value: attributes.customFieldName,
                             onChange: function(value) {
                                 setAttributes({ customFieldName: value });
@@ -174,10 +178,10 @@
                     !attributes.useCustomField && wp.element.createElement(
                         TextControl,
                         {
-                            label: __('Manual Vanity Key', 'realsatisfied-blocks'),
-                            help: __('Enter vanity key manually (e.g., "CENTURY21-Masters-11").', 'realsatisfied-blocks'),
+                            label: __('Manual Agent Vanity Key', 'realsatisfied-blocks'),
+                            help: __('Enter agent vanity key manually (e.g., "agent-name-12345").', 'realsatisfied-blocks'),
                             value: attributes.manualVanityKey,
-                            placeholder: __('Enter vanity key...', 'realsatisfied-blocks'),
+                            placeholder: __('Enter agent vanity key...', 'realsatisfied-blocks'),
                             onChange: function(value) {
                                 setAttributes({ manualVanityKey: value });
                             }
@@ -267,15 +271,55 @@
                             max: 500,
                             step: 10
                         }
+                    ),
+                    wp.element.createElement(
+                        SelectControl,
+                        {
+                            label: __('Sort By', 'realsatisfied-blocks'),
+                            value: attributes.sortBy,
+                            options: [
+                                { label: __('Date', 'realsatisfied-blocks'), value: 'date' },
+                                { label: __('Rating', 'realsatisfied-blocks'), value: 'rating' },
+                                { label: __('Customer Type', 'realsatisfied-blocks'), value: 'customer_type' }
+                            ],
+                            onChange: function(value) {
+                                setAttributes({ sortBy: value });
+                            }
+                        }
+                    ),
+                    wp.element.createElement(
+                        SelectControl,
+                        {
+                            label: __('Sort Order', 'realsatisfied-blocks'),
+                            value: attributes.sortOrder,
+                            options: [
+                                { label: __('Descending', 'realsatisfied-blocks'), value: 'desc' },
+                                { label: __('Ascending', 'realsatisfied-blocks'), value: 'asc' }
+                            ],
+                            onChange: function(value) {
+                                setAttributes({ sortOrder: value });
+                            }
+                        }
                     )
                 ),
                 wp.element.createElement(
                     PanelBody,
                     {
-                        title: __('Content Options', 'realsatisfied-blocks'),
+                        title: __('Agent Information', 'realsatisfied-blocks'),
                         initialOpen: false
                     },
                     wp.element.createElement(
+                        ToggleControl,
+                        {
+                            label: __('Show Agent Information', 'realsatisfied-blocks'),
+                            help: __('Display agent information header above testimonials.', 'realsatisfied-blocks'),
+                            checked: attributes.showAgentInfo,
+                            onChange: function(value) {
+                                setAttributes({ showAgentInfo: value });
+                            }
+                        }
+                    ),
+                    attributes.showAgentInfo && wp.element.createElement(
                         ToggleControl,
                         {
                             label: __('Show Agent Photo', 'realsatisfied-blocks'),
@@ -285,7 +329,7 @@
                             }
                         }
                     ),
-                    wp.element.createElement(
+                    attributes.showAgentInfo && wp.element.createElement(
                         ToggleControl,
                         {
                             label: __('Show Agent Name', 'realsatisfied-blocks'),
@@ -295,6 +339,23 @@
                             }
                         }
                     ),
+                    attributes.showAgentInfo && wp.element.createElement(
+                        ToggleControl,
+                        {
+                            label: __('Show Office', 'realsatisfied-blocks'),
+                            checked: attributes.showOffice,
+                            onChange: function(value) {
+                                setAttributes({ showOffice: value });
+                            }
+                        }
+                    )
+                ),
+                wp.element.createElement(
+                    PanelBody,
+                    {
+                        title: __('Content Options', 'realsatisfied-blocks'),
+                        initialOpen: false
+                    },
                     wp.element.createElement(
                         ToggleControl,
                         {
@@ -341,55 +402,7 @@
                 wp.element.createElement(
                     PanelBody,
                     {
-                        title: __('Filtering & Sorting', 'realsatisfied-blocks'),
-                        initialOpen: false
-                    },
-                    wp.element.createElement(
-                        TextControl,
-                        {
-                            label: __('Filter by Agent', 'realsatisfied-blocks'),
-                            help: __('Show only testimonials from specific agent (partial name match).', 'realsatisfied-blocks'),
-                            value: attributes.filterByAgent,
-                            placeholder: __('Enter agent name...', 'realsatisfied-blocks'),
-                            onChange: function(value) {
-                                setAttributes({ filterByAgent: value });
-                            }
-                        }
-                    ),
-                    wp.element.createElement(
-                        SelectControl,
-                        {
-                            label: __('Sort By', 'realsatisfied-blocks'),
-                            value: attributes.sortBy,
-                            options: [
-                                { label: __('Date', 'realsatisfied-blocks'), value: 'date' },
-                                { label: __('Rating', 'realsatisfied-blocks'), value: 'rating' },
-                                { label: __('Agent Name', 'realsatisfied-blocks'), value: 'agent' }
-                            ],
-                            onChange: function(value) {
-                                setAttributes({ sortBy: value });
-                            }
-                        }
-                    ),
-                    wp.element.createElement(
-                        SelectControl,
-                        {
-                            label: __('Sort Order', 'realsatisfied-blocks'),
-                            value: attributes.sortOrder,
-                            options: [
-                                { label: __('Newest First', 'realsatisfied-blocks'), value: 'desc' },
-                                { label: __('Oldest First', 'realsatisfied-blocks'), value: 'asc' }
-                            ],
-                            onChange: function(value) {
-                                setAttributes({ sortOrder: value });
-                            }
-                        }
-                    )
-                ),
-                wp.element.createElement(
-                    PanelBody,
-                    {
-                        title: __('Styling', 'realsatisfied-blocks'),
+                        title: __('Style Settings', 'realsatisfied-blocks'),
                         initialOpen: false
                     },
                     wp.element.createElement('p', {}, __('Background Color', 'realsatisfied-blocks')),
@@ -426,55 +439,10 @@
                         TextControl,
                         {
                             label: __('Border Radius', 'realsatisfied-blocks'),
-                            help: __('CSS border radius (e.g., "8px", "0.5rem").', 'realsatisfied-blocks'),
+                            help: __('CSS border radius (e.g., "8px").', 'realsatisfied-blocks'),
                             value: attributes.borderRadius,
-                            placeholder: __('8px', 'realsatisfied-blocks'),
                             onChange: function(value) {
                                 setAttributes({ borderRadius: value });
-                            }
-                        }
-                    ),
-                    attributes.enablePagination && wp.element.createElement('hr', {}),
-                    attributes.enablePagination && wp.element.createElement('h3', {}, __('Pagination Styling', 'realsatisfied-blocks')),
-                    attributes.enablePagination && wp.element.createElement('p', {}, __('Button Background Color', 'realsatisfied-blocks')),
-                    attributes.enablePagination && wp.element.createElement(
-                        ColorPicker,
-                        {
-                            color: attributes.paginationBackgroundColor || '#007cba',
-                            onChangeComplete: function(color) {
-                                setAttributes({ paginationBackgroundColor: color.hex });
-                            }
-                        }
-                    ),
-                    attributes.enablePagination && wp.element.createElement('p', {}, __('Button Text Color', 'realsatisfied-blocks')),
-                    attributes.enablePagination && wp.element.createElement(
-                        ColorPicker,
-                        {
-                            color: attributes.paginationTextColor || '#ffffff',
-                            onChangeComplete: function(color) {
-                                setAttributes({ paginationTextColor: color.hex });
-                            }
-                        }
-                    ),
-                    attributes.enablePagination && wp.element.createElement('p', {}, __('Button Hover Background Color', 'realsatisfied-blocks')),
-                    attributes.enablePagination && wp.element.createElement(
-                        ColorPicker,
-                        {
-                            color: attributes.paginationHoverBackgroundColor || '#005a87',
-                            onChangeComplete: function(color) {
-                                setAttributes({ paginationHoverBackgroundColor: color.hex });
-                            }
-                        }
-                    ),
-                    attributes.enablePagination && wp.element.createElement(
-                        TextControl,
-                        {
-                            label: __('Button Border Radius', 'realsatisfied-blocks'),
-                            help: __('CSS border radius for pagination buttons (e.g., "5px", "0.25rem").', 'realsatisfied-blocks'),
-                            value: attributes.paginationBorderRadius,
-                            placeholder: __('5px', 'realsatisfied-blocks'),
-                            onChange: function(value) {
-                                setAttributes({ paginationBorderRadius: value });
                             }
                         }
                     )
@@ -492,7 +460,7 @@
                     wp.element.createElement(
                         ServerSideRender,
                         {
-                            block: 'realsatisfied-blocks/office-testimonials',
+                            block: 'realsatisfied-blocks/agent-testimonials',
                             attributes: attributes,
                             key: JSON.stringify(attributes)
                         }
