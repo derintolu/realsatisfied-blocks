@@ -17,7 +17,7 @@
         title: __('Agent Testimonials', 'realsatisfied-blocks'),
         description: __('Display testimonials for a specific agent using agent vanity key from ACF field.', 'realsatisfied-blocks'),
         icon: 'format-quote',
-        category: 'realsatisfied',
+        category: 'widgets',
         keywords: [__('testimonials'), __('agent'), __('reviews'), __('realsatisfied')],
         
         attributes: {

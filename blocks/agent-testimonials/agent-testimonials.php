@@ -348,7 +348,7 @@ class RealSatisfied_Agent_Testimonials_Block {
         wp_enqueue_script(
             'realsatisfied-agent-testimonials-editor',
             plugin_dir_url(__FILE__) . 'agent-testimonials-editor.js',
-            array('wp-blocks', 'wp-element', 'wp-i18n', 'wp-components', 'wp-data'),
+            array('wp-blocks', 'wp-element', 'wp-i18n', 'wp-components', 'wp-data', 'wp-server-side-render'),
             '1.0.0'
         );
 
