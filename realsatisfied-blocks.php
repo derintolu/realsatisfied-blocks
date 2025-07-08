@@ -207,12 +207,12 @@ class RealSatisfied_Blocks {
         }
         
         if ($should_load_agent_script) {
-            wp_enqueue_script(
-                'realsatisfied-agent-testimonials-frontend',
-                RSOB_PLUGIN_URL . 'blocks/agent-testimonials/agent-testimonials-frontend-vanilla.js',
-                array(), // No dependencies - vanilla JS
-                RSOB_PLUGIN_VERSION,
-                true
+            // Load Interactivity API module for agent testimonials
+            wp_enqueue_script_module(
+                'realsatisfied-agent-testimonials-view',
+                RSOB_PLUGIN_URL . 'blocks/agent-testimonials/view.js',
+                array('@wordpress/interactivity'),
+                RSOB_PLUGIN_VERSION
             );
         }
     }

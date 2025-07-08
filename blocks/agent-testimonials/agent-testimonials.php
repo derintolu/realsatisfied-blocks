@@ -45,10 +45,10 @@ class RealSatisfied_Agent_Testimonials_Block {
         // Check if required classes exist
         if (!class_exists('RealSatisfied_Agent_RSS_Parser') || 
             !class_exists('RealSatisfied_Custom_Fields')) {
-            return;
+            // Still register the block to test
         }
 
-        register_block_type($this->block_name, array(
+        $result = register_block_type($this->block_name, array(
             'render_callback' => array($this, 'render_block'),
             'supports' => array(
                 'html' => false,
@@ -56,6 +56,7 @@ class RealSatisfied_Agent_Testimonials_Block {
                 'alignWide' => true,
                 'anchor' => true,
                 'customClassName' => true,
+                'interactivity' => true, // Add Interactivity API support
                 'color' => array(
                     'gradients' => true,
                     'link' => true,
@@ -238,23 +239,70 @@ class RealSatisfied_Agent_Testimonials_Block {
         // Filter and sort testimonials
         $filtered_testimonials = $this->filter_and_sort_testimonials($testimonials, $attributes);
         
+        // Process testimonials for display (format dates, add quotation marks, etc.)
+        $processed_testimonials = array();
+        foreach ($filtered_testimonials as $testimonial) {
+            $excerpt_length = intval($attributes['excerptLength'] ?? 150);
+            $description = $testimonial['description'] ?? '';
+            
+            // Truncate description if needed
+            if ($excerpt_length > 0 && strlen($description) > $excerpt_length) {
+                $description = substr($description, 0, $excerpt_length) . '...';
+            }
+            
+            // Format date
+            $formatted_date = '';
+            if (!empty($testimonial['pubDate'])) {
+                try {
+                    $date = new DateTime($testimonial['pubDate']);
+                    $formatted_date = $date->format('F j, Y');
+                } catch (Exception $e) {
+                    $formatted_date = $testimonial['pubDate']; // Fallback to original
+                }
+            }
+            
+            // Create processed testimonial
+            $processed_testimonial = array(
+                'title' => $testimonial['title'] ?? '',
+                'description' => $description,
+                'quotedDescription' => '"' . $description . '"',
+                'customer_type' => $testimonial['customer_type'] ?? '',
+                'pubDate' => $testimonial['pubDate'] ?? '',
+                'formattedDate' => $formatted_date,
+                'satisfaction' => $testimonial['satisfaction'] ?? '',
+                'recommendation' => $testimonial['recommendation'] ?? '',
+                'performance' => $testimonial['performance'] ?? '',
+                'display_name' => $testimonial['display_name'] ?? '',
+                'avatar' => $testimonial['avatar'] ?? '',
+                'hasRatings' => !empty($testimonial['satisfaction']) || !empty($testimonial['recommendation']) || !empty($testimonial['performance']),
+                'satisfactionStars' => $this->generate_stars($testimonial['satisfaction'] ?? ''),
+                'recommendationStars' => $this->generate_stars($testimonial['recommendation'] ?? ''),
+                'performanceStars' => $this->generate_stars($testimonial['performance'] ?? ''),
+                'satisfactionValue' => !empty($testimonial['satisfaction']) ? '(' . $testimonial['satisfaction'] . '%)' : '',
+                'recommendationValue' => !empty($testimonial['recommendation']) ? '(' . $testimonial['recommendation'] . '%)' : '',
+                'performanceValue' => !empty($testimonial['performance']) ? '(' . $testimonial['performance'] . '%)' : ''
+            );
+            
+            $processed_testimonials[] = $processed_testimonial;
+        }
+
         // Handle pagination or simple count limit
         $enable_pagination = $attributes['enablePagination'] ?? false;
-        $total_testimonials = count($filtered_testimonials);
+        $total_testimonials = count($processed_testimonials);
         
         if ($enable_pagination) {
             $items_per_page = intval($attributes['itemsPerPage'] ?? 6);
             $current_page = 1; // Default to first page for initial render
             $total_pages = ceil($total_testimonials / $items_per_page);
             $offset = ($current_page - 1) * $items_per_page;
-            $paged_testimonials = array_slice($filtered_testimonials, $offset, $items_per_page);
+            $paged_testimonials = array_slice($processed_testimonials, $offset, $items_per_page);
         } else {
             // Simple count limit (original behavior)
             $testimonial_count = intval($attributes['testimonialCount'] ?? 6);
             if ($testimonial_count > 0) {
-                $filtered_testimonials = array_slice($filtered_testimonials, 0, $testimonial_count);
+                $processed_testimonials = array_slice($processed_testimonials, 0, $testimonial_count);
             }
-            $paged_testimonials = $filtered_testimonials;
+            $paged_testimonials = $processed_testimonials;
             $total_pages = 1;
         }
 
@@ -291,24 +339,72 @@ class RealSatisfied_Agent_Testimonials_Block {
         );
         
         ?>
-        <div <?php echo $wrapper_attributes; ?> <?php echo $style_attr; ?>>
-            <div class="testimonials-container" 
-                 data-testimonials="<?php echo esc_attr(json_encode($filtered_testimonials)); ?>"
-                 data-items-per-page="<?php echo esc_attr($enable_pagination ? ($attributes['itemsPerPage'] ?? 6) : 0); ?>"
-                 data-total-pages="<?php echo esc_attr($total_pages); ?>"
-                 data-attributes="<?php echo esc_attr(json_encode($frontend_attributes)); ?>">
-                <?php echo $this->render_testimonials($paged_testimonials, $attributes); ?>
+        <div <?php echo $wrapper_attributes; ?> <?php echo $style_attr; ?>
+             data-wp-interactive="realsatisfied-agent-testimonials"
+             <?php echo wp_interactivity_data_wp_context(array(
+                 'testimonials' => $processed_testimonials,
+                 'currentPage' => 1,
+                 'totalPages' => $total_pages,
+                 'itemsPerPage' => $enable_pagination ? ($attributes['itemsPerPage'] ?? 6) : $total_testimonials,
+                 'enablePagination' => $enable_pagination,
+                 'layout' => $attributes['layout'] ?? 'grid',
+                 'columns' => $attributes['columns'] ?? 2,
+                 'loading' => false,
+                 'error' => null,
+                 'expandedTestimonials' => array()
+             )); ?>
+             data-wp-init="callbacks.initTestimonials">
+            
+            <div class="testimonials-container">
+                <?php
+                $layout = $attributes['layout'] ?? 'grid';
+                $columns = $attributes['columns'] ?? 2;
+                
+                if ($layout === 'grid'):
+                ?>
+                    <div class="testimonials-grid columns-<?php echo esc_attr($columns); ?>">
+                        <template data-wp-each="state.currentTestimonials">
+                            <?php echo $this->render_testimonial_template($attributes); ?>
+                        </template>
+                    </div>
+                <?php elseif ($layout === 'list'): ?>
+                    <div class="testimonials-list">
+                        <template data-wp-each="state.currentTestimonials">
+                            <?php echo $this->render_testimonial_template($attributes); ?>
+                        </template>
+                    </div>
+                <?php elseif ($layout === 'slider'): ?>
+                    <div class="testimonials-slider flexslider">
+                        <ul class="slides">
+                            <template data-wp-each="state.currentTestimonials">
+                                <li><?php echo $this->render_testimonial_template($attributes); ?></li>
+                            </template>
+                        </ul>
+                    </div>
+                <?php else: ?>
+                    <div class="testimonials-grid columns-<?php echo esc_attr($columns); ?>">
+                        <template data-wp-each="state.currentTestimonials">
+                            <?php echo $this->render_testimonial_template($attributes); ?>
+                        </template>
+                    </div>
+                <?php endif; ?>
             </div>
             
             <?php if ($enable_pagination && $total_pages > 1): ?>
                 <div class="testimonials-pagination" style="<?php echo $this->get_pagination_style($attributes); ?>">
-                    <button class="pagination-btn pagination-prev" disabled>&larr; <?php _e('Previous', 'realsatisfied-blocks'); ?></button>
+                    <button class="pagination-btn pagination-prev" 
+                            data-wp-on--click="actions.prevPage"
+                            data-wp-bind--disabled="!state.canGoPrev">
+                        &larr; <?php _e('Previous', 'realsatisfied-blocks'); ?>
+                    </button>
                     <div class="pagination-numbers">
-                        <span class="pagination-info">
-                            <?php printf(__('Page <span class="current-page">1</span> of <span class="total-pages">%d</span>', 'realsatisfied-blocks'), $total_pages); ?>
-                        </span>
+                        <span class="pagination-info" data-wp-text="state.pageInfo"></span>
                     </div>
-                    <button class="pagination-btn pagination-next" <?php echo $total_pages <= 1 ? 'disabled' : ''; ?>><?php _e('Next', 'realsatisfied-blocks'); ?> &rarr;</button>
+                    <button class="pagination-btn pagination-next"
+                            data-wp-on--click="actions.nextPage" 
+                            data-wp-bind--disabled="!state.canGoNext">
+                        <?php _e('Next', 'realsatisfied-blocks'); ?> &rarr;
+                    </button>
                 </div>
             <?php endif; ?>
         </div>
@@ -524,7 +620,8 @@ class RealSatisfied_Agent_Testimonials_Block {
         }
         
         if ($show_customer_type && !empty($testimonial['customer_type'])) {
-            $html .= '<div class="customer-type">' . esc_html($testimonial['customer_type']) . '</div>';
+            $customer_type_color = $attributes['paginationBackgroundColor'] ?? '#007cba';
+            $html .= '<div class="customer-type" style="color: ' . esc_attr($customer_type_color) . ';">' . esc_html($testimonial['customer_type']) . '</div>';
         }
         
         if ($show_date && !empty($testimonial['pubDate'])) {
@@ -625,6 +722,42 @@ class RealSatisfied_Agent_Testimonials_Block {
         // Empty stars
         for ($i = 0; $i < $empty_stars; $i++) {
             $html .= '<span class="star star-empty">☆</span>';
+        }
+
+        return $html;
+    }
+
+    /**
+     * Generate star rating display
+     *
+     * @param string|int $rating Percentage rating
+     * @return string Star rating HTML
+     */
+    private function generate_stars($rating) {
+        if (empty($rating)) {
+            return '';
+        }
+        
+        $star_rating = intval($rating) / 20; // Convert percentage to 5-star scale
+        $full_stars = floor($star_rating);
+        $half_star = ($star_rating - $full_stars) >= 0.5;
+        $empty_stars = 5 - $full_stars - ($half_star ? 1 : 0);
+        
+        $html = '';
+        
+        // Full stars
+        for ($i = 0; $i < $full_stars; $i++) {
+            $html .= '★';
+        }
+        
+        // Half star
+        if ($half_star) {
+            $html .= '☆';
+        }
+        
+        // Empty stars
+        for ($i = 0; $i < $empty_stars; $i++) {
+            $html .= '☆';
         }
 
         return $html;
@@ -746,6 +879,86 @@ class RealSatisfied_Agent_Testimonials_Block {
             array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components', 'wp-i18n', 'wp-server-side-render'),
             '1.0.0'
         );
+    }
+
+    /**
+     * Render testimonial template for Interactivity API
+     *
+     * @param array $attributes Block attributes
+     * @return string Template HTML
+     */
+    private function render_testimonial_template($attributes) {
+        // Build card styles
+        $card_styles = $this->build_card_styles($attributes);
+        $card_style_attr = !empty($card_styles) ? 'style="' . implode('; ', $card_styles) . '"' : '';
+        
+        // Build text styles
+        $text_styles = $this->build_text_styles($attributes);
+        $text_style_attr = !empty($text_styles) ? 'style="' . implode('; ', $text_styles) . '"' : '';
+        
+        ob_start();
+        ?>
+        <div class="testimonial-item testimonial-card" <?php echo $card_style_attr; ?>>
+            <?php if ($attributes['showQuotationMarks'] ?? true): ?>
+                <div class="testimonial-text" <?php echo $text_style_attr; ?> data-wp-text="context.item.quotedDescription"></div>
+            <?php else: ?>
+                <div class="testimonial-text" <?php echo $text_style_attr; ?> data-wp-text="context.item.description"></div>
+            <?php endif; ?>
+            
+            <div class="testimonial-meta">
+                <div class="testimonial-details">
+                    <?php if ($attributes['showCustomerName'] ?? true): ?>
+                        <div class="customer-name" data-wp-text="context.item.title"></div>
+                    <?php endif; ?>
+                    
+                    <?php if ($attributes['showCustomerType'] ?? true): ?>
+                        <div class="customer-type" data-wp-text="context.item.customer_type" style="color: <?php echo esc_attr($attributes['paginationBackgroundColor'] ?? '#007cba'); ?>;"></div>
+                    <?php endif; ?>
+                    
+                    <?php if ($attributes['showDate'] ?? true): ?>
+                        <div class="testimonial-date" data-wp-text="context.item.formattedDate"></div>
+                    <?php endif; ?>
+                    
+                    <?php if ($attributes['showRatings'] ?? false): ?>
+                        <div class="testimonial-ratings" data-wp-show="context.item.hasRatings">
+                            <div class="ratings-grid">
+                                <?php if ($attributes['showSatisfactionRating'] ?? true): ?>
+                                    <div class="rating-item" data-wp-show="context.item.satisfaction">
+                                        <span class="rating-label"><?php _e('Satisfaction:', 'realsatisfied-blocks'); ?></span>
+                                        <span class="rating-stars" data-wp-text="context.item.satisfactionStars"></span>
+                                        <?php if ($attributes['showRatingValues'] ?? true): ?>
+                                            <span class="rating-value" data-wp-text="context.item.satisfactionValue"></span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if ($attributes['showRecommendationRating'] ?? true): ?>
+                                    <div class="rating-item" data-wp-show="context.item.recommendation">
+                                        <span class="rating-label"><?php _e('Recommendation:', 'realsatisfied-blocks'); ?></span>
+                                        <span class="rating-stars" data-wp-text="context.item.recommendationStars"></span>
+                                        <?php if ($attributes['showRatingValues'] ?? true): ?>
+                                            <span class="rating-value" data-wp-text="context.item.recommendationValue"></span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if ($attributes['showPerformanceRating'] ?? true): ?>
+                                    <div class="rating-item" data-wp-show="context.item.performance">
+                                        <span class="rating-label"><?php _e('Performance:', 'realsatisfied-blocks'); ?></span>
+                                        <span class="rating-stars" data-wp-text="context.item.performanceStars"></span>
+                                        <?php if ($attributes['showRatingValues'] ?? true): ?>
+                                            <span class="rating-value" data-wp-text="context.item.performanceValue"></span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
     }
 
 }
