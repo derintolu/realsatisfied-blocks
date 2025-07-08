@@ -1,9 +1,9 @@
 <?php
 /**
- * RealSatisfied Office RSS Parser
+ * RealSatisfied Agent RSS Parser
  * 
- * Extracted and adapted from the original RealSatisfied Review Widget
- * Handles RSS feed fetching, parsing, and data extraction for office blocks
+ * Standalone parser for agent RSS feeds only
+ * Completely separate from office functionality
  */
 
 // Prevent direct access
@@ -12,14 +12,14 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * RealSatisfied Office RSS Parser Class
+ * RealSatisfied Agent RSS Parser Class
  */
-class RealSatisfied_Office_RSS_Parser {
+class RealSatisfied_Agent_RSS_Parser {
     
     /**
      * Plugin instance
      *
-     * @var RealSatisfied_Office_RSS_Parser
+     * @var RealSatisfied_Agent_RSS_Parser
      */
     private static $instance = null;
 
@@ -31,23 +31,23 @@ class RealSatisfied_Office_RSS_Parser {
     private $cache_duration = 43200;
 
     /**
-     * Office RSS feed URL
+     * Agent RSS feed URL
      *
      * @var string
      */
-    private $office_feed_url = 'https://rss.realsatisfied.com/rss/v3/office/';
+    private $agent_feed_url = 'https://rss.realsatisfied.com/rss/v3/agent/detailed/';
 
     /**
-     * Office XML namespace
+     * Agent XML namespace
      *
      * @var string
      */
-    private $office_namespace = 'https://rss.realsatisfied.com/ns/realsatisfied/';
+    private $agent_namespace = 'https://rss.realsatisfied.com/ns/realsatisfied/';
 
     /**
      * Get plugin instance
      *
-     * @return RealSatisfied_Office_RSS_Parser
+     * @return RealSatisfied_Agent_RSS_Parser
      */
     public static function get_instance() {
         if (self::$instance === null) {
@@ -68,23 +68,23 @@ class RealSatisfied_Office_RSS_Parser {
      */
     private function init_hooks() {
         // Add cache clearing functionality
-        add_action('wp_ajax_rsob_clear_feed_cache', array($this, 'clear_feed_cache_callback'));
-        add_action('wp_ajax_nopriv_rsob_clear_feed_cache', array($this, 'clear_feed_cache_callback'));
+        add_action('wp_ajax_rsab_clear_agent_cache', array($this, 'clear_agent_cache_callback'));
+        add_action('wp_ajax_nopriv_rsab_clear_agent_cache', array($this, 'clear_agent_cache_callback'));
     }
 
     /**
-     * Fetch and parse RSS feed for office
+     * Fetch and parse RSS feed for agent
      *
-     * @param string $vanity_key The office vanity key
+     * @param string $vanity_key The agent vanity key
      * @return array|WP_Error Array with channel data and testimonials, or WP_Error on failure
      */
-    public function fetch_office_data($vanity_key) {
+    public function fetch_agent_data($vanity_key) {
         if (empty($vanity_key)) {
-            return new WP_Error('missing_vanity_key', __('No vanity key provided', 'realsatisfied-blocks'));
+            return new WP_Error('missing_vanity_key', __('No agent vanity key provided', 'realsatisfied-blocks'));
         }
 
-        // Build feed URL
-        $feed_url = $this->office_feed_url . $vanity_key . '/page=1&source=wp_office_blocks';
+        // Build feed URL using original widget pattern
+        $feed_url = $this->agent_feed_url . $vanity_key . '/page=1&source=wp_widget';
         
         // Fetch RSS feed
         $rss_feed = fetch_feed($feed_url);
@@ -93,36 +93,35 @@ class RealSatisfied_Office_RSS_Parser {
             return $rss_feed;
         }
 
-        // Extract data
-        $office_data = $this->extract_office_data($rss_feed);
+        // Extract agent data
+        $agent_data = $this->extract_agent_data($rss_feed);
         
-        if (is_wp_error($office_data)) {
-            return $office_data;
+        if (is_wp_error($agent_data)) {
+            return $agent_data;
         }
 
-        return $office_data;
+        return $agent_data;
     }
 
-
-
     /**
-     * Extract office data from RSS feed
+     * Extract agent data from RSS feed
      *
      * @param SimplePie $rss_feed The RSS feed object
      * @return array|WP_Error Array with channel data and testimonials, or WP_Error on failure
      */
-    private function extract_office_data($rss_feed) {
-        $namespace = $this->office_namespace;
+    private function extract_agent_data($rss_feed) {
+        $namespace = $this->agent_namespace;
         
-        // Get maximum items (up to 50)
+        // Get maximum items (up to 50, matching original widget)
         $max_items = $rss_feed->get_item_quantity(50);
         $rss_items = $rss_feed->get_items(0, $max_items);
 
-        // Extract channel data (office-wide information)
+        // Extract channel data (agent information) - matching original widget structure
         $channel_data = array(
             'link' => $rss_feed->get_link(),
+            'display_name' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'display_name'),
+            'avatar' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'avatar'),
             'office' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'office'),
-            'logo' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'logo'),
             'overall_satisfaction' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'overall_satisfaction'),
             'recommendation_rating' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'recommendation_rating'),
             'performance_rating' => $this->obtain_channel_tag_data($rss_feed, $namespace, 'performance_rating'),
@@ -131,7 +130,7 @@ class RealSatisfied_Office_RSS_Parser {
 
         // Validate we have data
         if (empty($channel_data['response_count']) || $channel_data['response_count'] == 0) {
-            return new WP_Error('no_reviews', __('No reviews found for this office', 'realsatisfied-blocks'));
+            return new WP_Error('no_reviews', __('No reviews found for this agent', 'realsatisfied-blocks'));
         }
 
         // Extract testimonials
@@ -160,8 +159,6 @@ class RealSatisfied_Office_RSS_Parser {
             'testimonials' => $testimonials
         );
     }
-
-
 
     /**
      * Calculate overall rating from satisfaction, recommendation, and performance
@@ -220,14 +217,14 @@ class RealSatisfied_Office_RSS_Parser {
     }
 
     /**
-     * Clear feed cache (AJAX callback)
+     * Clear agent feed cache (AJAX callback)
      */
-    public function clear_feed_cache_callback() {
+    public function clear_agent_cache_callback() {
         // Temporarily set cache to 1 second
         add_filter('wp_feed_cache_transient_lifetime', function() { return 1; });
         
         // Clear cache by fetching with minimal cache time
-        $response = __('Feed cache has been cleared.', 'realsatisfied-blocks');
+        $response = __('Agent feed cache has been cleared.', 'realsatisfied-blocks');
         
         // Restore normal cache time
         add_filter('wp_feed_cache_transient_lifetime', function() { return $this->cache_duration; });
@@ -236,21 +233,21 @@ class RealSatisfied_Office_RSS_Parser {
     }
 
     /**
-     * Get office feed URL
+     * Get agent feed URL
      *
-     * @return string Office feed URL
+     * @return string Agent feed URL
      */
-    public function get_office_feed_url() {
-        return $this->office_feed_url;
+    public function get_agent_feed_url() {
+        return $this->agent_feed_url;
     }
 
     /**
-     * Get office namespace
+     * Get agent namespace
      *
-     * @return string Office XML namespace
+     * @return string Agent XML namespace
      */
-    public function get_office_namespace() {
-        return $this->office_namespace;
+    public function get_agent_namespace() {
+        return $this->agent_namespace;
     }
 
     /**
