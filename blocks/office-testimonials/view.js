@@ -135,9 +135,9 @@ store('realsatisfied-office-testimonials', {
 
     state: {
         /**
-         * Get filtered and sorted testimonials
+         * Get testimonials for current page
          */
-        get filteredTestimonials() {
+        get currentTestimonials() {
             const context = getContext();
             
             if (!context.testimonials || !Array.isArray(context.testimonials)) {
@@ -179,16 +179,7 @@ store('realsatisfied-office-testimonials', {
                 return result;
             });
 
-            return filtered;
-        },
-
-        /**
-         * Get testimonials for current page
-         */
-        get currentTestimonials() {
-            const context = getContext();
-            const filtered = context.filteredTestimonials;
-            
+            // Apply pagination if enabled
             if (!context.enablePagination) {
                 return filtered;
             }
@@ -209,7 +200,20 @@ store('realsatisfied-office-testimonials', {
                 return 1;
             }
             
-            const filtered = context.filteredTestimonials;
+            // Calculate filtered testimonials count for pagination
+            if (!context.testimonials || !Array.isArray(context.testimonials)) {
+                return 1;
+            }
+
+            let filtered = [...context.testimonials];
+
+            // Apply agent filter if active
+            if (context.activeFilter && context.activeFilter.type === 'agent') {
+                filtered = filtered.filter(testimonial => 
+                    testimonial.agent_id === context.activeFilter.value
+                );
+            }
+            
             return Math.ceil(filtered.length / context.itemsPerPage);
         },
 
@@ -322,7 +326,7 @@ store('realsatisfied-office-testimonials', {
          */
         get hasTestimonials() {
             const context = getContext();
-            return context.filteredTestimonials && context.filteredTestimonials.length > 0;
+            return context.testimonials && context.testimonials.length > 0;
         },
 
         /**

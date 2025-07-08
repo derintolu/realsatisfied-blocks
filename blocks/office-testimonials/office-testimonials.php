@@ -146,6 +146,10 @@ class RealSatisfied_Office_Testimonials_Block {
                     'type' => 'boolean',
                     'default' => true
                 ),
+                'showQuotationMarks' => array(
+                    'type' => 'boolean',
+                    'default' => true
+                ),
                 'excerptLength' => array(
                     'type' => 'number',
                     'default' => 150
