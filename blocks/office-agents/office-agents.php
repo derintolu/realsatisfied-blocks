@@ -888,6 +888,3 @@ class RealSatisfied_Office_Agents_Block {
         return $text;
     }
 }
-
-// Initialize the block
-new RealSatisfied_Office_Agents_Block();
