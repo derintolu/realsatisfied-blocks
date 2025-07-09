@@ -159,9 +159,13 @@ class RealSatisfied_Office_RSS_Parser {
         // Shuffle testimonials for variety (as done in original widget)
         shuffle($testimonials);
 
+        // Extract unique agents from testimonials
+        $agents = $this->extract_agents_from_testimonials($testimonials);
+
         return array(
             'channel' => $channel_data,
-            'testimonials' => $testimonials
+            'testimonials' => $testimonials,
+            'agents' => $agents
         );
     }
 
@@ -263,4 +267,136 @@ class RealSatisfied_Office_RSS_Parser {
     public function get_cache_duration() {
         return $this->cache_duration;
     }
-} 
+
+    /**
+     * Extract unique agents from testimonials data
+     *
+     * @param array $testimonials Array of testimonials
+     * @return array Array of unique agents with aggregated data
+     */
+    private function extract_agents_from_testimonials($testimonials) {
+        $agents = array();
+        $agent_stats = array();
+        
+        // Process each testimonial to extract agent data
+        foreach ($testimonials as $testimonial) {
+            $display_name = $testimonial['display_name'] ?? '';
+            $avatar = $testimonial['avatar'] ?? '';
+            
+            if (empty($display_name)) {
+                continue; // Skip testimonials without agent name
+            }
+            
+            // Initialize agent if not seen before
+            if (!isset($agent_stats[$display_name])) {
+                $agent_stats[$display_name] = array(
+                    'display_name' => $display_name,
+                    'avatar' => $avatar,
+                    'first_name' => $this->extract_first_name($display_name),
+                    'last_name' => $this->extract_last_name($display_name),
+                    'title' => '', // Not available from testimonials
+                    'email' => '', // Not available from testimonials
+                    'phone' => '', // Not available from testimonials
+                    'mobile' => '', // Not available from testimonials
+                    'vanity_id' => $this->generate_vanity_id($display_name),
+                    'review_count' => 0,
+                    'total_satisfaction' => 0,
+                    'total_recommendation' => 0,
+                    'total_performance' => 0,
+                    'valid_ratings_count' => 0
+                );
+            }
+            
+            // Update review count
+            $agent_stats[$display_name]['review_count']++;
+            
+            // Aggregate ratings if available
+            $satisfaction = intval($testimonial['satisfaction'] ?? 0);
+            $recommendation = intval($testimonial['recommendation'] ?? 0);
+            $performance = intval($testimonial['performance'] ?? 0);
+            
+            if ($satisfaction > 0 || $recommendation > 0 || $performance > 0) {
+                $agent_stats[$display_name]['total_satisfaction'] += $satisfaction;
+                $agent_stats[$display_name]['total_recommendation'] += $recommendation;
+                $agent_stats[$display_name]['total_performance'] += $performance;
+                $agent_stats[$display_name]['valid_ratings_count']++;
+            }
+            
+            // Use the latest avatar if available
+            if (!empty($avatar)) {
+                $agent_stats[$display_name]['avatar'] = $avatar;
+            }
+        }
+        
+        // Calculate overall ratings for each agent
+        foreach ($agent_stats as $agent_name => $stats) {
+            $overall_rating = 0;
+            
+            if ($stats['valid_ratings_count'] > 0) {
+                $avg_satisfaction = $stats['total_satisfaction'] / $stats['valid_ratings_count'];
+                $avg_recommendation = $stats['total_recommendation'] / $stats['valid_ratings_count'];
+                $avg_performance = $stats['total_performance'] / $stats['valid_ratings_count'];
+                
+                // Calculate overall rating using the same method as the main office calculation
+                $overall_rating = $this->calculate_overall_rating($avg_satisfaction, $avg_recommendation, $avg_performance);
+            }
+            
+            $agents[] = array(
+                'display_name' => $stats['display_name'],
+                'first_name' => $stats['first_name'],
+                'last_name' => $stats['last_name'],
+                'title' => $stats['title'],
+                'email' => $stats['email'],
+                'phone' => $stats['phone'],
+                'mobile' => $stats['mobile'],
+                'avatar' => $stats['avatar'],
+                'vanity_id' => $stats['vanity_id'],
+                'overall_rating' => $overall_rating,
+                'review_count' => $stats['review_count']
+            );
+        }
+        
+        return $agents;
+    }
+    
+    /**
+     * Extract first name from display name
+     *
+     * @param string $display_name Full display name
+     * @return string First name
+     */
+    private function extract_first_name($display_name) {
+        $parts = explode(' ', trim($display_name));
+        return $parts[0] ?? '';
+    }
+    
+    /**
+     * Extract last name from display name
+     *
+     * @param string $display_name Full display name
+     * @return string Last name
+     */
+    private function extract_last_name($display_name) {
+        $parts = explode(' ', trim($display_name));
+        if (count($parts) > 1) {
+            return end($parts);
+        }
+        return '';
+    }
+    
+    /**
+     * Generate vanity ID from display name
+     *
+     * @param string $display_name Full display name
+     * @return string Generated vanity ID
+     */
+    private function generate_vanity_id($display_name) {
+        // Simple vanity ID generation: lowercase, replace spaces with hyphens, remove special characters
+        $vanity_id = strtolower($display_name);
+        $vanity_id = preg_replace('/[^a-z0-9\s-]/', '', $vanity_id);
+        $vanity_id = preg_replace('/\s+/', '-', $vanity_id);
+        $vanity_id = trim($vanity_id, '-');
+        
+        return $vanity_id;
+    }
+}
