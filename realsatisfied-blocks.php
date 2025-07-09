@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: RealSatisfied Blocks
- * Description: Comprehensive Gutenberg blocks for RealSatisfied office and agent data - ratings, testimonials, and stats with WordPress Interactivity API
- * Version: 1.5.0
+ * Description: Gutenberg blocks for RealSatisfied office and agent data - ratings and testimonials with WordPress Interactivity API
+ * Version: 1.4.0
  * Author: RealSatisfied
  * Text Domain: realsatisfied-blocks
  * Requires at least: 5.4
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('RSOB_PLUGIN_VERSION', '1.5.0');
+define('RSOB_PLUGIN_VERSION', '1.4.0');
 define('RSOB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('RSOB_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('RSOB_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -83,7 +83,6 @@ class RealSatisfied_Blocks {
         require_once RSOB_PLUGIN_PATH . 'blocks/office-ratings/office-ratings.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/office-testimonials/office-testimonials.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/agent-testimonials/agent-testimonials.php';
-        require_once RSOB_PLUGIN_PATH . 'blocks/office-stats/office-stats.php';
     }
 
     /**
@@ -121,10 +120,6 @@ class RealSatisfied_Blocks {
         if (class_exists('RealSatisfied_Agent_Testimonials_Block')) {
             $agent_testimonials_block = new RealSatisfied_Agent_Testimonials_Block();
             $agent_testimonials_block->register_block();
-        }
-        
-        if (class_exists('RealSatisfied_Office_Stats_Block')) {
-            new RealSatisfied_Office_Stats_Block();
         }
         
         // Register blocks
@@ -214,19 +209,14 @@ class RealSatisfied_Blocks {
         
         // Check for office testimonials block
         $should_load_office_script = false;
-        $should_load_agents_script = false;
         
         // Check for blocks in post content
         if (has_block('realsatisfied-blocks/office-testimonials')) {
             $should_load_office_script = true;
         }
         
-        if (has_block('realsatisfied-blocks/office-agents')) {
-            $should_load_agents_script = true;
-        }
-        
         // Additional checks for custom post types and templates where has_block() might fail
-        if (!$should_load_office_script && !$should_load_agents_script) {
+        if (!$should_load_office_script) {
             global $post;
             if ($post) {
                 // Check if this is an office/company post type or template that might use the blocks
@@ -234,7 +224,6 @@ class RealSatisfied_Blocks {
                     get_post_meta($post->ID, 'realsatisfied_feed', true) ||
                     (function_exists('get_field') && get_field('realsatisfied_feed', $post->ID))) {
                     $should_load_office_script = true;
-                    $should_load_agents_script = true;
                 }
             }
         }
@@ -244,16 +233,6 @@ class RealSatisfied_Blocks {
             wp_enqueue_script_module(
                 'realsatisfied-office-testimonials-view',
                 RSOB_PLUGIN_URL . 'blocks/office-testimonials/view.js',
-                array('@wordpress/interactivity'),
-                RSOB_PLUGIN_VERSION
-            );
-        }
-        
-        if ($should_load_agents_script) {
-            // Load Interactivity API module for office agents
-            wp_enqueue_script_module(
-                'realsatisfied-office-agents-view',
-                RSOB_PLUGIN_URL . 'blocks/office-agents/view.js',
                 array('@wordpress/interactivity'),
                 RSOB_PLUGIN_VERSION
             );

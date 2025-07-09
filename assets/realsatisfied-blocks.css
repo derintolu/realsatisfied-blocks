@@ -889,283 +889,6 @@
     color: #856404;
 }
 
-/* =====================================================
-   Office Agents Block Styles
-   ===================================================== */
-
-.wp-block-realsatisfied-blocks-office-agents {
-    margin: 2rem 0;
-}
-
-/* Controls */
-.realsatisfied-office-agents .agents-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
-
-.realsatisfied-office-agents .agents-sorting select {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: white;
-    font-size: 0.9rem;
-    min-width: 150px;
-}
-
-/* Grid Layout */
-.realsatisfied-office-agents .agents-grid {
-    display: grid;
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.realsatisfied-office-agents .agents-grid.columns-1 {
-    grid-template-columns: 1fr;
-}
-
-.realsatisfied-office-agents .agents-grid.columns-2 {
-    grid-template-columns: repeat(2, 1fr);
-}
-
-.realsatisfied-office-agents .agents-grid.columns-3 {
-    grid-template-columns: repeat(3, 1fr);
-}
-
-.realsatisfied-office-agents .agents-grid.columns-4 {
-    grid-template-columns: repeat(4, 1fr);
-}
-
-.realsatisfied-office-agents .agents-grid.columns-5 {
-    grid-template-columns: repeat(5, 1fr);
-}
-
-.realsatisfied-office-agents .agents-grid.columns-6 {
-    grid-template-columns: repeat(6, 1fr);
-}
-
-/* Agent Cards */
-.realsatisfied-office-agents .agent-card {
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 1.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.realsatisfied-office-agents .agent-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Agent Photo */
-.realsatisfied-office-agents .agent-photo {
-    margin-bottom: 1rem;
-}
-
-.realsatisfied-office-agents .agent-photo img {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #f0f0f0;
-    margin: 0 auto;
-    display: block;
-}
-
-/* Agent Info */
-.realsatisfied-office-agents .agent-info {
-    text-align: center;
-}
-
-.realsatisfied-office-agents .agent-name {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin: 0 0 0.5rem 0;
-    color: #333;
-}
-
-.realsatisfied-office-agents .agent-title {
-    font-size: 0.9rem;
-    color: #666;
-    margin: 0 0 1rem 0;
-    font-style: italic;
-}
-
-/* Agent Rating */
-.realsatisfied-office-agents .agent-rating {
-    margin: 0.75rem 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.realsatisfied-office-agents .rating-stars {
-    color: #ffc107;
-    font-size: 1rem;
-}
-
-.realsatisfied-office-agents .rating-value {
-    font-weight: 600;
-    color: #333;
-    font-size: 1rem;
-}
-
-.realsatisfied-office-agents .agent-reviews {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-}
-
-/* Agent Contact */
-.realsatisfied-office-agents .agent-contact {
-    margin: 1rem 0;
-}
-
-.realsatisfied-office-agents .agent-email,
-.realsatisfied-office-agents .agent-phone {
-    margin: 0.5rem 0;
-}
-
-.realsatisfied-office-agents .agent-email a,
-.realsatisfied-office-agents .agent-phone a {
-    color: #007cba;
-    text-decoration: none;
-    font-size: 0.9rem;
-}
-
-.realsatisfied-office-agents .agent-email a:hover,
-.realsatisfied-office-agents .agent-phone a:hover {
-    text-decoration: underline;
-}
-
-/* Agent Actions */
-.realsatisfied-office-agents .agent-actions {
-    margin-top: 1.5rem;
-}
-
-.realsatisfied-office-agents .agent-profile-link {
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    background-color: #007cba;
-    color: #ffffff;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: background-color 0.3s ease;
-}
-
-.realsatisfied-office-agents .agent-profile-link:hover {
-    background-color: #005a87;
-    color: #ffffff;
-    text-decoration: none;
-}
-
-/* List Layout */
-.realsatisfied-office-agents.layout-list .agents-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.realsatisfied-office-agents.layout-list .agent-card {
-    display: flex;
-    align-items: center;
-    text-align: left;
-    padding: 1.5rem;
-    gap: 1.5rem;
-}
-
-.realsatisfied-office-agents.layout-list .agent-photo {
-    margin-bottom: 0;
-    flex-shrink: 0;
-}
-
-.realsatisfied-office-agents.layout-list .agent-photo img {
-    width: 100px;
-    height: 100px;
-}
-
-.realsatisfied-office-agents.layout-list .agent-info {
-    text-align: left;
-    flex: 1;
-}
-
-.realsatisfied-office-agents.layout-list .agent-rating {
-    justify-content: flex-start;
-}
-
-.realsatisfied-office-agents.layout-list .agent-actions {
-    margin-top: 1rem;
-}
-
-/* Slider Layout */
-.realsatisfied-office-agents.layout-slider .agents-slider {
-    position: relative;
-    overflow: hidden;
-    border-radius: 8px;
-}
-
-.realsatisfied-office-agents.layout-slider .slides {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.realsatisfied-office-agents.layout-slider .slides li {
-    flex: 0 0 100%;
-    padding: 0 1rem;
-}
-
-/* Pagination */
-.realsatisfied-office-agents .agents-pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 2rem;
-    padding: 1rem 0;
-}
-
-.realsatisfied-office-agents .pagination-btn {
-    padding: 0.75rem 1.5rem;
-    background-color: var(--pagination-bg-color, #007cba);
-    color: var(--pagination-text-color, #ffffff);
-    border: none;
-    border-radius: var(--pagination-border-radius, 5px);
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.3s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.realsatisfied-office-agents .pagination-btn:hover:not(:disabled) {
-    background-color: var(--pagination-hover-bg-color, #005a87);
-}
-
-.realsatisfied-office-agents .pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.realsatisfied-office-agents .pagination-info {
-    color: #666;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
 /* Editor Preview */
 .realsatisfied-editor-preview {
     border: 2px dashed #ddd;
@@ -1216,72 +939,45 @@
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-    .realsatisfied-office-agents .agents-grid.columns-4,
-    .realsatisfied-office-agents .agents-grid.columns-5,
-    .realsatisfied-office-agents .agents-grid.columns-6 {
+    .realsatisfied-office-testimonials .testimonials-grid.columns-4,
+    .realsatisfied-office-testimonials .testimonials-grid.columns-5,
+    .realsatisfied-office-testimonials .testimonials-grid.columns-6 {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
 @media (max-width: 768px) {
-    .realsatisfied-office-agents .agents-grid.columns-3,
-    .realsatisfied-office-agents .agents-grid.columns-4,
-    .realsatisfied-office-agents .agents-grid.columns-5,
-    .realsatisfied-office-agents .agents-grid.columns-6 {
+    .realsatisfied-office-testimonials .testimonials-grid.columns-3,
+    .realsatisfied-office-testimonials .testimonials-grid.columns-4,
+    .realsatisfied-office-testimonials .testimonials-grid.columns-5,
+    .realsatisfied-office-testimonials .testimonials-grid.columns-6 {
         grid-template-columns: repeat(2, 1fr);
     }
     
-    .realsatisfied-office-agents .agents-controls {
+    .realsatisfied-office-testimonials .testimonials-controls {
         flex-direction: column;
         gap: 1rem;
         align-items: stretch;
     }
-    
-    .realsatisfied-office-agents.layout-list .agent-card {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .realsatisfied-office-agents.layout-list .agent-info {
-        text-align: center;
-    }
-    
-    .realsatisfied-office-agents.layout-list .agent-rating {
-        justify-content: center;
-    }
 }
 
 @media (max-width: 480px) {
-    .realsatisfied-office-agents .agents-grid {
+    .realsatisfied-office-testimonials .testimonials-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
     
-    .realsatisfied-office-agents .agent-card {
+    .realsatisfied-office-testimonials .testimonial-card {
         padding: 1rem;
     }
     
-    .realsatisfied-office-agents .agent-photo img {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .realsatisfied-office-agents .agents-pagination {
+    .realsatisfied-office-testimonials .testimonials-pagination {
         flex-direction: column;
         gap: 0.5rem;
     }
     
-    .realsatisfied-office-agents .pagination-btn {
+    .realsatisfied-office-testimonials .pagination-btn {
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
     }
-}
-
-/* Error States for Office Agents */
-.realsatisfied-office-agents-error {
-    padding: 1rem;
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
-    border-radius: 4px;
-    color: #856404;
 }

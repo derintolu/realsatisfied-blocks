@@ -171,8 +171,7 @@ class RealSatisfied_Widget_Compatibility {
         $blocks = array(
             'realsatisfied-blocks/office-ratings',
             'realsatisfied-blocks/office-testimonials',
-            'realsatisfied-blocks/office-stats',
-            'realsatisfied-blocks/office-agents'
+            'realsatisfied-blocks/agent-testimonials'
         );
 
         foreach ($blocks as $block) {
