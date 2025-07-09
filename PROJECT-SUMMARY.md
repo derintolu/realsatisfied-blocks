@@ -81,7 +81,7 @@
 - **Inline Documentation**: Comprehensive code comments and PHPDoc
 
 ### ✅ Version Management
-- **Main branch**: v1.4.0 - Stable release with core functionality
+- **Main branch**: v1.0.0 - Initial stable release as standalone plugin
 - **Version-1.5 branch**: Future development with Office Stats block
 - **Git history**: Clean commit history with detailed change descriptions
 

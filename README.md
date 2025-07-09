@@ -1,15 +1,15 @@
 # RealSatisfied Blocks
 
-**Version:** 1.4.0  
+**Version:** 1.0.0  
 **Requires WordPress:** 5.4+  
 **Tested up to:** WordPress 6.7  
 **License:** GPLv2 or later  
 
 A **standalone** WordPress plugin providing Gutenberg blocks for displaying RealSatisfied office and agent data with modern WordPress Interactivity API. **No dependencies required.**
 
-## 🎉 Now Completely Standalone!
+## 🎉 Now Completely Standalone
 
-As of version 1.4.0, this plugin no longer requires the legacy RealSatisfied Review Widget plugin. All functionality has been rebuilt as a modern, self-contained Gutenberg blocks plugin.
+As of version 1.0.0, this plugin is completely standalone and requires no external dependencies. All functionality has been built as modern, self-contained Gutenberg blocks.
 
 ## Overview
 
