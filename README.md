@@ -83,16 +83,19 @@ The plugin includes comprehensive text processing to handle:
 
 ## Screenshots
 
+### Blocks in the Block Picker
+![Blocks in Block Picker](https://media.c21realestate.com/screenshot-c21masterscom.local-.jpeg)
+*Showing the widget blocks in the block editor*
+
+
 ### Office Ratings & Testimonials Display
 ![Office Testimonials](https://media.c21realestate.com/screenshot-1-2.png)
 *Example of Office Testimonials block displaying customer reviews, pagination, and responsive layout.*
 
 ### Office Tesimonials Example
-![Complete Integration on C21 Masters](https://media.c21realestate.com/ratings-block.png))
+![Complete Integration on C21 Masters](https://media.c21realestate.com/ratings-block.png)
 *Example of the Office Ratings Blocks showing how they integrate seamlessly into a professional real estate website layout. Website not published yet*
 
-### Blocks in the Block Picker
-! [Blocks in Block Picker](https://media.c21realestate.com/screenshot-c21masterscom.local-.jpeg)
 
 
 ## Installation
