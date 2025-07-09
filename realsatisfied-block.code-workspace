@@ -1,11 +1,14 @@
 {
 	"folders": [
-		{
-			"path": "../realsatisfied-review-widget"
-		},
-		{
-			"path": "."
-		}
-	],
+        {
+            "path": "../realsatisfied-review-widget"
+        },
+        {
+            "path": "."
+        },
+        {
+            "path": "../../.."
+        }
+    ],
 	"settings": {}
 }
