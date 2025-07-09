@@ -2,8 +2,9 @@
 /**
  * RealSatisfied Widget Compatibility
  * 
- * Ensures our office blocks work alongside the existing widget
- * Handles asset loading conflicts and provides compatibility utilities
+ * Provides optional compatibility when the legacy RealSatisfied Review Widget is present.
+ * The blocks are fully standalone and do not require the legacy widget to function.
+ * Handles asset loading conflicts and provides compatibility utilities when both are active.
  */
 
 // Prevent direct access

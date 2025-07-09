@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: RealSatisfied Blocks
- * Description: Gutenberg blocks for RealSatisfied office and agent data - ratings and testimonials with WordPress Interactivity API
+ * Description: Standalone Gutenberg blocks for RealSatisfied office and agent data - ratings and testimonials with WordPress Interactivity API. No dependencies required.
  * Version: 1.4.0
  * Author: RealSatisfied
  * Text Domain: realsatisfied-blocks
@@ -60,9 +60,6 @@ class RealSatisfied_Blocks {
     private function init_hooks() {
         add_action('init', array($this, 'init'));
         add_action('plugins_loaded', array($this, 'load_textdomain'));
-        
-        // Check for required plugin
-        add_action('admin_notices', array($this, 'check_required_plugin'));
         
         // Activation and deactivation hooks
         register_activation_hook(__FILE__, array($this, 'activate'));
@@ -139,20 +136,6 @@ class RealSatisfied_Blocks {
             false,
             dirname(RSOB_PLUGIN_BASENAME) . '/languages/'
         );
-    }
-
-    /**
-     * Check if required plugin is active
-     */
-    public function check_required_plugin() {
-        if (!class_exists('RSRW_Real_Satisfied_Review_Widget')) {
-            $message = sprintf(
-                __('RealSatisfied Blocks requires the %s plugin to be installed and activated.', 'realsatisfied-blocks'),
-                '<strong>RealSatisfied Review Widget</strong>'
-            );
-            
-            echo '<div class="notice notice-error"><p>' . wp_kses_post($message) . '</p></div>';
-        }
     }
 
     /**
@@ -259,12 +242,6 @@ class RealSatisfied_Blocks {
         if (version_compare(get_bloginfo('version'), '5.4', '<')) {
             deactivate_plugins(RSOB_PLUGIN_BASENAME);
             wp_die(__('RealSatisfied Blocks requires WordPress 5.4 or higher.', 'realsatisfied-blocks'));
-        }
-
-        // Check for required plugin
-        if (!class_exists('RSRW_Real_Satisfied_Review_Widget')) {
-            deactivate_plugins(RSOB_PLUGIN_BASENAME);
-            wp_die(__('RealSatisfied Blocks requires the RealSatisfied Review Widget plugin.', 'realsatisfied-blocks'));
         }
 
         // Flush rewrite rules
