@@ -85,8 +85,7 @@ The plugin includes comprehensive text processing to handle:
 
 ### Blocks in the Block Picker
 ![Blocks in Block Picker](https://media.c21realestate.com/screenshot-c21masterscom.local-.jpeg)
-*Showing the widget blocks in the block editor*
-
+*Showing the widget blocks in the block editor.*
 
 ### Office Ratings & Testimonials Display
 ![Office Testimonials](https://media.c21realestate.com/screenshot-1-2.png)
