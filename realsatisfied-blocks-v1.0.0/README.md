@@ -75,6 +75,16 @@ The plugin includes comprehensive text processing to handle:
 - Smart quote and symbol conversion
 - Whitespace normalization
 
+## Screenshots
+
+### Office Ratings & Testimonials Display
+![Office Ratings and Testimonials](https://media.c21realestate.com/screenshot-1-2.png)
+*Example of the Office Ratings block and Office Testimonials block displaying customer reviews with star ratings, pagination, and responsive layout.*
+
+### Complete Integration Example
+![Complete Integration on C21 Masters](https://media.c21realestate.com/screenshot-c21masterscom.local-.jpeg)
+*Real-world implementation showing how the blocks integrate seamlessly into a professional real estate website layout.*
+
 ## Installation
 
 1. Upload the `realsatisfied-blocks` folder to `/wp-content/plugins/`
