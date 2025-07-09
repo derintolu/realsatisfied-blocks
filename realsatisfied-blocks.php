@@ -61,9 +61,6 @@ class RealSatisfied_Blocks {
         add_action('init', array($this, 'init'));
         add_action('plugins_loaded', array($this, 'load_textdomain'));
         
-        // Register block category
-        add_filter('block_categories_all', array($this, 'register_block_category'), 10, 2);
-        
         // Check for required plugin
         add_action('admin_notices', array($this, 'check_required_plugin'));
         
@@ -124,6 +121,10 @@ class RealSatisfied_Blocks {
             new RealSatisfied_Agent_Testimonials_Block();
         }
         
+        if (class_exists('RealSatisfied_Office_Agents_Block')) {
+            new RealSatisfied_Office_Agents_Block();
+        }
+        
         // Register blocks
         $this->register_blocks();
         
@@ -163,26 +164,6 @@ class RealSatisfied_Blocks {
     private function register_blocks() {
         // Blocks will be registered by their individual classes
         // This method serves as a central registration point if needed
-    }
-
-    /**
-     * Register custom block category
-     *
-     * @param array $categories Existing block categories
-     * @param WP_Block_Editor_Context $block_editor_context Block editor context
-     * @return array Modified block categories
-     */
-    public function register_block_category($categories, $block_editor_context) {
-        return array_merge(
-            array(
-                array(
-                    'slug'  => 'realsatisfied',
-                    'title' => __('RealSatisfied', 'realsatisfied-blocks'),
-                    'icon'  => 'star-filled',
-                ),
-            ),
-            $categories
-        );
     }
 
     /**

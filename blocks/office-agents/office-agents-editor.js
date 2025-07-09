@@ -22,7 +22,7 @@ registerBlockType('realsatisfied-blocks/office-agents', {
     title: __('RealSatisfied Office Agents', 'realsatisfied-blocks'),
     description: __('Display agents for an office with customizable layout and styling options.', 'realsatisfied-blocks'),
     icon: 'groups',
-    category: 'realsatisfied',
+    category: 'widgets',
     keywords: [
         __('agents', 'realsatisfied-blocks'),
         __('office', 'realsatisfied-blocks'),
