@@ -17,7 +17,7 @@
     registerBlockType('realsatisfied-blocks/office-testimonials', {
         title: __('Office Testimonials', 'realsatisfied-blocks'),
         icon: 'format-quote',
-        category: 'widgets',
+        category: 'realsatisfied',
         keywords: [
             __('realsatisfied', 'realsatisfied-blocks'),
             __('testimonials', 'realsatisfied-blocks'),

@@ -17,7 +17,7 @@
     registerBlockType('realsatisfied-blocks/agent-testimonials', {
         title: __('Agent Testimonials', 'realsatisfied-blocks'),
         icon: 'format-quote',
-        category: 'widgets',
+        category: 'realsatisfied',
         keywords: [
             __('realsatisfied', 'realsatisfied-blocks'),
             __('testimonials', 'realsatisfied-blocks'),
