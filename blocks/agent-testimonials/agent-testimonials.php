@@ -33,7 +33,7 @@ class RealSatisfied_Agent_Testimonials_Block {
      * Initialize hooks
      */
     private function init_hooks() {
-        add_action('init', array($this, 'register_block'));
+        // Register block is now called directly from main plugin
         add_action('enqueue_block_editor_assets', array($this, 'enqueue_editor_assets'));
         // Frontend assets are handled by the main plugin file
     }

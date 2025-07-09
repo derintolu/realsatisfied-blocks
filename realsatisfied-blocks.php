@@ -108,21 +108,29 @@ class RealSatisfied_Blocks {
             RealSatisfied_Widget_Compatibility::get_instance();
         }
 
-        // Initialize blocks
+        // Initialize blocks - call register_block directly since we're already in init hook
         if (class_exists('RealSatisfied_Office_Ratings_Block')) {
-            new RealSatisfied_Office_Ratings_Block();
+            $office_ratings_block = new RealSatisfied_Office_Ratings_Block();
+            $office_ratings_block->register_block();
         }
         
         if (class_exists('RealSatisfied_Office_Testimonials_Block')) {
-            new RealSatisfied_Office_Testimonials_Block();
+            $office_testimonials_block = new RealSatisfied_Office_Testimonials_Block();
+            $office_testimonials_block->register_block();
         }
         
         if (class_exists('RealSatisfied_Agent_Testimonials_Block')) {
-            new RealSatisfied_Agent_Testimonials_Block();
+            $agent_testimonials_block = new RealSatisfied_Agent_Testimonials_Block();
+            $agent_testimonials_block->register_block();
         }
         
         if (class_exists('RealSatisfied_Office_Agents_Block')) {
-            new RealSatisfied_Office_Agents_Block();
+            $office_agents_block = new RealSatisfied_Office_Agents_Block();
+            $office_agents_block->register_block();
+        }
+        
+        if (class_exists('RealSatisfied_Office_Stats_Block')) {
+            new RealSatisfied_Office_Stats_Block();
         }
         
         // Register blocks
