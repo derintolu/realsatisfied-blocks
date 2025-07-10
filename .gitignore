@@ -1,3 +1,7 @@
 node_modules
 quick-test.php
 safety-check.sh
+
+# Release packages - distribute via GitHub Releases, don't track in repo
+realsatisfied-blocks-v*/
+*.zip
