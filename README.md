@@ -1,6 +1,6 @@
 # RealSatisfied Blocks
 
-**Version:** 1.0.0  
+**Version:** 1.2.0  
 **Requires WordPress:** 5.4+  
 **Tested up to:** WordPress 6.7  
 **License:** GPLv2 or later  
