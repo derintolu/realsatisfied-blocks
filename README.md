@@ -35,13 +35,21 @@ RealSatisfied Blocks is a **standalone WordPress plugin** that provides three po
 
 ### Available Blocks
 
-#### 1. Office Ratings Block
+#### 1. 🎉 NEW: Testimonial Marquee Block
+  - Seamless dual-row infinite scroll animation
+  - Company-wide RSS testimonial aggregation
+  - Advanced randomization for agent diversity
+  - GPU-accelerated smooth animations
+  - Responsive design with mobile optimization
+  - Live editor preview with ServerSideRender
+
+#### 2. Office Ratings Block
 - Display overall office satisfaction ratings
 - Show recommendation and performance metrics
 - Configurable rating display formats
 - Star rating visualization
 
-#### 2. Office Testimonials Block
+#### 3. Office Testimonials Block
 - Display customer testimonials for real estate offices
 - Pagination with configurable items per page
 - Filtering by customer type and rating
@@ -50,7 +58,7 @@ RealSatisfied Blocks is a **standalone WordPress plugin** that provides three po
 - Customer avatar support
 - Date formatting options
 
-#### 3. Agent Testimonials Block
+#### 4. Agent Testimonials Block
 - Display customer testimonials for individual agents
 - Agent-specific data sourcing via RSS feeds
 - Pagination and filtering capabilities
