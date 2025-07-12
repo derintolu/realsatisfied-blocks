@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: RealSatisfied Blocks
+ * Plugin Name: RealSatisfied Blocks Dev Copy
  * Description: Standalone Gutenberg blocks for RealSatisfied office and agent data - ratings and testimonials with WordPress Interactivity API. No dependencies required.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: RealSatisfied
  * Text Domain: realsatisfied-blocks
  * Requires at least: 5.4
@@ -73,6 +73,7 @@ class RealSatisfied_Blocks {
         // Load includes
         require_once RSOB_PLUGIN_PATH . 'includes/class-office-rss-parser.php';
         require_once RSOB_PLUGIN_PATH . 'includes/class-agent-rss-parser.php';
+        require_once RSOB_PLUGIN_PATH . 'includes/class-company-rss-parser.php';
         require_once RSOB_PLUGIN_PATH . 'includes/class-custom-fields.php';
         require_once RSOB_PLUGIN_PATH . 'includes/class-widget-compatibility.php';
         
@@ -80,6 +81,7 @@ class RealSatisfied_Blocks {
         require_once RSOB_PLUGIN_PATH . 'blocks/office-ratings/office-ratings.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/office-testimonials/office-testimonials.php';
         require_once RSOB_PLUGIN_PATH . 'blocks/agent-testimonials/agent-testimonials.php';
+        require_once RSOB_PLUGIN_PATH . 'blocks/testimonial-marquee/testimonial-marquee.php';
     }
 
     /**
@@ -93,6 +95,10 @@ class RealSatisfied_Blocks {
         
         if (class_exists('RealSatisfied_Agent_RSS_Parser')) {
             RealSatisfied_Agent_RSS_Parser::get_instance();
+        }
+        
+        if (class_exists('RealSatisfied_Company_RSS_Parser')) {
+            RealSatisfied_Company_RSS_Parser::get_instance();
         }
         
         if (class_exists('RealSatisfied_Custom_Fields')) {
@@ -117,6 +123,11 @@ class RealSatisfied_Blocks {
         if (class_exists('RealSatisfied_Agent_Testimonials_Block')) {
             $agent_testimonials_block = new RealSatisfied_Agent_Testimonials_Block();
             $agent_testimonials_block->register_block();
+        }
+        
+        if (class_exists('RealSatisfied_Testimonial_Marquee_Block')) {
+            $testimonial_marquee_block = new RealSatisfied_Testimonial_Marquee_Block();
+            $testimonial_marquee_block->register_block();
         }
         
         // Register blocks
@@ -218,6 +229,17 @@ class RealSatisfied_Blocks {
                 RSOB_PLUGIN_URL . 'blocks/office-testimonials/view.js',
                 array('@wordpress/interactivity'),
                 RSOB_PLUGIN_VERSION
+            );
+        }
+        
+        // Check for testimonial marquee block
+        if (has_block('realsatisfied-blocks/testimonial-marquee')) {
+            wp_enqueue_script(
+                'realsatisfied-testimonial-marquee-view',
+                RSOB_PLUGIN_URL . 'blocks/testimonial-marquee/view.js',
+                array(),
+                RSOB_PLUGIN_VERSION,
+                true
             );
         }
     }
