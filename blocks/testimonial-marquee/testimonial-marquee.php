@@ -41,8 +41,6 @@ class RealSatisfied_Testimonial_Marquee_Block {
      * Register the block
      */
     public function register_block() {
-        // Debug logging
-        error_log('RealSatisfied Testimonial Marquee: Attempting to register block ' . $this->block_name);
         
         // Register editor script
         $asset_file_path = plugin_dir_path(__FILE__) . 'testimonial-marquee-editor.asset.php';
@@ -92,9 +90,7 @@ class RealSatisfied_Testimonial_Marquee_Block {
             'style' => 'realsatisfied-testimonial-marquee-style'
         ));
         
-        if ($result) {
-            error_log('RealSatisfied Testimonial Marquee: Block registered successfully');
-        } else {
+        if (!$result) {
             error_log('RealSatisfied Testimonial Marquee: Block registration failed');
         }
         
@@ -175,24 +171,18 @@ class RealSatisfied_Testimonial_Marquee_Block {
      * @return string Block HTML
      */
     public function render_block($attributes) {
-        error_log('RealSatisfied Testimonial Marquee: render_block called with attributes: ' . print_r($attributes, true));
-        
         // Merge with defaults
         $attributes = wp_parse_args($attributes, $this->get_default_attributes());
-        error_log('RealSatisfied Testimonial Marquee: merged attributes: ' . print_r($attributes, true));
 
         // Check if company ID is provided
         if (empty($attributes['companyId'])) {
-            error_log('RealSatisfied Testimonial Marquee: No company ID provided in attributes');
             return '<div class="rs-testimonial-marquee-empty"><p>' . __('Please configure a Company ID in the block settings.', 'realsatisfied-blocks') . '</p></div>';
         }
 
         // Get company testimonials
         $testimonials = $this->get_company_testimonials($attributes);
-        error_log('RealSatisfied Testimonial Marquee: found ' . count($testimonials) . ' testimonials');
         
         if (empty($testimonials)) {
-            error_log('RealSatisfied Testimonial Marquee: No testimonials found, returning empty message');
             return $this->render_no_testimonials_message();
         }
 
@@ -207,16 +197,8 @@ class RealSatisfied_Testimonial_Marquee_Block {
         }
 
         // Split testimonials between rows to ensure different content
-        error_log('RealSatisfied Testimonial Marquee: Creating row sets from ' . count($testimonials) . ' total testimonials');
         $row1_testimonials = $this->create_row_testimonial_set($testimonials, 'even');
         $row2_testimonials = $this->create_row_testimonial_set($testimonials, 'odd');
-        
-        // Log diversity stats
-        $row1_agents = array_unique(array_map(function($t) { return $t['agent_name']; }, $row1_testimonials));
-        $row2_agents = array_unique(array_map(function($t) { return $t['agent_name']; }, $row2_testimonials));
-        
-        error_log('RealSatisfied Testimonial Marquee: Row 1 has ' . count($row1_testimonials) . ' testimonials from ' . count($row1_agents) . ' different agents');
-        error_log('RealSatisfied Testimonial Marquee: Row 2 has ' . count($row2_testimonials) . ' testimonials from ' . count($row2_agents) . ' different agents');
 
         // Generate unique ID for this block instance
         $block_id = 'rs-testimonial-marquee-' . wp_rand(1000, 9999);
@@ -284,11 +266,8 @@ class RealSatisfied_Testimonial_Marquee_Block {
      * @param array $attributes Block attributes
      * @return array Testimonials array
      */
-    private function get_company_testimonials($attributes) {
-        error_log('RealSatisfied Testimonial Marquee: get_company_testimonials called with companyId: ' . $attributes['companyId']);
-        
+    private function get_company_testimonials($attributes) {        
         if (empty($attributes['companyId'])) {
-            error_log('RealSatisfied Testimonial Marquee: No company ID provided');
             return array();
         }
         
@@ -298,7 +277,6 @@ class RealSatisfied_Testimonial_Marquee_Block {
         }
         
         $parser = RealSatisfied_Company_RSS_Parser::get_instance();
-        error_log('RealSatisfied Testimonial Marquee: Parser instance created');
         
         $options = array(
             'limit' => $attributes['maxTestimonials'] * 2, // Get more to filter from
@@ -306,14 +284,16 @@ class RealSatisfied_Testimonial_Marquee_Block {
         );
 
         $company_data = $parser->fetch_company_data($attributes['companyId'], $options);
-        error_log('RealSatisfied Testimonial Marquee: fetch_company_data returned: ' . (is_wp_error($company_data) ? 'WP_Error: ' . $company_data->get_error_message() : 'success'));
         
-        if (is_wp_error($company_data) || empty($company_data['testimonials'])) {
-            error_log('RealSatisfied Testimonial Marquee: No testimonials found or error occurred');
+        if (is_wp_error($company_data)) {
+            error_log('RealSatisfied Testimonial Marquee: Error fetching company data: ' . $company_data->get_error_message());
+            return array();
+        }
+        
+        if (empty($company_data['testimonials'])) {
             return array();
         }
 
-        error_log('RealSatisfied Testimonial Marquee: Found ' . count($company_data['testimonials']) . ' testimonials');
         return $company_data['testimonials'];
     }
 

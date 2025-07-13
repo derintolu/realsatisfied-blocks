@@ -5,6 +5,9 @@
         },
         {
             "path": "."
+        },
+        {
+            "path": "../../../../../../../Documents/Product plugin"
         }
     ],
 	"settings": {}

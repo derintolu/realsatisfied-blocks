@@ -1,14 +1,16 @@
 <?php
 /**
- * Plugin Name: RealSatisfied Blocks Dev Copy
+ * Plugin Name: RealSatisfied Blocks
  * Description: Standalone Gutenberg blocks for RealSatisfied office and agent data - ratings and testimonials with WordPress Interactivity API. No dependencies required.
  * Version: 1.2.0
- * Author: RealSatisfied
+ * Author: Derin Tolu
  * Text Domain: realsatisfied-blocks
  * Requires at least: 5.4
  * Tested up to: 6.7
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
+ * Update URI: false
+ * Plugin Slug: realsatisfied-blocks
  */
 
 // Prevent direct access
