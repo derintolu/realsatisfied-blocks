@@ -146,8 +146,18 @@ class RealSatisfied_Company_RSS_Parser {
             return $company_data;
         }
 
-        // Cache the result for 10 minutes (600 seconds) to improve editor performance
-        set_transient($cache_key, $company_data, 600);
+        // Cache the result for 12 hours (43200 seconds)
+        set_transient($cache_key, $company_data, $this->cache_duration);
+        
+        // Store cache metadata for the cache manager
+        $cache_hash = md5($company_id . serialize($options));
+        $meta_key = 'realsatisfied_company_meta_' . $cache_hash;
+        update_option($meta_key, array(
+            'company_id' => $company_id,
+            'options' => $options,
+            'cached_at' => time(),
+            'cache_key' => $cache_key
+        ), false);
 
         return $company_data;
     }

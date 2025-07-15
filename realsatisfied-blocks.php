@@ -78,6 +78,8 @@ class RealSatisfied_Blocks {
         require_once RSOB_PLUGIN_PATH . 'includes/class-company-rss-parser.php';
         require_once RSOB_PLUGIN_PATH . 'includes/class-custom-fields.php';
         require_once RSOB_PLUGIN_PATH . 'includes/class-widget-compatibility.php';
+        require_once RSOB_PLUGIN_PATH . 'includes/class-rss-cache-manager.php';
+        require_once RSOB_PLUGIN_PATH . 'includes/class-rss-cache-admin.php';
         
         // Load blocks
         require_once RSOB_PLUGIN_PATH . 'blocks/office-ratings/office-ratings.php';
