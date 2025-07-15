@@ -25,6 +25,13 @@ class RealSatisfied_Cache_Admin {
     private static $instance = null;
 
     /**
+     * Admin page hook
+     *
+     * @var string
+     */
+    private $admin_hook = null;
+
+    /**
      * Get plugin instance
      *
      * @return RealSatisfied_Cache_Admin
@@ -56,21 +63,29 @@ class RealSatisfied_Cache_Admin {
      * Add admin menu page
      */
     public function add_admin_menu() {
-        // Add as submenu under Tools only
-        add_management_page(
+        // Only add if user has proper capabilities and we're in admin
+        if (!current_user_can('manage_options') || !is_admin()) {
+            return;
+        }
+        
+        // Add as submenu under Tools
+        $hook = add_management_page(
             __('RealSatisfied Cache Manager', 'realsatisfied-blocks'),
             __('RealSatisfied Cache', 'realsatisfied-blocks'),
             'manage_options',
             'realsatisfied-cache',
             array($this, 'admin_page')
         );
+        
+        // Store hook for script enqueuing
+        $this->admin_hook = $hook;
     }
 
     /**
      * Enqueue admin scripts
      */
     public function enqueue_admin_scripts($hook) {
-        if ($hook !== 'settings_page_realsatisfied-cache') {
+        if (!$this->admin_hook || $hook !== $this->admin_hook) {
             return;
         }
 
@@ -373,9 +388,15 @@ class RealSatisfied_Cache_Admin {
     }
 }
 
-// Initialize admin interface
+// Initialize admin interface - conditional to prevent conflicts
 add_action('plugins_loaded', function() {
     if (is_admin() && class_exists('RealSatisfied_RSS_Cache_Manager')) {
-        RealSatisfied_Cache_Admin::get_instance();
+        // Only add admin menu if no conflicts detected
+        // You can set this to false if you experience admin menu conflicts
+        $enable_admin_menu = apply_filters('realsatisfied_enable_cache_admin', true);
+        
+        if ($enable_admin_menu) {
+            RealSatisfied_Cache_Admin::get_instance();
+        }
     }
 });
