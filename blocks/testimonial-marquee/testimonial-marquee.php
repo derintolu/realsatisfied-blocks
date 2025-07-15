@@ -110,7 +110,7 @@ class RealSatisfied_Testimonial_Marquee_Block {
             ),
             'maxTestimonials' => array(
                 'type' => 'number',
-                'default' => 30 // Reduced from 100 for better performance
+                'default' => 100
             ),
             'animationSpeed' => array(
                 'type' => 'number',
@@ -279,7 +279,7 @@ class RealSatisfied_Testimonial_Marquee_Block {
         $parser = RealSatisfied_Company_RSS_Parser::get_instance();
         
         $options = array(
-            'limit' => min($attributes['maxTestimonials'] * 1.5, 50), // Reduced multiplier and added max cap
+            'limit' => $attributes['maxTestimonials'] * 2, // Get more to filter from
             'preserve_order' => false // Allow shuffling
         );
 
@@ -355,7 +355,7 @@ class RealSatisfied_Testimonial_Marquee_Block {
         }
         
         // If we don't have enough testimonials, carefully add more without clustering
-        $target_count = 15; // Reduced from 25 for better performance
+        $target_count = 25;
         if (count($row_testimonials) < $target_count && count($diverse_set) > 0) {
             $extended_set = $row_testimonials;
             $needed = $target_count - count($row_testimonials);
@@ -466,7 +466,7 @@ class RealSatisfied_Testimonial_Marquee_Block {
             $html .= '<div class="rs-agent-info">';
             
             if ($attributes['showAgentAvatar'] && !empty($testimonial['agent_avatar'])) {
-                $html .= '<img class="rs-agent-avatar" loading="lazy" src="' . esc_url($testimonial['agent_avatar']) . '" alt="' . esc_attr($testimonial['agent_name']) . '" />';
+                $html .= '<img class="rs-agent-avatar" src="' . esc_url($testimonial['agent_avatar']) . '" alt="' . esc_attr($testimonial['agent_name']) . '" />';
             }
             
             if ($attributes['showAgentName'] && !empty($testimonial['agent_name'])) {
@@ -498,14 +498,12 @@ class RealSatisfied_Testimonial_Marquee_Block {
         $css .= 'color: ' . esc_attr($attributes['textColor']) . ';';
         $css .= 'overflow: hidden;';
         $css .= 'padding: 20px 0;';
-        $css .= 'contain: layout style paint;'; // CSS containment for better performance
         $css .= '}';
 
         $css .= '#' . $block_id . ' .rs-marquee-row {';
         $css .= 'margin: 10px 0;';
         $css .= 'white-space: nowrap;';
         $css .= 'overflow: hidden;';
-        $css .= 'contain: strict;'; // Strict containment for rows
         $css .= '}';
 
         $css .= '#' . $block_id . ' .rs-marquee-track {';
@@ -517,7 +515,6 @@ class RealSatisfied_Testimonial_Marquee_Block {
         $css .= 'will-change: transform;';
         $css .= 'transform: translateZ(0);';
         $css .= 'white-space: nowrap;';
-        $css .= 'contain: layout;'; // Layout containment for tracks
         $css .= '}';
         
         $css .= '#' . $block_id . ' .rs-marquee-content {';
@@ -619,7 +616,6 @@ class RealSatisfied_Testimonial_Marquee_Block {
         $css .= 'height: 32px;';
         $css .= 'border-radius: 50%;';
         $css .= 'object-fit: cover;';
-        $css .= 'content-visibility: auto;'; // Performance optimization for images
         $css .= '}';
 
         $css .= '#' . $block_id . ' .rs-agent-name {';
