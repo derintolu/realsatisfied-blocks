@@ -42,7 +42,8 @@
                     }
                 });
             }, {
-                threshold: 0.1 // Trigger when 10% visible
+                threshold: 0.1, // Trigger when 10% visible
+                rootMargin: '50px' // Start loading 50px before becoming visible
             });
             
             observer.observe(marquee);
@@ -53,6 +54,16 @@
             if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                 tracks.forEach(function(track) {
                     track.style.animationDuration = (speed * 3) + 's'; // Slow down significantly
+                });
+            }
+            
+            // Performance optimization: Throttle any potential DOM updates
+            let rafId;
+            function performanceOptimization() {
+                if (rafId) return;
+                rafId = requestAnimationFrame(function() {
+                    // Any future DOM updates can be batched here
+                    rafId = null;
                 });
             }
         });

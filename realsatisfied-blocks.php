@@ -2,7 +2,7 @@
 /**
  * Plugin Name: RealSatisfied Blocks
  * Description: Standalone Gutenberg blocks for RealSatisfied office and agent data - ratings and testimonials with WordPress Interactivity API. No dependencies required.
- * Version: 1.2.0
+ * Version: 1.2.1
  * Author: Derin Tolu
  * Text Domain: realsatisfied-blocks
  * Requires at least: 5.4
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('RSOB_PLUGIN_VERSION', '1.2.0');
+define('RSOB_PLUGIN_VERSION', '1.2.1');
 define('RSOB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('RSOB_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('RSOB_PLUGIN_BASENAME', plugin_basename(__FILE__));
