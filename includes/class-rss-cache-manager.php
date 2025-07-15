@@ -19,7 +19,16 @@ if (!defined('ABSPATH')) {
 class RealSatisfied_RSS_Cache_Manager {
     
     /**
-     * Plugin instance
+     * Plu    /**
+     * Get default company IDs that should always be cached
+     *
+     * @return array Default company IDs
+     */
+    private function get_default_company_ids() {
+        // Don't hard-code any company IDs - only cache what's actually being used
+        // Company IDs should be discovered from actual testimonial marquee blocks in use
+        return array();
+    }e
      *
      * @var RealSatisfied_RSS_Cache_Manager
      */
@@ -345,9 +354,9 @@ class RealSatisfied_RSS_Cache_Manager {
             }
         }
         
-        // Fallback: Add common company IDs if none found
+        // Fallback: Scan for company IDs used in testimonial marquee blocks
         if (empty($company_ids)) {
-            $company_ids = $this->get_default_company_ids();
+            $company_ids = $this->get_company_ids_from_blocks();
         }
         
         return array_unique($company_ids);
@@ -420,15 +429,46 @@ class RealSatisfied_RSS_Cache_Manager {
     }
 
     /**
-     * Get default company IDs to prefetch
+     * Get default company IDs that should always be cached
      *
      * @return array Default company IDs
      */
     private function get_default_company_ids() {
-        // Add common company IDs that should always be cached
-        return array(
-            'c21masters' // Add your company's default ID here
+        // Don't hard-code any company IDs - only cache what's actually being used
+        // Company IDs should be discovered from actual testimonial marquee blocks in use
+        return array();
+    }
+
+    /**
+     * Get company IDs from testimonial marquee blocks in use
+     *
+     * @return array Company IDs found in actual blocks
+     */
+    private function get_company_ids_from_blocks() {
+        global $wpdb;
+        
+        $company_ids = array();
+        
+        // Search for testimonial marquee blocks in post content
+        $results = $wpdb->get_results(
+            "SELECT post_content FROM {$wpdb->posts} 
+             WHERE post_status = 'publish' 
+             AND post_content LIKE '%wp:realsatisfied-blocks/testimonial-marquee%'",
+            ARRAY_A
         );
+        
+        foreach ($results as $result) {
+            // Parse block content to extract companyId attributes
+            if (preg_match_all('/\"companyId\":\"([^\"]+)\"/', $result['post_content'], $matches)) {
+                foreach ($matches[1] as $company_id) {
+                    if (!empty($company_id) && !in_array($company_id, $company_ids)) {
+                        $company_ids[] = sanitize_text_field($company_id);
+                    }
+                }
+            }
+        }
+        
+        return $company_ids;
     }
 
     /**
