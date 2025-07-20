@@ -57,6 +57,7 @@ class RealSatisfied_Cache_Admin {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('wp_ajax_realsatisfied_manual_refresh', array($this, 'handle_manual_refresh'));
+        add_action('wp_ajax_realsatisfied_save_company_ids', array($this, 'save_company_cache_ids'));
     }
 
     /**
@@ -201,6 +202,34 @@ class RealSatisfied_Cache_Admin {
                 </div>
             </div>
 
+            <div class="postbox">
+                <h2 class="hndle"><?php _e('Company Cache Configuration', 'realsatisfied-blocks'); ?></h2>
+                <div class="inside">
+                    <p><?php _e('Configure which company IDs should be cached for testimonial marquee blocks. Enter comma-separated company IDs.', 'realsatisfied-blocks'); ?></p>
+                    <form id="company-cache-config">
+                        <?php
+                        $saved_company_ids = get_option('realsatisfied_company_cache_ids', array());
+                        $company_ids_text = is_array($saved_company_ids) ? implode(', ', $saved_company_ids) : '';
+                        ?>
+                        <p>
+                            <label for="company_cache_ids">
+                                <strong><?php _e('Company IDs:', 'realsatisfied-blocks'); ?></strong><br>
+                                <textarea id="company_cache_ids" name="company_cache_ids" rows="3" cols="50" class="large-text"><?php echo esc_textarea($company_ids_text); ?></textarea>
+                            </label>
+                        </p>
+                        <p class="description">
+                            <?php _e('Example: 12345, 67890, 13579. Leave empty to auto-discover from testimonial marquee blocks.', 'realsatisfied-blocks'); ?>
+                        </p>
+                        <p>
+                            <button type="submit" class="button button-primary">
+                                <?php _e('Save Company IDs', 'realsatisfied-blocks'); ?>
+                            </button>
+                        </p>
+                        <?php wp_nonce_field('realsatisfied_save_company_ids', 'company_ids_nonce'); ?>
+                    </form>
+                </div>
+            </div>
+
             <div id="cache-refresh-result" style="display: none;" class="notice">
                 <p id="cache-refresh-message"></p>
             </div>
@@ -308,6 +337,50 @@ class RealSatisfied_Cache_Admin {
                     }
                 });
             });
+            
+            // Company ID configuration form
+            $('#company-cache-config').on('submit', function(e) {
+                e.preventDefault();
+                
+                var form = $(this);
+                var formData = form.serialize() + '&action=realsatisfied_save_company_ids';
+                
+                var submitButton = form.find('button[type="submit"]');
+                var originalText = submitButton.text();
+                
+                submitButton.prop('disabled', true).text('<?php echo esc_js(__('Saving...', 'realsatisfied-blocks')); ?>');
+                
+                $.ajax({
+                    url: realsatisfiedCache.ajaxurl,
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.success) {
+                            $('#cache-refresh-result')
+                                .removeClass('notice-error')
+                                .addClass('notice-success')
+                                .show();
+                            $('#cache-refresh-message').text(response.data.message);
+                        } else {
+                            $('#cache-refresh-result')
+                                .removeClass('notice-success')
+                                .addClass('notice-error')
+                                .show();
+                            $('#cache-refresh-message').text(response.data || 'Failed to save company IDs.');
+                        }
+                    },
+                    error: function() {
+                        $('#cache-refresh-result')
+                            .removeClass('notice-success')
+                            .addClass('notice-error')
+                            .show();
+                        $('#cache-refresh-message').text('AJAX request failed.');
+                    },
+                    complete: function() {
+                        submitButton.prop('disabled', false).text(originalText);
+                    }
+                });
+            });
         });
         </script>
 
@@ -329,6 +402,35 @@ class RealSatisfied_Cache_Admin {
         }
         </style>
         <?php
+    }
+
+    /**
+     * Handle AJAX request to save company cache IDs
+     */
+    public function save_company_cache_ids() {
+        // Verify user permissions
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Insufficient permissions', 'realsatisfied-blocks'));
+        }
+        
+        // Verify nonce for security
+        if (!check_admin_referer('realsatisfied_save_company_ids', 'company_ids_nonce')) {
+            wp_send_json_error(__('Security check failed', 'realsatisfied-blocks'));
+        }
+
+        // Get and sanitize company IDs
+        $company_ids_raw = isset($_POST['company_cache_ids']) ? sanitize_textarea_field($_POST['company_cache_ids']) : '';
+        
+        // Convert to array and clean up
+        $company_ids = array_filter(array_map('trim', explode(',', $company_ids_raw)));
+        
+        // Save to options
+        update_option('realsatisfied_company_cache_ids', $company_ids);
+        
+        wp_send_json_success(array(
+            'message' => sprintf(__('Company cache IDs saved successfully (%d IDs)', 'realsatisfied-blocks'), count($company_ids)),
+            'company_ids' => $company_ids
+        ));
     }
 
     /**

@@ -19,15 +19,20 @@ if (!defined('ABSPATH')) {
 class RealSatisfied_RSS_Cache_Manager {
     
     /**
-     * Plu    /**
      * Get default company IDs that should always be cached
      *
      * @return array Default company IDs
      */
     private function get_default_company_ids() {
-        // Don't hard-code any company IDs - only cache what's actually being used
-        // Company IDs should be discovered from actual testimonial marquee blocks in use
-        return array();
+        // Get configured company IDs from admin settings first
+        $company_ids = get_option('realsatisfied_company_cache_ids', array());
+        
+        // If no admin configuration, fall back to scanning blocks (expensive, only in cron)
+        if (empty($company_ids) && wp_doing_cron()) {
+            $company_ids = $this->get_company_ids_from_blocks();
+        }
+        
+        return is_array($company_ids) ? $company_ids : array();
     }
 
     /**
@@ -211,23 +216,34 @@ class RealSatisfied_RSS_Cache_Manager {
         
         foreach ($company_ids as $company_id) {
             try {
-                // Force refresh by clearing cache first
-                $cache_key = 'rsob_company_' . md5($company_id . serialize(array()));
-                delete_transient($cache_key);
-                
-                // Fetch fresh data (this will create new cache)
-                $options = array(
-                    'limit' => 50,
-                    'preserve_order' => false
+                // Cache multiple variations that testimonial marquee blocks typically use
+                $cache_variations = array(
+                    // Default options (empty)
+                    array(),
+                    // Common testimonial marquee options  
+                    array('limit' => 50, 'preserve_order' => false),
+                    array('limit' => 100, 'preserve_order' => false),
+                    array('limit' => 30, 'preserve_order' => false),
+                    array('limit' => 60, 'preserve_order' => false)
                 );
                 
-                $data = $parser->fetch_company_data($company_id, $options);
-                
-                if (!is_wp_error($data) && !empty($data['testimonials'])) {
-                    $refreshed++;
+                foreach ($cache_variations as $options) {
+                    // Force refresh by clearing cache first
+                    $cache_key = 'rsob_company_' . md5($company_id . serialize($options));
+                    delete_transient($cache_key);
+                    
+                    // Fetch fresh data (this will create new cache)
+                    $data = $parser->fetch_company_data($company_id, $options);
+                    
+                    if (!is_wp_error($data) && !empty($data['testimonials'])) {
+                        $refreshed++;
+                    }
+                    
+                    // Small delay between variations
+                    usleep(100000); // 0.1 seconds
                 }
                 
-                // Small delay to prevent overwhelming the RSS server
+                // Delay between company IDs to prevent overwhelming the RSS server
                 usleep(250000); // 0.25 seconds
                 
             } catch (Exception $e) {
@@ -334,30 +350,11 @@ class RealSatisfied_RSS_Cache_Manager {
      * @return array Company IDs that have been cached
      */
     private function get_cached_company_ids() {
-        global $wpdb;
+        // Use a simple, fast approach - just get default company IDs
+        // The cache system should only refresh what's actually being used
+        $company_ids = $this->get_default_company_ids();
         
-        // Get all transients that match company pattern
-        $results = $wpdb->get_results(
-            "SELECT option_name FROM {$wpdb->options} 
-             WHERE option_name LIKE '_transient_rsob_company_%'",
-            ARRAY_A
-        );
-        
-        $company_ids = array();
-        foreach ($results as $result) {
-            // Extract the MD5 hash from the transient name
-            $hash = str_replace('_transient_rsob_company_', '', $result['option_name']);
-            
-            // Try to find the original company ID from cache metadata
-            $meta_key = 'realsatisfied_company_meta_' . $hash;
-            $meta = get_option($meta_key);
-            
-            if ($meta && isset($meta['company_id'])) {
-                $company_ids[] = $meta['company_id'];
-            }
-        }
-        
-        // Fallback: Scan for company IDs used in testimonial marquee blocks
+        // If no defaults, do a quick scan for testimonial marquee blocks
         if (empty($company_ids)) {
             $company_ids = $this->get_company_ids_from_blocks();
         }
@@ -429,17 +426,6 @@ class RealSatisfied_RSS_Cache_Manager {
         }
         
         return array_unique($vanity_keys);
-    }
-
-    /**
-     * Get default company IDs that should always be cached
-     *
-     * @return array Default company IDs
-     */
-    private function get_default_company_ids() {
-        // Don't hard-code any company IDs - only cache what's actually being used
-        // Company IDs should be discovered from actual testimonial marquee blocks in use
-        return array();
     }
 
     /**
