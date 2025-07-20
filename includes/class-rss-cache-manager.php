@@ -28,7 +28,10 @@ class RealSatisfied_RSS_Cache_Manager {
         // Don't hard-code any company IDs - only cache what's actually being used
         // Company IDs should be discovered from actual testimonial marquee blocks in use
         return array();
-    }e
+    }
+
+    /**
+     * Plugin instance
      *
      * @var RealSatisfied_RSS_Cache_Manager
      */
