@@ -3,6 +3,18 @@ claude
 quick-test.php
 safety-check.sh
 
+# Development environment files
+.DS_Store
+.cursorrules
+.claude/
+*.code-workspace
+
+# Development documentation (regenerate as needed)
+CHANGELOG.md
+DEVELOPMENT.md
+PROJECT-SUMMARY.md
+SAFETY-PROTOCOL.md
+
 # Release packages - distribute via GitHub Releases, don't track in repo
 realsatisfied-blocks-v*/
 *.zip
