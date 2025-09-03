@@ -1,12 +1,13 @@
 <?php
 /**
  * Plugin Name: RealSatisfied Blocks
+ * Plugin URI: https://github.com/derintolu/realsatisfied-blocks
  * Description: Standalone Gutenberg blocks for RealSatisfied office and agent data - ratings and testimonials with WordPress Interactivity API. No dependencies required.
- * Version: 1.2.2
+ * Version: 1.4.0
  * Author: Derin Tolu
  * Text Domain: realsatisfied-blocks
  * Requires at least: 5.4
- * Tested up to: 6.7
+ * Tested up to: 6.7.1
  * License: GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * Update URI: false
@@ -19,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('RSOB_PLUGIN_VERSION', '1.2.2');
+define('RSOB_PLUGIN_VERSION', '1.4.0');
 define('RSOB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('RSOB_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('RSOB_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -140,6 +141,9 @@ class RealSatisfied_Blocks {
         // Enqueue assets
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
         add_action('enqueue_block_editor_assets', array($this, 'enqueue_editor_assets'));
+        
+        // Add lazy loading support for images
+        add_filter('wp_img_tag_add_loading_attr', array($this, 'add_loading_lazy_to_realsatisfied_images'), 10, 3);
     }
 
     /**
@@ -280,6 +284,24 @@ class RealSatisfied_Blocks {
     public function deactivate() {
         // Clean up if needed
         flush_rewrite_rules();
+    }
+    
+    /**
+     * Add lazy loading to RealSatisfied block images
+     *
+     * @param string $value The loading attribute value
+     * @param string $image The HTML img tag  
+     * @param string $context The context where the function is called (unused)
+     * @return string The loading attribute value
+     */
+    public function add_loading_lazy_to_realsatisfied_images($value, $image, $context) {
+        // Only apply to images with RealSatisfied classes
+        if (strpos($image, 'realsatisfied-') !== false || 
+            strpos($image, 'rs-agent-avatar') !== false ||
+            strpos($image, 'agent-photo') !== false) {
+            return 'lazy';
+        }
+        return $value;
     }
 }
 

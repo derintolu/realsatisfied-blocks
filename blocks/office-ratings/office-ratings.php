@@ -273,7 +273,7 @@ class RealSatisfied_Office_Ratings_Block {
                 <!-- div5: Trust badge -->
                 <div class="div5">
                     <a href="https://www.realsatisfied.com/" target="_blank" rel="noopener noreferrer" class="realsatisfied-trust-link">
-                        <img src="<?php echo esc_url(RSOB_PLUGIN_URL . 'assets/images/RealSatisfied-Trust-Seal-80pix.png'); ?>" alt="<?php echo esc_attr(__('RealSatisfied Trust Seal', 'realsatisfied-blocks')); ?>" class="realsatisfied-trust-image" />
+                        <img src="<?php echo esc_url(RSOB_PLUGIN_URL . 'assets/images/RealSatisfied-Trust-Seal-80pix.png'); ?>" alt="<?php echo esc_attr(__('RealSatisfied Trust Seal', 'realsatisfied-blocks')); ?>" class="realsatisfied-trust-image" loading="lazy" decoding="async" />
                     </a>
                 </div>
                 <?php endif; ?>
@@ -448,7 +448,7 @@ class RealSatisfied_Office_Ratings_Block {
      */
     private function render_realsatisfied_trust_badge() {
         $badge_url = RSOB_PLUGIN_URL . 'assets/images/realsatisfied-trust-badge.svg';
-        return '<img src="' . esc_url($badge_url) . '" alt="' . esc_attr(__('Verified with RealSatisfied', 'realsatisfied-blocks')) . '" class="realsatisfied-trust-badge-img" />';
+        return '<img src="' . esc_url($badge_url) . '" alt="' . esc_attr(__('Verified with RealSatisfied', 'realsatisfied-blocks')) . '" class="realsatisfied-trust-badge-img" loading="lazy" decoding="async" />';
     }
 
     /**

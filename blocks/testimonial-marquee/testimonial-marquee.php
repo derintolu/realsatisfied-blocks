@@ -91,7 +91,7 @@ class RealSatisfied_Testimonial_Marquee_Block {
         ));
         
         if (!$result) {
-            error_log('RealSatisfied Testimonial Marquee: Block registration failed');
+            // Block registration failed - handled silently
         }
         
         return $result;
@@ -272,7 +272,7 @@ class RealSatisfied_Testimonial_Marquee_Block {
         }
         
         if (!class_exists('RealSatisfied_Company_RSS_Parser')) {
-            error_log('RealSatisfied Testimonial Marquee: RealSatisfied_Company_RSS_Parser class not found');
+            // RSS Parser class not found - return empty array
             return array();
         }
         
@@ -286,7 +286,7 @@ class RealSatisfied_Testimonial_Marquee_Block {
         $company_data = $parser->fetch_company_data($attributes['companyId'], $options);
         
         if (is_wp_error($company_data)) {
-            error_log('RealSatisfied Testimonial Marquee: Error fetching company data: ' . $company_data->get_error_message());
+            // Error fetching company data - return empty array
             return array();
         }
         
@@ -466,7 +466,7 @@ class RealSatisfied_Testimonial_Marquee_Block {
             $html .= '<div class="rs-agent-info">';
             
             if ($attributes['showAgentAvatar'] && !empty($testimonial['agent_avatar'])) {
-                $html .= '<img class="rs-agent-avatar" src="' . esc_url($testimonial['agent_avatar']) . '" alt="' . esc_attr($testimonial['agent_name']) . '" />';
+                $html .= '<img class="rs-agent-avatar" src="' . esc_url($testimonial['agent_avatar']) . '" alt="' . esc_attr($testimonial['agent_name']) . '" loading="lazy" decoding="async" />';
             }
             
             if ($attributes['showAgentName'] && !empty($testimonial['agent_name'])) {

@@ -892,7 +892,9 @@ class RealSatisfied_Office_Testimonials_Block {
                         <?php if ($attributes['showAgentPhoto'] ?? true): ?>
                             <div class="agent-photo">
                                 <img data-wp-bind--src="context.item.agent_photo" 
-                                     data-wp-bind--alt="context.item.agent_name" />
+                                     data-wp-bind--alt="context.item.agent_name"
+                                     loading="lazy"
+                                     decoding="async" />
                             </div>
                         <?php endif; ?>
                         
