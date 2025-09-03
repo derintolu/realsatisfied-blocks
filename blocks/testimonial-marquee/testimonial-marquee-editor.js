@@ -5,13 +5,6 @@
 (function() {
     'use strict';
 
-    // Debug logging
-    console.log('RealSatisfied Testimonial Marquee: Editor script loading...');
-    
-    // Test basic WordPress objects
-    console.log('wp.blocks available:', typeof wp.blocks);
-    console.log('wp.blocks.registerBlockType available:', typeof wp.blocks.registerBlockType);
-    console.log('wp.serverSideRender available:', typeof wp.serverSideRender);
 
     var registerBlockType = wp.blocks.registerBlockType;
     var __ = wp.i18n.__;
@@ -25,7 +18,6 @@
     var ToggleControl = wp.components.ToggleControl;
     var ColorPicker = wp.components.ColorPicker;
 
-    console.log('RealSatisfied Testimonial Marquee: About to register block...');
 
     registerBlockType('realsatisfied-blocks/testimonial-marquee', {
         title: __('RealSatisfied Testimonial Marquee', 'realsatisfied-blocks'),
@@ -323,6 +315,5 @@
         }
     });
 
-    console.log('RealSatisfied Testimonial Marquee: Block registration completed!');
 
 })();

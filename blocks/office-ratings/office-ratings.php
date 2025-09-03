@@ -188,10 +188,6 @@ class RealSatisfied_Office_Ratings_Block {
             $channel['performance_rating']
         );
 
-        // Debug: Show what dynamic data is being pulled from RSS feed
-        // Office: {$channel['office']}
-        // Overall Rating: {$overall_rating}/5.0 (calculated from {$channel['overall_satisfaction']}, {$channel['recommendation_rating']}, {$channel['performance_rating']})
-        // Reviews: {$channel['response_count']}
 
         // Get color attributes with defaults
         $star_color_filled = $attributes['starColorFilled'] ?? '#FFD700';
