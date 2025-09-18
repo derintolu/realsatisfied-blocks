@@ -1,6 +1,6 @@
 # RealSatisfied Blocks
 
-**Version:** 1.2.0  
+**Version:** 1.4.1  
 **Requires WordPress:** 5.4+  
 **Tested up to:** WordPress 6.7  
 **License:** GPLv2 or later  
@@ -224,6 +224,12 @@ if (class_exists('RealSatisfied_Office_Testimonials_Block')) {
 - Comprehensive testing to ensure no functional regression
 
 ## Changelog
+
+### Version 1.4.1 (September 18, 2025)
+- **PERFORMANCE**: Optimized RSS feed fetching with 75% faster timeouts (15s vs 60s)
+- **RELIABILITY**: Added stale cache fallback for zero-downtime operation
+- **EFFICIENCY**: Implemented background cache refresh to prevent slow requests
+- **STABILITY**: Enhanced HTTP request optimization with compression and better error handling
 
 ### Version 1.4.0 (July 8, 2025)
 - **BREAKING**: Removed dependency on RealSatisfied Review Widget plugin

@@ -73,6 +73,9 @@ class RealSatisfied_Company_RSS_Parser {
         // Add cache clearing functionality
         add_action('wp_ajax_rsob_clear_company_feed_cache', array($this, 'clear_feed_cache_callback'));
         add_action('wp_ajax_nopriv_rsob_clear_company_feed_cache', array($this, 'clear_feed_cache_callback'));
+
+        // Add background cache refresh hook
+        add_action('rsob_refresh_company_cache', array($this, 'background_cache_refresh'), 10, 2);
     }
 
     /**
@@ -90,8 +93,14 @@ class RealSatisfied_Company_RSS_Parser {
         // Check cache first
         $cache_key = 'rsob_company_' . md5($company_id . serialize($options));
         $cached_data = get_transient($cache_key);
-        
+
         if ($cached_data !== false) {
+            // Schedule background refresh if cache is older than 6 hours
+            $cache_meta_key = 'realsatisfied_company_meta_' . md5($company_id . serialize($options));
+            $cache_meta = get_option($cache_meta_key, array());
+            if (isset($cache_meta['cached_at']) && (time() - $cache_meta['cached_at']) > 21600) {
+                wp_schedule_single_event(time() + 60, 'rsob_refresh_company_cache', array($company_id, $options));
+            }
             return $cached_data;
         }
 
@@ -107,10 +116,16 @@ class RealSatisfied_Company_RSS_Parser {
         add_filter('http_request_timeout', array($this, 'increase_http_timeout'));
         add_filter('http_request_args', array($this, 'customize_http_args'));
         
-        // Try to fetch RSS feed using WordPress HTTP API instead of SimplePie
+        // Try to fetch RSS feed using WordPress HTTP API with optimized settings
         $response = wp_remote_get($feed_url, array(
-            'timeout' => 60,
-            'user-agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
+            'timeout' => 15, // Reduced from 60s to 15s
+            'user-agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url'),
+            'httpversion' => '1.1',
+            'redirection' => 3, // Reduced redirects
+            'blocking' => true,
+            'compress' => true, // Enable compression
+            'decompress' => true,
+            'sslverify' => true
         ));
         
         // Remove timeout filter
@@ -118,6 +133,14 @@ class RealSatisfied_Company_RSS_Parser {
         remove_filter('http_request_args', array($this, 'customize_http_args'));
         
         if (is_wp_error($response)) {
+            // Try to get stale cache as fallback
+            $stale_cache_key = $cache_key . '_stale';
+            $stale_data = get_transient($stale_cache_key);
+            if ($stale_data !== false) {
+                // Schedule background refresh
+                wp_schedule_single_event(time() + 300, 'rsob_refresh_company_cache', array($company_id, $options));
+                return $stale_data;
+            }
             return new WP_Error('fetch_failed', 'Failed to fetch RSS feed: ' . $response->get_error_message());
         }
         
@@ -148,7 +171,11 @@ class RealSatisfied_Company_RSS_Parser {
 
         // Cache the result for 12 hours (43200 seconds)
         set_transient($cache_key, $company_data, $this->cache_duration);
-        
+
+        // Also store a stale copy with longer expiration for fallback
+        $stale_cache_key = $cache_key . '_stale';
+        set_transient($stale_cache_key, $company_data, $this->cache_duration * 7); // 7 days
+
         // Store cache metadata for the cache manager
         $cache_hash = md5($company_id . serialize($options));
         $meta_key = 'realsatisfied_company_meta_' . $cache_hash;
@@ -173,14 +200,9 @@ class RealSatisfied_Company_RSS_Parser {
         // Register namespace
         $xml->registerXPathNamespace('rs', $this->namespaces['realsatisfied']);
         
-        // Debug: log the XML structure
-        error_log('Company RSS Parser: XML root element: ' . $xml->getName());
-        error_log('Company RSS Parser: Channel found: ' . (isset($xml->channel) ? 'yes' : 'no'));
-        
         // Extract channel data (company-wide information)
         $channel = $xml->channel;
         if (!$channel) {
-            error_log('Company RSS Parser: No channel found in XML');
             return new WP_Error('no_channel', 'No channel found in RSS feed');
         }
         
@@ -211,11 +233,9 @@ class RealSatisfied_Company_RSS_Parser {
         if ($has_offices) {
             // For company feeds, items are nested under office elements
             $office_count = count($channel->office);
-            error_log('Company RSS Parser: Found ' . $office_count . ' offices in channel');
             
             foreach ($channel->office as $office) {
             $item_count = count($office->item);
-            error_log('Company RSS Parser: Found ' . $item_count . ' items in office');
             
             // Extract office information
             $office_info = array(
@@ -310,8 +330,6 @@ class RealSatisfied_Company_RSS_Parser {
                 }
             }
             
-            error_log('Company RSS Parser: Testimonial ' . ($count + 1) . ' from ' . $testimonial['office_name'] . ': ' . substr($testimonial['text'], 0, 50) . '... by ' . $testimonial['agent_name']);
-            
             $all_testimonials[] = $testimonial;
             
             // Collect unique agents
@@ -329,9 +347,7 @@ class RealSatisfied_Company_RSS_Parser {
         }
         } else {
             // Fallback: Direct items under channel (like office feeds)
-            error_log('Company RSS Parser: No offices found, checking for direct items under channel');
             $item_count = count($channel->item);
-            error_log('Company RSS Parser: Found ' . $item_count . ' direct items in channel');
             
             foreach ($channel->item as $item) {
                 if ($count >= $limit) break;
@@ -385,8 +401,6 @@ class RealSatisfied_Company_RSS_Parser {
                     }
                 }
                 
-                error_log('Company RSS Parser: Direct testimonial ' . ($count + 1) . ': ' . substr($testimonial['text'], 0, 50) . '... by ' . $testimonial['agent_name']);
-                
                 $all_testimonials[] = $testimonial;
                 
                 // Collect unique agents
@@ -403,8 +417,6 @@ class RealSatisfied_Company_RSS_Parser {
             }
         }
         
-        error_log('Company RSS Parser: Extracted ' . count($all_testimonials) . ' testimonials total');
-
         // Apply filters if specified
         if (!empty($options['office_filter'])) {
             $all_testimonials = $this->filter_testimonials_by_office($all_testimonials, $options['office_filter']);
@@ -655,9 +667,24 @@ class RealSatisfied_Company_RSS_Parser {
                 return (!empty($tag_data) && isset($tag_data[0]['data'])) ? $tag_data[0]['data'] : $default;
             }
         } catch (Exception $e) {
-            error_log('RealSatisfied Company RSS Parser: Error getting channel tag ' . $tag . ': ' . $e->getMessage());
+            // Error getting channel tag, return default
         }
         return $default;
+    }
+
+    /**
+     * Background cache refresh (cron job)
+     *
+     * @param string $company_id Company ID to refresh
+     * @param array $options Fetch options
+     */
+    public function background_cache_refresh($company_id, $options = array()) {
+        // Force cache bypass by removing cache check temporarily
+        $cache_key = 'rsob_company_' . md5($company_id . serialize($options));
+        delete_transient($cache_key);
+
+        // Fetch fresh data (this will repopulate cache)
+        $this->fetch_company_data($company_id, $options);
     }
 
     /**
@@ -666,13 +693,13 @@ class RealSatisfied_Company_RSS_Parser {
     public function clear_feed_cache_callback() {
         // Temporarily set cache to 1 second
         add_filter('wp_feed_cache_transient_lifetime', function() { return 1; });
-        
+
         // Clear cache by fetching with minimal cache time
         $response = __('Company feed cache has been cleared.', 'realsatisfied-blocks');
-        
+
         // Restore normal cache time
         add_filter('wp_feed_cache_transient_lifetime', function() { return $this->cache_duration; });
-        
+
         wp_send_json_success($response);
     }
 
@@ -701,7 +728,7 @@ class RealSatisfied_Company_RSS_Parser {
      * @return int Increased timeout
      */
     public function increase_http_timeout($timeout) {
-        return 60; // Increase to 60 seconds
+        return 15; // Optimized to 15 seconds
     }
 
     /**
@@ -721,7 +748,7 @@ class RealSatisfied_Company_RSS_Parser {
         $args['sslverify'] = true;
         
         // Set connection timeout
-        $args['timeout'] = 60;
+        $args['timeout'] = 15;
         
         return $args;
     }
@@ -739,7 +766,7 @@ class RealSatisfied_Company_RSS_Parser {
                 return $rss_feed->$method();
             }
         } catch (Exception $e) {
-            error_log('RealSatisfied Company RSS Parser: Error calling ' . $method . ': ' . $e->getMessage());
+            // Error calling method, return null
         }
         return null;
     }
@@ -757,7 +784,7 @@ class RealSatisfied_Company_RSS_Parser {
                 return $rss_feed->get_item_quantity($limit);
             }
         } catch (Exception $e) {
-            error_log('RealSatisfied Company RSS Parser: Error getting item quantity: ' . $e->getMessage());
+            // Error getting item quantity, return 0
         }
         return 0;
     }
@@ -776,7 +803,7 @@ class RealSatisfied_Company_RSS_Parser {
                 return $rss_feed->get_items($start, $end);
             }
         } catch (Exception $e) {
-            error_log('RealSatisfied Company RSS Parser: Error getting items: ' . $e->getMessage());
+            // Error getting items, return empty array
         }
         return array();
     }
