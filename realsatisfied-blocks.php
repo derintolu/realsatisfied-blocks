@@ -3,7 +3,7 @@
  * Plugin Name: RealSatisfied Blocks
  * Plugin URI: https://github.com/derintolu/realsatisfied-blocks
  * Description: Standalone Gutenberg blocks for RealSatisfied office and agent data - ratings and testimonials with WordPress Interactivity API. No dependencies required.
- * Version: 1.4.1
+ * Version: 1.4.2
  * Author: Derin Tolu
  * Text Domain: realsatisfied-blocks
  * Requires at least: 5.4
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('RSOB_PLUGIN_VERSION', '1.4.1');
+define('RSOB_PLUGIN_VERSION', '1.4.2');
 define('RSOB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('RSOB_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('RSOB_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -78,7 +78,11 @@ class RealSatisfied_Blocks {
         require_once RSOB_PLUGIN_PATH . 'includes/class-agent-rss-parser.php';
         require_once RSOB_PLUGIN_PATH . 'includes/class-company-rss-parser.php';
         require_once RSOB_PLUGIN_PATH . 'includes/class-custom-fields.php';
-        require_once RSOB_PLUGIN_PATH . 'includes/class-widget-compatibility.php';
+        // Optional widget compatibility (only load if file exists)
+        $widget_compat_file = RSOB_PLUGIN_PATH . 'includes/class-widget-compatibility.php';
+        if (file_exists($widget_compat_file)) {
+            require_once $widget_compat_file;
+        }
         require_once RSOB_PLUGIN_PATH . 'includes/class-rss-cache-manager.php';
         require_once RSOB_PLUGIN_PATH . 'includes/class-rss-cache-admin.php';
         
