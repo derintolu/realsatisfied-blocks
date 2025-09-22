@@ -122,14 +122,31 @@ jobs:
       run: |
         echo "🚀 Starting deployment to WPMU DEV Studio21..."
 
-        # Set target path - for WPMU DEV it's typically /home/{user}/sites/{site}/wp-content/plugins/
+        # First, let's explore the directory structure
+        echo "🔍 Exploring server directory structure..."
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+          ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+          echo "Current directory: $(pwd)"
+          echo "Listing directories:"
+          ls -la
+          echo "Looking for WordPress structure:"
+          find . -maxdepth 3 -name "wp-content" -type d 2>/dev/null || echo "wp-content not found in first 3 levels"
+          find . -maxdepth 3 -name "wp-config.php" -type f 2>/dev/null || echo "wp-config.php not found in first 3 levels"
+        ENDSSH
+
+        # Set target path and ensure directories exist
         if [ -n "${{ secrets.WORDPRESS_PATH }}" ]; then
-          TARGET_PATH="${{ secrets.WORDPRESS_PATH }}/wp-content/plugins/realsatisfied-blocks/"
+          BASE_PATH="${{ secrets.WORDPRESS_PATH }}"
         else
-          # Default for WPMU DEV hosting structure
-          TARGET_PATH="site/wp-content/plugins/realsatisfied-blocks/"
+          BASE_PATH="site"
         fi
 
+        echo "📁 Creating directory structure if needed..."
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+          ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
+          "mkdir -p ${BASE_PATH}/wp-content/plugins/realsatisfied-blocks"
+
+        TARGET_PATH="${BASE_PATH}/wp-content/plugins/realsatisfied-blocks/"
         echo "📁 Deploying to: $TARGET_PATH"
 
         # Deploy using rsync (as recommended by WPMU DEV)
