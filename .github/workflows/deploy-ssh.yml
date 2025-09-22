@@ -39,7 +39,7 @@ jobs:
       run: composer run-script install-standards
 
     - name: Run WordPress Coding Standards
-      run: vendor/bin/phpcs --standard=phpcs.xml --report=summary || echo "PHPCS has issues but continuing deployment"
+      run: vendor/bin/phpcs --standard=phpcs-deploy.xml --report=summary
       continue-on-error: true
 
     - name: Check for security issues
