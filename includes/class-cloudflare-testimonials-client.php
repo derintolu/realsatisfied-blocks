@@ -27,7 +27,7 @@ class Cloudflare_Testimonials_Client {
 	 *
 	 * @var string
 	 */
-	private $api_url = 'https://realsatisfied-testimonials.YOUR-SUBDOMAIN.workers.dev';
+	private $api_url = 'https://realsatisfied-testimonials.century-21-real-estate-alliance-group1007.workers.dev';
 
 	/**
 	 * Cache duration (1 hour - Worker already caches for 7 days)

@@ -1,0 +1,18 @@
+{
+  "name": "realsatisfied-testimonials",
+  "main": "worker.js",
+  "compatibility_date": "2024-01-01",
+  "account_id": "1ec84157926eab7ca3b201a2cfa7080a",
+  "vars": {
+    "API_KEY": "rsob-secure-api-key-2024"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "TESTIMONIALS_CACHE",
+      "id": "3a2c4fcca0f44bdcb7e68979fa9895aa"
+    }
+  ],
+  "triggers": {
+    "crons": ["0 2 * * *"]
+  }
+}
