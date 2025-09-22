@@ -25,16 +25,18 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Routes
-    if (url.pathname === '/api/testimonials') {
+    // Routes - handle both root and subpath
+    const path = url.pathname.replace(/^\/testimonials/, ''); // Remove /testimonials prefix if present
+
+    if (path === '/api/testimonials' || url.pathname === '/api/testimonials') {
       return await handleGetTestimonials(request, env, corsHeaders);
     }
 
-    if (url.pathname === '/api/refresh') {
+    if (path === '/api/refresh' || url.pathname === '/api/refresh') {
       return await handleRefresh(request, env, corsHeaders);
     }
 
-    if (url.pathname === '/api/status') {
+    if (path === '/api/status' || url.pathname === '/api/status') {
       return await handleStatus(env, corsHeaders);
     }
 

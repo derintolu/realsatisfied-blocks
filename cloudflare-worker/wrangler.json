@@ -14,5 +14,11 @@
   ],
   "triggers": {
     "crons": ["0 2 * * *"]
-  }
+  },
+  "routes": [
+    {
+      "pattern": "api.c21masters.com/testimonials/*",
+      "zone_name": "c21masters.com"
+    }
+  ]
 }
