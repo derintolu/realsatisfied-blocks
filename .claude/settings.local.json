@@ -18,7 +18,9 @@
       "Bash(wp plugin status:*)",
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
-      "Bash(php:*)"
+      "Bash(php:*)",
+      "WebFetch(domain:wpmudev.com)",
+      "Bash(ssh-keyscan:*)"
     ],
     "deny": []
   }

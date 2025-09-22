@@ -134,11 +134,11 @@ jobs:
           find . -maxdepth 3 -name "wp-config.php" -type f 2>/dev/null || echo "wp-config.php not found in first 3 levels"
         ENDSSH
 
-        # Set target path and ensure directories exist
+        # Set target path - WordPress is at site/public_html for WPMU DEV
         if [ -n "${{ secrets.WORDPRESS_PATH }}" ]; then
           BASE_PATH="${{ secrets.WORDPRESS_PATH }}"
         else
-          BASE_PATH="site"
+          BASE_PATH="site/public_html"
         fi
 
         echo "📁 Creating directory structure if needed..."
@@ -175,11 +175,11 @@ jobs:
         # Use SSH to verify deployment and optionally clear cache
         ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
           ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
-          # Navigate to plugin directory
+          # Navigate to plugin directory - WordPress is at site/public_html
           if [ -n "${{ secrets.WORDPRESS_PATH }}" ]; then
             PLUGIN_DIR="${{ secrets.WORDPRESS_PATH }}/wp-content/plugins/realsatisfied-blocks"
           else
-            PLUGIN_DIR="site/wp-content/plugins/realsatisfied-blocks"
+            PLUGIN_DIR="site/public_html/wp-content/plugins/realsatisfied-blocks"
           fi
 
           # Check if plugin file exists

@@ -20,7 +20,7 @@ Add these secrets to your GitHub repository (Settings → Secrets and variables 
 
 ### Optional Secrets:
 
-4. **WORDPRESS_PATH**: `site` (or leave empty, it will default to 'site')
+4. **WORDPRESS_PATH**: `site/public_html` (or leave empty, it will default to 'site/public_html')
 5. **SSH_KNOWN_HOSTS**:
    - Host fingerprint (SHA256): `SHA256:gej9bHOjKMCVAhA3qlaI/GuLhh6NDgBy9TJTiza9vvU`
    - Add this full line for ed25519 key:
@@ -58,7 +58,7 @@ You can manually trigger a deployment by:
 ## Deployment Path:
 
 The plugin will be deployed to:
-`site/wp-content/plugins/realsatisfied-blocks/`
+`site/public_html/wp-content/plugins/realsatisfied-blocks/`
 
 ## Support:
 
