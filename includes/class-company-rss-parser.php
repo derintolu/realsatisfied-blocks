@@ -77,6 +77,9 @@ class RealSatisfied_Company_RSS_Parser {
 		// Set up weekly cron job for RSS updates
 		add_action( 'wp', array( $this, 'schedule_weekly_rss_update' ) );
 		add_action( 'rsob_weekly_rss_update', array( $this, 'update_all_company_testimonials' ) );
+
+		// Initialize RSS data on first load
+		add_action( 'init', array( $this, 'initialize_rss_data' ) );
 	}
 
 	/**
@@ -93,7 +96,7 @@ class RealSatisfied_Company_RSS_Parser {
 
 		// Set defaults
 		$limit     = isset( $options['limit'] ) ? intval( $options['limit'] ) : 50;
-		$page_size = 500; // Fetch in chunks of 500
+		$page_size = 200; // Fetch in chunks of 200 max
 
 		// Check if we have recent data in database
 		$cached_testimonials = $this->get_testimonials_from_db( $company_id, $limit );
@@ -125,7 +128,7 @@ class RealSatisfied_Company_RSS_Parser {
 		$company_data     = null;
 		$page             = isset( $options['page'] ) ? intval( $options['page'] ) : 1;
 		$collected        = 0;
-		$max_pages        = 20; // Prevent infinite loops, max 10,000 items (500 * 20)
+		$max_pages        = 1; // Limit to 200 testimonials max
 
 		while ( $collected < $total_limit && $page <= $max_pages ) {
 			// Memory management - check available memory
@@ -473,6 +476,69 @@ class RealSatisfied_Company_RSS_Parser {
 	}
 
 	/**
+	 * Initialize RSS data on plugin load
+	 */
+	public function initialize_rss_data() {
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'realsatisfied_testimonials';
+
+		// Check if we need to initialize data
+		$init_option = 'rsob_rss_initialized';
+		if ( get_option( $init_option ) ) {
+			return; // Already initialized
+		}
+
+		// Create table if it doesn't exist
+		$this->create_testimonials_table();
+
+		// Check if table is empty
+		$count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
+		if ( $count > 0 ) {
+			update_option( $init_option, true );
+			return; // Already has data
+		}
+
+		// Get default company ID from blocks or options
+		$default_company_id = $this->get_default_company_id();
+		if ( $default_company_id ) {
+			// Fetch initial data
+			$options = array( 'limit' => 200 ); // Start with 200 testimonials
+			$this->fetch_company_data_paginated( $default_company_id, $options, 200, 200 );
+		}
+
+		// Mark as initialized
+		update_option( $init_option, true );
+	}
+
+	/**
+	 * Get default company ID from existing usage
+	 */
+	private function get_default_company_id() {
+		// Check for company ID in recent posts with testimonial blocks
+		global $wpdb;
+
+		$query = "
+			SELECT post_content
+			FROM {$wpdb->posts}
+			WHERE post_content LIKE '%realsatisfied/testimonial-marquee%'
+			AND post_status = 'publish'
+			LIMIT 5
+		";
+
+		$posts = $wpdb->get_results( $query );
+
+		foreach ( $posts as $post ) {
+			// Extract company ID from block content
+			if ( preg_match( '/"companyId":"([^"]+)"/', $post->post_content, $matches ) ) {
+				return $matches[1];
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * Update all company testimonials via cron job
 	 */
 	public function update_all_company_testimonials() {
@@ -492,8 +558,8 @@ class RealSatisfied_Company_RSS_Parser {
 			$this->clear_company_cache( $company_id );
 
 			// Fetch fresh data (this will populate the database)
-			$options = array( 'limit' => 1000 ); // Get up to 1000 testimonials per company
-			$this->fetch_company_data_paginated( $company_id, $options, 1000, 500 );
+			$options = array( 'limit' => 200 ); // Get up to 200 testimonials per company
+			$this->fetch_company_data_paginated( $company_id, $options, 200, 200 );
 
 			// Add small delay to prevent overwhelming the RSS server
 			sleep( 2 );
