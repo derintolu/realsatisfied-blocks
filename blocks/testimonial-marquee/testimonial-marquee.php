@@ -282,22 +282,18 @@ class RealSatisfied_Testimonial_Marquee_Block {
 		$parser = RealSatisfied_Company_RSS_Parser::get_instance();
 
 		$options = array(
-			'limit'          => $attributes['maxTestimonials'] * 2, // Get more to filter from
-			'preserve_order' => false, // Allow shuffling
+			'limit'         => $attributes['maxTestimonials'] * 3, // Get more to ensure variety
+			'office_filter' => isset( $attributes['officeFilter'] ) ? $attributes['officeFilter'] : '',
 		);
 
-		$company_data = $parser->fetch_company_data( $attributes['companyId'], $options );
+		// Use database-only method for fast loading
+		$testimonials = $parser->get_testimonials_from_cache( $attributes['companyId'], $options );
 
-		if ( is_wp_error( $company_data ) ) {
-			error_log( 'RealSatisfied Testimonial Marquee: Error fetching company data: ' . $company_data->get_error_message() );
+		if ( empty( $testimonials ) ) {
 			return array();
 		}
 
-		if ( empty( $company_data['testimonials'] ) ) {
-			return array();
-		}
-
-		return $company_data['testimonials'];
+		return $testimonials;
 	}
 
 	/**

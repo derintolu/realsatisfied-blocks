@@ -1,4 +1,4 @@
-<?php
+1<?php
 /**
  * RealSatisfied Company RSS Parser
  *
@@ -24,11 +24,11 @@ class RealSatisfied_Company_RSS_Parser {
 	private static $instance = null;
 
 	/**
-	 * RSS feed cache duration (12 hours)
+	 * RSS feed cache duration (1 week)
 	 *
 	 * @var int
 	 */
-	private $cache_duration = 43200;
+	private $cache_duration = 604800; // 7 days * 24 hours * 60 minutes * 60 seconds
 
 	/**
 	 * RSS feed URL for company
@@ -73,6 +73,10 @@ class RealSatisfied_Company_RSS_Parser {
 		// Add cache clearing functionality
 		add_action( 'wp_ajax_rsob_clear_company_feed_cache', array( $this, 'clear_feed_cache_callback' ) );
 		add_action( 'wp_ajax_nopriv_rsob_clear_company_feed_cache', array( $this, 'clear_feed_cache_callback' ) );
+
+		// Set up weekly cron job for RSS updates
+		add_action( 'wp', array( $this, 'schedule_weekly_rss_update' ) );
+		add_action( 'rsob_weekly_rss_update', array( $this, 'update_all_company_testimonials' ) );
 	}
 
 	/**
@@ -87,38 +91,134 @@ class RealSatisfied_Company_RSS_Parser {
 			return new WP_Error( 'missing_company_id', __( 'No company ID provided', 'realsatisfied-blocks' ) );
 		}
 
-		// Check cache first
-		$cache_key   = 'rsob_company_' . md5( $company_id . serialize( $options ) );
-		$cached_data = get_transient( $cache_key );
+		// Set defaults
+		$limit     = isset( $options['limit'] ) ? intval( $options['limit'] ) : 50;
+		$page_size = 500; // Fetch in chunks of 500
 
-		if ( $cached_data !== false ) {
-			return $cached_data;
+		// Check if we have recent data in database
+		$cached_testimonials = $this->get_testimonials_from_db( $company_id, $limit );
+		$cache_key           = 'rsob_company_meta_' . md5( $company_id . serialize( $options ) );
+		$cached_meta         = get_transient( $cache_key );
+
+		if ( $cached_testimonials && $cached_meta ) {
+			return array(
+				'company'      => $cached_meta['company'],
+				'testimonials' => $cached_testimonials,
+			);
 		}
 
+		// Try to fetch data with pagination
+		return $this->fetch_company_data_paginated( $company_id, $options, $limit, $page_size );
+	}
+
+	/**
+	 * Fetch company data with pagination support
+	 *
+	 * @param string $company_id The company ID
+	 * @param array  $options Request options
+	 * @param int    $total_limit Total testimonials needed
+	 * @param int    $page_size Items per page request
+	 * @return array|WP_Error
+	 */
+	private function fetch_company_data_paginated( $company_id, $options, $total_limit, $page_size ) {
+		$all_testimonials = array();
+		$company_data     = null;
+		$page             = isset( $options['page'] ) ? intval( $options['page'] ) : 1;
+		$collected        = 0;
+		$max_pages        = 20; // Prevent infinite loops, max 10,000 items (500 * 20)
+
+		while ( $collected < $total_limit && $page <= $max_pages ) {
+			// Memory management - check available memory
+			if ( memory_get_usage() > ( 0.8 * $this->get_memory_limit() ) ) {
+				break; // Stop if using too much memory
+			}
+
+			$page_data = $this->fetch_single_page( $company_id, $page, $page_size, $options );
+
+			if ( is_wp_error( $page_data ) ) {
+				// If we already have some data, return what we have
+				if ( ! empty( $all_testimonials ) && $company_data ) {
+					break;
+				}
+				return $page_data;
+			}
+
+			// Store company data from first successful page
+			if ( ! $company_data ) {
+				$company_data = $page_data['company'];
+			}
+
+			// Add testimonials
+			$page_testimonials = $page_data['testimonials'];
+			if ( empty( $page_testimonials ) ) {
+				// No more testimonials available
+				break;
+			}
+
+			$remaining = $total_limit - $collected;
+			$to_add    = min( count( $page_testimonials ), $remaining );
+
+			$all_testimonials = array_merge( $all_testimonials, array_slice( $page_testimonials, 0, $to_add ) );
+			$collected       += $to_add;
+
+			// Clean up memory
+			unset( $page_data, $page_testimonials );
+
+			// If we got fewer than page_size testimonials, we've reached the end
+			if ( $to_add < $page_size ) {
+				break;
+			}
+
+			$page++;
+		}
+
+		// Store testimonials in database instead of memory cache
+		$this->store_testimonials_in_db( $company_id, $all_testimonials, $company_data );
+
+		$result = array(
+			'company'      => $company_data,
+			'testimonials' => $all_testimonials,
+		);
+
+		// Only cache the company metadata, not the testimonials
+		$cache_key = 'rsob_company_meta_' . md5( $company_id . serialize( $options ) );
+		set_transient(
+			$cache_key,
+			array(
+				'company'            => $company_data,
+				'last_updated'       => time(),
+				'total_testimonials' => count( $all_testimonials ),
+			),
+			$this->cache_duration
+		);
+
+		return $result;
+	}
+
+	/**
+	 * Fetch a single page of RSS data
+	 *
+	 * @param string $company_id The company ID
+	 * @param int    $page Page number
+	 * @param int    $page_size Items per page
+	 * @param array  $options Request options
+	 * @return array|WP_Error
+	 */
+	private function fetch_single_page( $company_id, $page, $page_size, $options = array() ) {
 		// Build feed URL
 		$feed_url = $this->company_feed_url . $company_id;
 
-		// Add query parameters if needed
-		if ( ! empty( $options['page'] ) ) {
-			$feed_url .= '?page=' . intval( $options['page'] );
-		}
+		// Add pagination parameters
+		$feed_url .= '?page=' . $page . '&limit=' . $page_size;
 
-		// Temporarily increase HTTP timeout for this request
-		add_filter( 'http_request_timeout', array( $this, 'increase_http_timeout' ) );
-		add_filter( 'http_request_args', array( $this, 'customize_http_args' ) );
-
-		// Try to fetch RSS feed using WordPress HTTP API instead of SimplePie
+		// Use shorter timeout for paginated requests
 		$response = wp_remote_get(
 			$feed_url,
 			array(
-				'timeout'    => 60,
+				'timeout'    => 15, // Shorter timeout for smaller chunks
 				'user-agent' => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ),
 			)
 		);
-
-		// Remove timeout filter
-		remove_filter( 'http_request_timeout', array( $this, 'increase_http_timeout' ) );
-		remove_filter( 'http_request_args', array( $this, 'customize_http_args' ) );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'fetch_failed', 'Failed to fetch RSS feed: ' . $response->get_error_message() );
@@ -143,30 +243,278 @@ class RealSatisfied_Company_RSS_Parser {
 		}
 
 		// Extract data using SimpleXML
-		$company_data = $this->extract_company_data_from_xml( $xml, $options );
+		return $this->extract_company_data_from_xml( $xml, $options );
+	}
 
-		if ( is_wp_error( $company_data ) ) {
-			return $company_data;
+	/**
+	 * Store testimonials in database
+	 *
+	 * @param string $company_id Company ID
+	 * @param array  $testimonials Array of testimonials
+	 * @param array  $company_data Company metadata
+	 */
+	private function store_testimonials_in_db( $company_id, $testimonials, $company_data ) {
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'realsatisfied_testimonials';
+
+		// Create table if it doesn't exist
+		$this->create_testimonials_table();
+
+		// Clear existing testimonials for this company
+		$wpdb->delete( $table_name, array( 'company_id' => $company_id ) );
+
+		// Insert new testimonials in batches to avoid memory issues
+		$batch_size = 100;
+		$batches    = array_chunk( $testimonials, $batch_size );
+
+		foreach ( $batches as $batch ) {
+			$values = array();
+			foreach ( $batch as $testimonial ) {
+				$values[] = $wpdb->prepare(
+					'(%s, %s, %s, %s, %s, %s, %s, %s, %s, %d)',
+					$company_id,
+					sanitize_text_field( $testimonial['agent_name'] ),
+					sanitize_text_field( $testimonial['office_name'] ),
+					sanitize_textarea_field( $testimonial['text'] ),
+					sanitize_text_field( $testimonial['client_name'] ),
+					sanitize_text_field( $testimonial['transaction_type'] ),
+					sanitize_text_field( $testimonial['date'] ),
+					floatval( $testimonial['rating'] ),
+					sanitize_text_field( $testimonial['link'] ),
+					time()
+				);
+			}
+
+			if ( ! empty( $values ) ) {
+				$sql = "INSERT INTO {$table_name}
+						(company_id, agent_name, office_name, testimonial_text, client_name, transaction_type, date, rating, link, created_at)
+						VALUES " . implode( ',', $values );
+				$wpdb->query( $sql );
+			}
+		}
+	}
+
+	/**
+	 * Create testimonials table
+	 */
+	private function create_testimonials_table() {
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'realsatisfied_testimonials';
+
+		$charset_collate = $wpdb->get_charset_collate();
+
+		$sql = "CREATE TABLE IF NOT EXISTS {$table_name} (
+			id int(11) NOT NULL AUTO_INCREMENT,
+			company_id varchar(255) NOT NULL,
+			agent_name varchar(255) NOT NULL,
+			office_name varchar(255) NOT NULL,
+			testimonial_text text NOT NULL,
+			client_name varchar(255) NOT NULL,
+			transaction_type varchar(100) NOT NULL,
+			date varchar(50) NOT NULL,
+			rating decimal(3,2) NOT NULL,
+			link varchar(500) NOT NULL,
+			created_at int(11) NOT NULL,
+			PRIMARY KEY (id),
+			KEY company_id (company_id),
+			KEY agent_name (agent_name),
+			KEY office_name (office_name)
+		) {$charset_collate};";
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta( $sql );
+	}
+
+	/**
+	 * Get memory limit in bytes
+	 *
+	 * @return int Memory limit in bytes
+	 */
+	private function get_memory_limit() {
+		$memory_limit = ini_get( 'memory_limit' );
+
+		if ( $memory_limit == -1 ) {
+			return PHP_INT_MAX;
 		}
 
-		// Cache the result for 12 hours (43200 seconds)
-		set_transient( $cache_key, $company_data, $this->cache_duration );
+		$unit         = strtolower( substr( $memory_limit, -1 ) );
+		$memory_limit = (int) $memory_limit;
 
-		// Store cache metadata for the cache manager
-		$cache_hash = md5( $company_id . serialize( $options ) );
-		$meta_key   = 'realsatisfied_company_meta_' . $cache_hash;
-		update_option(
-			$meta_key,
-			array(
-				'company_id' => $company_id,
-				'options'    => $options,
-				'cached_at'  => time(),
-				'cache_key'  => $cache_key,
+		switch ( $unit ) {
+			case 'g':
+				$memory_limit *= 1024;
+			case 'm':
+				$memory_limit *= 1024;
+			case 'k':
+				$memory_limit *= 1024;
+		}
+
+		return $memory_limit;
+	}
+
+	/**
+	 * Get testimonials from database
+	 *
+	 * @param string $company_id Company ID
+	 * @param int    $limit Number of testimonials to retrieve
+	 * @return array|false Array of testimonials or false if not found
+	 */
+	private function get_testimonials_from_db( $company_id, $limit = 50 ) {
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'realsatisfied_testimonials';
+
+		// Check if table exists
+		if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) != $table_name ) {
+			return false;
+		}
+
+		// Check if we have recent data (within cache duration)
+		$cutoff_time = time() - $this->cache_duration;
+
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table_name}
+				WHERE company_id = %s AND created_at > %d
+				ORDER BY created_at DESC
+				LIMIT %d",
+				$company_id,
+				$cutoff_time,
+				$limit
 			),
-			false
+			ARRAY_A
 		);
 
-		return $company_data;
+		if ( empty( $results ) ) {
+			return false;
+		}
+
+		// Convert database format back to array format
+		$testimonials = array();
+		foreach ( $results as $row ) {
+			$testimonials[] = array(
+				'agent_name'       => $row['agent_name'],
+				'office_name'      => $row['office_name'],
+				'text'             => $row['testimonial_text'],
+				'client_name'      => $row['client_name'],
+				'transaction_type' => $row['transaction_type'],
+				'date'             => $row['date'],
+				'rating'           => floatval( $row['rating'] ),
+				'link'             => $row['link'],
+			);
+		}
+
+		return $testimonials;
+	}
+
+	/**
+	 * Get testimonials directly from database with filtering options
+	 *
+	 * @param string $company_id Company ID
+	 * @param array  $options Query options (limit, office_filter, etc.)
+	 * @return array Array of testimonials
+	 */
+	public function get_testimonials_from_cache( $company_id, $options = array() ) {
+		global $wpdb;
+
+		$table_name    = $wpdb->prefix . 'realsatisfied_testimonials';
+		$limit         = isset( $options['limit'] ) ? intval( $options['limit'] ) : 50;
+		$office_filter = isset( $options['office_filter'] ) ? $options['office_filter'] : '';
+
+		// Check if table exists
+		if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) != $table_name ) {
+			return array();
+		}
+
+		$where_clause = 'WHERE company_id = %s';
+		$params       = array( $company_id );
+
+		// Add office filter if specified
+		if ( ! empty( $office_filter ) ) {
+			$where_clause .= ' AND office_name LIKE %s';
+			$params[]      = '%' . $wpdb->esc_like( $office_filter ) . '%';
+		}
+
+		$sql      = "SELECT * FROM {$table_name} {$where_clause} ORDER BY created_at DESC LIMIT %d";
+		$params[] = $limit;
+
+		$results = $wpdb->get_results(
+			$wpdb->prepare( $sql, ...$params ),
+			ARRAY_A
+		);
+
+		// Convert to standard format
+		$testimonials = array();
+		foreach ( $results as $row ) {
+			$testimonials[] = array(
+				'agent_name'       => $row['agent_name'],
+				'office_name'      => $row['office_name'],
+				'text'             => $row['testimonial_text'],
+				'client_name'      => $row['client_name'],
+				'transaction_type' => $row['transaction_type'],
+				'date'             => $row['date'],
+				'rating'           => floatval( $row['rating'] ),
+				'link'             => $row['link'],
+			);
+		}
+
+		return $testimonials;
+	}
+
+	/**
+	 * Schedule weekly RSS update cron job
+	 */
+	public function schedule_weekly_rss_update() {
+		if ( ! wp_next_scheduled( 'rsob_weekly_rss_update' ) ) {
+			wp_schedule_event( time(), 'weekly', 'rsob_weekly_rss_update' );
+		}
+	}
+
+	/**
+	 * Update all company testimonials via cron job
+	 */
+	public function update_all_company_testimonials() {
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'realsatisfied_testimonials';
+
+		// Get all unique company IDs from the database
+		$company_ids = $wpdb->get_col( "SELECT DISTINCT company_id FROM {$table_name}" );
+
+		if ( empty( $company_ids ) ) {
+			return;
+		}
+
+		foreach ( $company_ids as $company_id ) {
+			// Force refresh by clearing cache first
+			$this->clear_company_cache( $company_id );
+
+			// Fetch fresh data (this will populate the database)
+			$options = array( 'limit' => 1000 ); // Get up to 1000 testimonials per company
+			$this->fetch_company_data_paginated( $company_id, $options, 1000, 500 );
+
+			// Add small delay to prevent overwhelming the RSS server
+			sleep( 2 );
+		}
+	}
+
+	/**
+	 * Clear cache for a specific company
+	 *
+	 * @param string $company_id Company ID
+	 */
+	private function clear_company_cache( $company_id ) {
+		global $wpdb;
+
+		// Clear database entries
+		$table_name = $wpdb->prefix . 'realsatisfied_testimonials';
+		$wpdb->delete( $table_name, array( 'company_id' => $company_id ) );
+
+		// Clear transient cache
+		$cache_pattern = 'rsob_company_meta_' . md5( $company_id );
+		delete_transient( $cache_pattern );
 	}
 
 	/**
@@ -180,14 +528,9 @@ class RealSatisfied_Company_RSS_Parser {
 		// Register namespace
 		$xml->registerXPathNamespace( 'rs', $this->namespaces['realsatisfied'] );
 
-		// Debug: log the XML structure
-		error_log( 'Company RSS Parser: XML root element: ' . $xml->getName() );
-		error_log( 'Company RSS Parser: Channel found: ' . ( isset( $xml->channel ) ? 'yes' : 'no' ) );
-
 		// Extract channel data (company-wide information)
 		$channel = $xml->channel;
 		if ( ! $channel ) {
-			error_log( 'Company RSS Parser: No channel found in XML' );
 			return new WP_Error( 'no_channel', 'No channel found in RSS feed' );
 		}
 
@@ -217,12 +560,7 @@ class RealSatisfied_Company_RSS_Parser {
 
 		if ( $has_offices ) {
 			// For company feeds, items are nested under office elements
-			$office_count = count( $channel->office );
-			error_log( 'Company RSS Parser: Found ' . $office_count . ' offices in channel' );
-
 			foreach ( $channel->office as $office ) {
-				$item_count = count( $office->item );
-				error_log( 'Company RSS Parser: Found ' . $item_count . ' items in office' );
 
 				// Extract office information
 				$office_info = array(
@@ -319,8 +657,6 @@ class RealSatisfied_Company_RSS_Parser {
 						}
 					}
 
-					error_log( 'Company RSS Parser: Testimonial ' . ( $count + 1 ) . ' from ' . $testimonial['office_name'] . ': ' . substr( $testimonial['text'], 0, 50 ) . '... by ' . $testimonial['agent_name'] );
-
 					$all_testimonials[] = $testimonial;
 
 					// Collect unique agents
@@ -338,10 +674,6 @@ class RealSatisfied_Company_RSS_Parser {
 			}
 		} else {
 			// Fallback: Direct items under channel (like office feeds)
-			error_log( 'Company RSS Parser: No offices found, checking for direct items under channel' );
-			$item_count = count( $channel->item );
-			error_log( 'Company RSS Parser: Found ' . $item_count . ' direct items in channel' );
-
 			foreach ( $channel->item as $item ) {
 				if ( $count >= $limit ) {
 					break;
@@ -396,8 +728,6 @@ class RealSatisfied_Company_RSS_Parser {
 					}
 				}
 
-				error_log( 'Company RSS Parser: Direct testimonial ' . ( $count + 1 ) . ': ' . substr( $testimonial['text'], 0, 50 ) . '... by ' . $testimonial['agent_name'] );
-
 				$all_testimonials[] = $testimonial;
 
 				// Collect unique agents
@@ -413,8 +743,6 @@ class RealSatisfied_Company_RSS_Parser {
 				$count++;
 			}
 		}
-
-		error_log( 'Company RSS Parser: Extracted ' . count( $all_testimonials ) . ' testimonials total' );
 
 		// Apply filters if specified
 		if ( ! empty( $options['office_filter'] ) ) {

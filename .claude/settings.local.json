@@ -20,7 +20,9 @@
       "Bash(git merge:*)",
       "Bash(php:*)",
       "WebFetch(domain:wpmudev.com)",
-      "Bash(ssh-keyscan:*)"
+      "Bash(ssh-keyscan:*)",
+      "Bash(composer run lint:*)",
+      "Bash(composer run lint-fix:*)"
     ],
     "deny": []
   }

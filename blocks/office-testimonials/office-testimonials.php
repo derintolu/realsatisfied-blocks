@@ -287,7 +287,7 @@ class RealSatisfied_Office_Testimonials_Block {
 
 				// Create a colored background - use button color as primary, with variations for multiple agents
 				$button_color = $attributes['paginationBackgroundColor'] ?? '#007cba';
-				$colors       = [
+				$colors       = array(
 					$button_color, // Primary button color
 					$this->adjust_color_brightness( $button_color, -20 ), // Darker variant
 					$this->adjust_color_brightness( $button_color, 20 ),  // Lighter variant
@@ -296,7 +296,7 @@ class RealSatisfied_Office_Testimonials_Block {
 					'#e74c3c',
 					'#2ecc71',
 					'#9b59b6', // Fallback colors
-				];
+				);
 				$color_index  = crc32( $display_name ) % count( $colors );
 				$bg_color     = $colors[ $color_index ];
 
