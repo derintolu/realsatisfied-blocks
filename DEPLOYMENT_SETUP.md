@@ -22,7 +22,11 @@ Add these secrets to your GitHub repository (Settings → Secrets and variables 
 
 4. **WORDPRESS_PATH**: `site` (or leave empty, it will default to 'site')
 5. **SSH_KNOWN_HOSTS**:
-   - Get this by running: `ssh-keyscan -H studio21.tempurl.host`
+   - Host fingerprint (SHA256): `SHA256:gej9bHOjKMCVAhA3qlaI/GuLhh6NDgBy9TJTiza9vvU`
+   - Add this full line for ed25519 key:
+   ```
+   |1|JZITtjdfcG/jX+lc+htA51xjtdI=|Ge8+uhJoh582CJ1OYwzXrDA0Cq8= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICzmNWGF+5uHA//ACE/SD7Z3cahDlOyHvEDAkhw5C+nn
+   ```
    - This adds extra security by verifying the host fingerprint
 
 ## How to Add Secrets to GitHub:
