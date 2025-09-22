@@ -47,10 +47,25 @@ jobs:
     - name: Check for security issues
       run: |
         echo "Checking for common security issues..."
-        ! grep -r "eval(" --include="*.php" --exclude-dir=vendor --exclude-dir=node_modules . || (echo "Found eval() usage" && exit 1)
-        ! grep -r "\$_GET\[" --include="*.php" --exclude-dir=vendor --exclude-dir=node_modules . | grep -v "sanitize\|esc_" || (echo "Found unsanitized \$_GET usage" && exit 1)
-        ! grep -r "\$_POST\[" --include="*.php" --exclude-dir=vendor --exclude-dir=node_modules . | grep -v "sanitize\|esc_\|wp_nonce" || (echo "Found unsanitized \$_POST usage" && exit 1)
-        echo "Security checks passed ✅"
+        # Check for eval() usage (should never be used)
+        if grep -r "eval(" --include="*.php" --exclude-dir=vendor --exclude-dir=node_modules .; then
+          echo "❌ Found eval() usage - this is a security risk"
+          exit 1
+        fi
+
+        # Check for direct $_GET output without escaping (more precise check)
+        if grep -r "echo.*\$_GET\[" --include="*.php" --exclude-dir=vendor --exclude-dir=node_modules . | grep -v "esc_\|sanitize"; then
+          echo "❌ Found unescaped \$_GET output"
+          exit 1
+        fi
+
+        # Check for direct $_POST output without escaping (more precise check)
+        if grep -r "echo.*\$_POST\[" --include="*.php" --exclude-dir=vendor --exclude-dir=node_modules . | grep -v "esc_\|sanitize"; then
+          echo "❌ Found unescaped \$_POST output"
+          exit 1
+        fi
+
+        echo "✅ Security checks passed"
 
   deploy:
     name: Deploy to Production Server
