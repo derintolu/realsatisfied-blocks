@@ -452,11 +452,14 @@ class RealSatisfied_Company_RSS_Parser {
 				'agent_name'       => $row['agent_name'],
 				'office_name'      => $row['office_name'],
 				'text'             => $row['testimonial_text'],
-				'client_name'      => $row['client_name'],
-				'transaction_type' => $row['transaction_type'],
+				'customer_name'    => $row['client_name'], // Map client_name to customer_name for marquee compatibility
+				'customer_type'    => $row['transaction_type'], // Map transaction_type to customer_type
+				'customer_location'=> '', // Not stored in database, set empty
 				'date'             => $row['date'],
+				'pub_date'         => $row['date'], // Also provide pub_date for compatibility
 				'rating'           => floatval( $row['rating'] ),
 				'link'             => $row['link'],
+				'agent_avatar'     => '', // Not stored in database for company feeds
 			);
 		}
 
@@ -506,11 +509,14 @@ class RealSatisfied_Company_RSS_Parser {
 				'agent_name'       => $row['agent_name'],
 				'office_name'      => $row['office_name'],
 				'text'             => $row['testimonial_text'],
-				'client_name'      => $row['client_name'],
-				'transaction_type' => $row['transaction_type'],
+				'customer_name'    => $row['client_name'], // Map client_name to customer_name for marquee compatibility
+				'customer_type'    => $row['transaction_type'], // Map transaction_type to customer_type
+				'customer_location'=> '', // Not stored in database, set empty
 				'date'             => $row['date'],
+				'pub_date'         => $row['date'], // Also provide pub_date for compatibility
 				'rating'           => floatval( $row['rating'] ),
 				'link'             => $row['link'],
+				'agent_avatar'     => '', // Not stored in database for company feeds
 			);
 		}
 
