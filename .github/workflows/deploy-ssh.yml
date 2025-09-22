@@ -134,13 +134,13 @@ jobs:
           find . -maxdepth 3 -name "wp-config.php" -type f 2>/dev/null || echo "wp-config.php not found in first 3 levels"
         ENDSSH
 
-        # WordPress is in the 'site' directory as shown in the ls output
-        TARGET_PATH="site/wp-content/plugins/realsatisfied-blocks/"
+        # WordPress is in site/public_html as shown in the WPMU DEV interface
+        TARGET_PATH="site/public_html/wp-content/plugins/realsatisfied-blocks/"
 
         echo "📁 Creating directory structure if needed..."
         ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
           ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} \
-          "mkdir -p site/wp-content/plugins/realsatisfied-blocks"
+          "mkdir -p site/public_html/wp-content/plugins/realsatisfied-blocks"
         echo "📁 Deploying to: $TARGET_PATH"
 
         # Deploy using rsync (as recommended by WPMU DEV)
@@ -169,8 +169,8 @@ jobs:
         # Use SSH to verify deployment and optionally clear cache
         ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
           ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
-          # Navigate to plugin directory - WordPress is in 'site' directory
-          PLUGIN_DIR="site/wp-content/plugins/realsatisfied-blocks"
+          # Navigate to plugin directory - WordPress is in site/public_html
+          PLUGIN_DIR="site/public_html/wp-content/plugins/realsatisfied-blocks"
 
           # Check if plugin file exists
           if [ -f "$PLUGIN_DIR/realsatisfied-blocks.php" ]; then
