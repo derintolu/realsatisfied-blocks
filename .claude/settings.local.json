@@ -15,7 +15,9 @@
       "Bash(vendor/bin/phpcs:*)",
       "Bash(vendor/bin/phpcbf:*)",
       "Bash(wp plugin verify-checksums:*)",
-      "Bash(wp plugin status:*)"
+      "Bash(wp plugin status:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)"
     ],
     "deny": []
   }
