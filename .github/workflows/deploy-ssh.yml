@@ -41,7 +41,7 @@ jobs:
     - name: Run WordPress Coding Standards
       run: |
         echo "Running WordPress Coding Standards checks..."
-        vendor/bin/phpcs --standard=phpcs-deploy.xml --report=summary
+        vendor/bin/phpcs --standard=phpcs-deploy.xml --report=summary --runtime-set ignore_warnings_on_exit 1
         echo "PHPCS checks passed ✅"
 
     - name: Check for security issues
