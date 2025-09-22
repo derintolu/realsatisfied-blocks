@@ -35,16 +35,19 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-interaction
 
-    - name: Skip PHPCS for deployment
-      run: echo "Skipping PHPCS checks for deployment - plugin functionality is working"
+    - name: Run WordPress Coding Standards
+      run: |
+        echo "Running WordPress Coding Standards checks..."
+        vendor/bin/phpcs --standard=phpcs-deploy.xml --report=summary
+        echo "PHPCS checks passed ✅"
 
     - name: Check for security issues
       run: |
         echo "Checking for common security issues..."
-        ! grep -r "eval(" --include="*.php" . || (echo "Found eval() usage" && exit 1)
-        ! grep -r "\$_GET\[" --include="*.php" . | grep -v "sanitize\|esc_" || (echo "Found unsanitized \$_GET usage" && exit 1)
-        ! grep -r "\$_POST\[" --include="*.php" . | grep -v "sanitize\|esc_\|wp_nonce" || (echo "Found unsanitized \$_POST usage" && exit 1)
-        echo "Security checks passed"
+        ! grep -r "eval(" --include="*.php" --exclude-dir=vendor --exclude-dir=node_modules . || (echo "Found eval() usage" && exit 1)
+        ! grep -r "\$_GET\[" --include="*.php" --exclude-dir=vendor --exclude-dir=node_modules . | grep -v "sanitize\|esc_" || (echo "Found unsanitized \$_GET usage" && exit 1)
+        ! grep -r "\$_POST\[" --include="*.php" --exclude-dir=vendor --exclude-dir=node_modules . | grep -v "sanitize\|esc_\|wp_nonce" || (echo "Found unsanitized \$_POST usage" && exit 1)
+        echo "Security checks passed ✅"
 
   deploy:
     name: Deploy to Production Server
