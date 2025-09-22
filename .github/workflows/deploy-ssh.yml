@@ -1,4 +1,23 @@
-name: Deploy to Production (SSH)
+name: Deploy to WPMU DEV Studio21 Hosting
+
+# Deploy to WPMU DEV hosting using rsync as recommended in their documentation
+# https://wpmudev.com/docs/api-plugin-development/hosting-api-docs/#github
+#
+# Required GitHub Secrets:
+# - SSH_HOST: Your WPMU DEV host (e.g., studio21.tempurl.host)
+# - SSH_USERNAME: SSH username created in WPMU DEV Hub (e.g., c21mas-sftp)
+# - SSH_PRIVATE_KEY: Private SSH key (generate with: ssh-keygen -t ed25519)
+#
+# Optional GitHub Secrets:
+# - SSH_KNOWN_HOSTS: Host fingerprint for security (get with: ssh-keyscan -H studio21.tempurl.host)
+# - WORDPRESS_PATH: Path to WordPress root (defaults to 'site' for WPMU DEV)
+# - SSH_PORT: Custom SSH port (defaults to 22)
+#
+# Setup Steps:
+# 1. Generate SSH key pair: ssh-keygen -t ed25519 -f ~/.ssh/realsatisfied_deploy
+# 2. Add public key to WPMU DEV Hub > Your Site > Hosting > SSH/SFTP
+# 3. Add private key to GitHub repo > Settings > Secrets > SSH_PRIVATE_KEY
+# 4. Add other required secrets
 
 on:
   push:
@@ -80,153 +99,97 @@ jobs:
     # Note: Node.js build steps removed as production server doesn't have Node.js
     # All necessary built files should be committed to the repository
 
-    - name: Create deployment package
+    # Package creation removed - rsync will handle exclusions directly
+
+    - name: Setup SSH
       run: |
-        # Create a clean build without development files
-        mkdir -p deploy-package
-        rsync -av --exclude='.git*' \
-                  --exclude='node_modules' \
-                  --exclude='vendor' \
-                  --exclude='tests' \
-                  --exclude='phpcs.xml' \
-                  --exclude='composer.*' \
-                  --exclude='package*.json' \
-                  --exclude='webpack.config.js' \
-                  --exclude='src' \
-                  --exclude='.github' \
-                  --exclude='logs' \
-                  --exclude='deploy*' \
-                  --exclude='.env*' \
-                  --exclude='*SETUP.md' \
-                  --exclude='DEPLOYMENT.md' \
-                  . deploy-package/
+        # Create SSH directory
+        mkdir -p ~/.ssh
 
-        # Create zip file for release
-        cd deploy-package
-        zip -r ../realsatisfied-blocks-$(date +%Y%m%d-%H%M%S).zip .
-        cd ..
+        # Add SSH private key
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
 
-    - name: Deploy via SSH
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT || 22 }}
-        script: |
-          echo "🚀 Starting deployment to production..."
+        # Add known hosts
+        if [ -n "${{ secrets.SSH_KNOWN_HOSTS }}" ]; then
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+        else
+          # Auto-accept host key (less secure but works if known_hosts not set)
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+        fi
 
-          # Use the site directory as base path
-          BASE_PATH="site"
-          if [ -n "${{ secrets.WORDPRESS_PATH }}" ]; then
-            BASE_PATH="${{ secrets.WORDPRESS_PATH }}"
-          fi
+    - name: Deploy to WPMU DEV Hosting via rsync
+      run: |
+        echo "🚀 Starting deployment to WPMU DEV Studio21..."
 
-          # Navigate to WordPress plugins directory
-          PLUGIN_DIR="${BASE_PATH}/wp-content/plugins/realsatisfied-blocks"
+        # Set target path - for WPMU DEV it's typically /home/{user}/sites/{site}/wp-content/plugins/
+        if [ -n "${{ secrets.WORDPRESS_PATH }}" ]; then
+          TARGET_PATH="${{ secrets.WORDPRESS_PATH }}/wp-content/plugins/realsatisfied-blocks/"
+        else
+          # Default for WPMU DEV hosting structure
+          TARGET_PATH="site/wp-content/plugins/realsatisfied-blocks/"
+        fi
 
-          # Debug: Show current directory and check paths
-          echo "Current directory: $(pwd)"
-          echo "Target plugin directory: $PLUGIN_DIR"
+        echo "📁 Deploying to: $TARGET_PATH"
 
-          # Create plugin directory if it doesn't exist
-          mkdir -p "$PLUGIN_DIR"
+        # Deploy using rsync (as recommended by WPMU DEV)
+        rsync -avz --delete \
+          --exclude='.git*' \
+          --exclude='node_modules' \
+          --exclude='vendor' \
+          --exclude='tests' \
+          --exclude='phpcs*.xml' \
+          --exclude='composer.*' \
+          --exclude='package*.json' \
+          --exclude='webpack.config.js' \
+          --exclude='.github' \
+          --exclude='logs' \
+          --exclude='*.md' \
+          --exclude='.env*' \
+          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+          ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:$TARGET_PATH
 
-          # Navigate to plugins directory
-          cd "${BASE_PATH}/wp-content/plugins" || exit 1
+        echo "✅ Files synchronized successfully"
 
-          # Create backup of current plugin
-          if [ -d "realsatisfied-blocks" ]; then
-            BACKUP_NAME="realsatisfied-blocks-backup-$(date +%Y%m%d-%H%M%S)"
-            cp -r realsatisfied-blocks "$BACKUP_NAME"
-            echo "✅ Backup created: $BACKUP_NAME"
-          fi
+    - name: Clear cache and verify deployment
+      run: |
+        echo "🔄 Clearing WPMU DEV cache and verifying deployment..."
 
-          # Clean up old backups (keep last 5)
-          ls -t realsatisfied-blocks-backup-* 2>/dev/null | tail -n +6 | xargs rm -rf 2>/dev/null || true
-
-          echo "📁 Ready for file upload..."
-
-    - name: Upload files via SCP
-      uses: appleboy/scp-action@v0.1.4
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT || 22 }}
-        source: "deploy-package/*"
-        target: ${{ secrets.WORDPRESS_PATH || 'site' }}/wp-content/plugins/realsatisfied-blocks/
-        strip_components: 1
-
-    - name: Set permissions and cleanup
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT || 22 }}
-        script: |
-          # Use the site directory as base path
-          BASE_PATH="site"
-          if [ -n "${{ secrets.WORDPRESS_PATH }}" ]; then
-            BASE_PATH="${{ secrets.WORDPRESS_PATH }}"
-          fi
-
+        # Use SSH to verify deployment and optionally clear cache
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+          ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
           # Navigate to plugin directory
-          PLUGIN_DIR="${BASE_PATH}/wp-content/plugins/realsatisfied-blocks"
-          cd "$PLUGIN_DIR" || exit 1
-
-          # Set proper permissions
-          find . -type f -exec chmod 644 {} \;
-          find . -type d -exec chmod 755 {} \;
-
-          # Set ownership if we have permission (ignore errors if not)
-          chown -R www-data:www-data . 2>/dev/null || echo "⚠️  Could not set ownership (may require sudo)"
-
-          # Clear WordPress caches if WP-CLI is available (optional)
-          if command -v wp &> /dev/null; then
-            cd "$BASE_PATH" 2>/dev/null || cd "site" 2>/dev/null || echo "⚠️  Could not navigate to WordPress root"
-            wp cache flush 2>/dev/null || echo "⚠️  WP-CLI not available or cache flush failed"
-            wp plugin status realsatisfied-blocks 2>/dev/null || echo "⚠️  Could not check plugin status"
-          else
-            echo "ℹ️  WP-CLI not available (this is okay)"
-          fi
-
-          echo "✅ File permissions set successfully"
-          echo "🎉 Deployment completed!"
-
-    - name: Verify deployment
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT || 22 }}
-        script: |
-          # Use the site directory as base path
-          BASE_PATH="site"
           if [ -n "${{ secrets.WORDPRESS_PATH }}" ]; then
-            BASE_PATH="${{ secrets.WORDPRESS_PATH }}"
+            PLUGIN_DIR="${{ secrets.WORDPRESS_PATH }}/wp-content/plugins/realsatisfied-blocks"
+          else
+            PLUGIN_DIR="site/wp-content/plugins/realsatisfied-blocks"
           fi
 
-          # Check if main plugin file exists
-          PLUGIN_FILE="${BASE_PATH}/wp-content/plugins/realsatisfied-blocks/realsatisfied-blocks.php"
-          if [ -f "$PLUGIN_FILE" ]; then
-            echo "✅ Plugin file exists: $PLUGIN_FILE"
-            # Check if file is readable
-            if [ -r "$PLUGIN_FILE" ]; then
-              echo "✅ Plugin file is readable"
-              # Extract version from plugin header
-              VERSION=$(grep "Version:" "$PLUGIN_FILE" | head -1 | sed 's/.*Version: *\([0-9.]*\).*/\1/')
-              echo "📊 Plugin version: $VERSION"
-            else
-              echo "❌ Plugin file is not readable"
-              exit 1
+          # Check if plugin file exists
+          if [ -f "$PLUGIN_DIR/realsatisfied-blocks.php" ]; then
+            echo "✅ Plugin deployed successfully"
+
+            # Extract version
+            VERSION=$(grep "Version:" "$PLUGIN_DIR/realsatisfied-blocks.php" | head -1 | sed 's/.*Version: *//')
+            echo "📊 Deployed version: $VERSION"
+
+            # Set proper permissions
+            find "$PLUGIN_DIR" -type f -exec chmod 644 {} \; 2>/dev/null || true
+            find "$PLUGIN_DIR" -type d -exec chmod 755 {} \; 2>/dev/null || true
+
+            # Clear WordPress cache if WP-CLI is available
+            if command -v wp &> /dev/null; then
+              wp cache flush 2>/dev/null && echo "✅ WordPress cache cleared" || echo "ℹ️ Could not clear cache"
             fi
           else
-            echo "❌ Plugin file not found"
+            echo "❌ Plugin file not found at expected location"
             exit 1
           fi
+        ENDSSH
+
+        echo "🎉 Deployment completed successfully!"
+
+    # Verification is now included in the deployment step above
 
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/v')
