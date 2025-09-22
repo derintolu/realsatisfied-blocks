@@ -264,8 +264,21 @@ class RealSatisfied_Company_RSS_Parser {
 		// Create table if it doesn't exist
 		$this->create_testimonials_table();
 
-		// Clear existing testimonials for this company
-		$wpdb->delete( $table_name, array( 'company_id' => $company_id ) );
+		// Rotate testimonials - remove oldest 50, add new 200, keep variety
+		$max_testimonials = 400; // Keep more testimonials for better rotation
+		$remove_count = 50; // Remove oldest 50 each week for rotation
+
+		// Remove oldest testimonials to make room for new ones
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$table_name}
+				WHERE company_id = %s
+				ORDER BY created_at ASC
+				LIMIT %d",
+				$company_id,
+				$remove_count
+			)
+		);
 
 		// Insert new testimonials in batches to avoid memory issues
 		$batch_size = 100;
@@ -274,19 +287,35 @@ class RealSatisfied_Company_RSS_Parser {
 		foreach ( $batches as $batch ) {
 			$values = array();
 			foreach ( $batch as $testimonial ) {
-				$values[] = $wpdb->prepare(
-					'(%s, %s, %s, %s, %s, %s, %s, %s, %s, %d)',
-					$company_id,
-					sanitize_text_field( $testimonial['agent_name'] ),
-					sanitize_text_field( $testimonial['office_name'] ),
-					sanitize_textarea_field( $testimonial['text'] ),
-					sanitize_text_field( $testimonial['client_name'] ),
-					sanitize_text_field( $testimonial['transaction_type'] ),
-					sanitize_text_field( $testimonial['date'] ),
-					floatval( $testimonial['rating'] ),
-					sanitize_text_field( $testimonial['link'] ),
-					time()
+				// Check if this testimonial already exists (avoid duplicates)
+				$existing = $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT id FROM {$table_name}
+						WHERE company_id = %s
+						AND agent_name = %s
+						AND testimonial_text = %s
+						LIMIT 1",
+						$company_id,
+						$testimonial['agent_name'],
+						$testimonial['text']
+					)
 				);
+
+				if ( ! $existing ) {
+					$values[] = $wpdb->prepare(
+						'(%s, %s, %s, %s, %s, %s, %s, %s, %s, %d)',
+						$company_id,
+						sanitize_text_field( $testimonial['agent_name'] ),
+						sanitize_text_field( $testimonial['office_name'] ),
+						sanitize_textarea_field( $testimonial['text'] ),
+						sanitize_text_field( $testimonial['client_name'] ),
+						sanitize_text_field( $testimonial['transaction_type'] ),
+						sanitize_text_field( $testimonial['date'] ),
+						floatval( $testimonial['rating'] ),
+						sanitize_text_field( $testimonial['link'] ),
+						time()
+					);
+				}
 			}
 
 			if ( ! empty( $values ) ) {
@@ -295,6 +324,28 @@ class RealSatisfied_Company_RSS_Parser {
 						VALUES " . implode( ',', $values );
 				$wpdb->query( $sql );
 			}
+		}
+
+		// Trim to max testimonials if we exceed the limit
+		$current_count = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table_name} WHERE company_id = %s",
+				$company_id
+			)
+		);
+
+		if ( $current_count > $max_testimonials ) {
+			$excess = $current_count - $max_testimonials;
+			$wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM {$table_name}
+					WHERE company_id = %s
+					ORDER BY created_at ASC
+					LIMIT %d",
+					$company_id,
+					$excess
+				)
+			);
 		}
 	}
 
