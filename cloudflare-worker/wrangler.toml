@@ -1,0 +1,22 @@
+name = "realsatisfied-testimonials"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Your Cloudflare account ID
+account_id = "YOUR_ACCOUNT_ID"
+
+# Environment variables
+[vars]
+API_KEY = "YOUR_SECURE_API_KEY"
+
+# KV Namespace for caching testimonials
+[[kv_namespaces]]
+binding = "TESTIMONIALS_CACHE"
+id = "YOUR_KV_NAMESPACE_ID"
+
+# Cron trigger - runs daily at 2 AM UTC
+[triggers]
+crons = ["0 2 * * *"]
+
+# Routes (optional - can use workers.dev subdomain instead)
+# route = "testimonials-api.yourdomain.com/*"
