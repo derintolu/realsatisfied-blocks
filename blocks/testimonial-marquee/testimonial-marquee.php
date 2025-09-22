@@ -282,32 +282,22 @@ class RealSatisfied_Testimonial_Marquee_Block {
 		$parser = RealSatisfied_Company_RSS_Parser::get_instance();
 
 		$options = array(
-			'limit'         => $attributes['maxTestimonials'] * 3, // Get more to ensure variety
-			'office_filter' => isset( $attributes['officeFilter'] ) ? $attributes['officeFilter'] : '',
+			'limit'          => $attributes['maxTestimonials'] * 2, // Get more to filter from
+			'preserve_order' => false, // Allow shuffling
 		);
 
-		// Try to get testimonials from cache first (fast)
-		$testimonials = $parser->get_testimonials_from_cache( $attributes['companyId'], $options );
+		$company_data = $parser->fetch_company_data( $attributes['companyId'], $options );
 
-		// If no cached data, schedule a background fetch and show empty for now
-		if ( empty( $testimonials ) ) {
-			// Trigger background fetch via AJAX or cron
-			wp_schedule_single_event( time() + 1, 'rsob_fetch_company_testimonials', array( $attributes['companyId'], $options ) );
-			error_log( 'RealSatisfied Testimonial Marquee: No cached data for company ' . $attributes['companyId'] . ', scheduled background fetch' );
-
-			// Try one quick fetch with very short timeout as last resort
-			add_filter( 'http_request_timeout', function() { return 2; } ); // 2 second timeout
-			$data = $parser->fetch_company_data( $attributes['companyId'], array_merge( $options, array( 'limit' => 50 ) ) ); // Fetch less for speed
-			remove_filter( 'http_request_timeout', function() { return 2; } );
-
-			if ( ! is_wp_error( $data ) && ! empty( $data['testimonials'] ) ) {
-				$testimonials = $data['testimonials'];
-			} else {
-				return array(); // Return empty to avoid slow page load
-			}
+		if ( is_wp_error( $company_data ) ) {
+			error_log( 'RealSatisfied Testimonial Marquee: Error fetching company data: ' . $company_data->get_error_message() );
+			return array();
 		}
 
-		return $testimonials;
+		if ( empty( $company_data['testimonials'] ) ) {
+			return array();
+		}
+
+		return $company_data['testimonials'];
 	}
 
 	/**
