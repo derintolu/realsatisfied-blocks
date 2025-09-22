@@ -126,9 +126,9 @@ class RealSatisfied_Company_RSS_Parser {
 	private function fetch_company_data_paginated( $company_id, $options, $total_limit, $page_size ) {
 		$all_testimonials = array();
 		$company_data     = null;
-		$page             = isset( $options['page'] ) ? intval( $options['page'] ) : 1;
+		$page             = isset( $options['page'] ) ? intval( $options['page'] ) : rand( 1, 3 ); // Start from random page for variety
 		$collected        = 0;
-		$max_pages        = 1; // Limit to 200 testimonials max
+		$max_pages        = 5; // Allow up to 5 pages for variety (200 * 5 = 1000 testimonials to choose from)
 
 		while ( $collected < $total_limit && $page <= $max_pages ) {
 			// Memory management - check available memory
