@@ -274,6 +274,26 @@ class RealSatisfied_Testimonial_Marquee_Block {
 			return array();
 		}
 
+		// Try Cloudflare Worker first if enabled
+		if ( defined( 'RSOB_USE_CLOUDFLARE' ) && RSOB_USE_CLOUDFLARE ) {
+			if ( ! class_exists( 'Cloudflare_Testimonials_Client' ) ) {
+				require_once RSOB_PLUGIN_PATH . 'includes/class-cloudflare-testimonials-client.php';
+			}
+
+			$client = Cloudflare_Testimonials_Client::get_instance();
+			$testimonials = $client->fetch_testimonials(
+				$attributes['companyId'],
+				array( 'limit' => $attributes['maxTestimonials'] * 2 )
+			);
+
+			if ( ! is_wp_error( $testimonials ) && ! empty( $testimonials ) ) {
+				return $testimonials;
+			}
+
+			error_log( 'Cloudflare API error, falling back to RSS: ' . ( is_wp_error( $testimonials ) ? $testimonials->get_error_message() : 'Empty response' ) );
+		}
+
+		// Fallback to RSS parser
 		if ( ! class_exists( 'RealSatisfied_Company_RSS_Parser' ) ) {
 			error_log( 'RealSatisfied Testimonial Marquee: RealSatisfied_Company_RSS_Parser class not found' );
 			return array();
