@@ -24,11 +24,11 @@ class RealSatisfied_Company_RSS_Parser {
 	private static $instance = null;
 
 	/**
-	 * RSS feed cache duration (12 hours)
+	 * RSS feed cache duration (7 days - only fetch once per week)
 	 *
 	 * @var int
 	 */
-	private $cache_duration = 43200;
+	private $cache_duration = 604800; // 7 days to prevent frequent RSS calls
 
 	/**
 	 * RSS feed URL for company
@@ -73,6 +73,10 @@ class RealSatisfied_Company_RSS_Parser {
 		// Add cache clearing functionality
 		add_action( 'wp_ajax_rsob_clear_company_feed_cache', array( $this, 'clear_feed_cache_callback' ) );
 		add_action( 'wp_ajax_nopriv_rsob_clear_company_feed_cache', array( $this, 'clear_feed_cache_callback' ) );
+
+		// Set up weekly cron job for RSS updates
+		add_action( 'wp', array( $this, 'schedule_weekly_rss_update' ) );
+		add_action( 'rsob_weekly_rss_update', array( $this, 'update_company_testimonials_cron' ) );
 	}
 
 	/**
@@ -87,13 +91,43 @@ class RealSatisfied_Company_RSS_Parser {
 			return new WP_Error( 'missing_company_id', __( 'No company ID provided', 'realsatisfied-blocks' ) );
 		}
 
-		// Check cache first
-		$cache_key   = 'rsob_company_' . md5( $company_id . serialize( $options ) );
-		$cached_data = get_transient( $cache_key );
+		// Check both object cache AND transient cache
+		$cache_key = 'rsob_company_' . md5( $company_id . serialize( $options ) );
+
+		// Try object cache first (fastest)
+		$cached_data = wp_cache_get( $cache_key, 'realsatisfied_blocks' );
+
+		if ( $cached_data === false ) {
+			// Try transient cache (persistent)
+			$cached_data = get_transient( $cache_key );
+		}
 
 		if ( $cached_data !== false ) {
+			// Store in object cache for this request
+			wp_cache_set( $cache_key, $cached_data, 'realsatisfied_blocks', 3600 );
 			return $cached_data;
 		}
+
+		// Check if another request is already fetching this data
+		$lock_key = 'rsob_fetching_' . md5( $company_id );
+		if ( get_transient( $lock_key ) ) {
+			// Return empty to prevent multiple simultaneous fetches
+			return new WP_Error( 'fetch_in_progress', 'Another request is already fetching this data' );
+		}
+
+		// Check retry limit - max 3 attempts per hour
+		$retry_key = 'rsob_retry_count_' . md5( $company_id );
+		$retry_count = get_transient( $retry_key );
+		if ( $retry_count >= 3 ) {
+			// Too many failed attempts, wait an hour
+			return new WP_Error( 'too_many_retries', 'Too many failed attempts. Please try again later.' );
+		}
+
+		// Increment retry counter (expires in 1 hour)
+		set_transient( $retry_key, $retry_count + 1, 3600 );
+
+		// Set lock to prevent simultaneous fetches (30 second lock - enough for fetch)
+		set_transient( $lock_key, true, 30 );
 
 		// Build feed URL
 		$feed_url = $this->company_feed_url . $company_id;
@@ -107,11 +141,11 @@ class RealSatisfied_Company_RSS_Parser {
 		add_filter( 'http_request_timeout', array( $this, 'increase_http_timeout' ) );
 		add_filter( 'http_request_args', array( $this, 'customize_http_args' ) );
 
-		// Try to fetch RSS feed using WordPress HTTP API instead of SimplePie
+		// Try to fetch RSS feed using WordPress HTTP API with reasonable timeout
 		$response = wp_remote_get(
 			$feed_url,
 			array(
-				'timeout'    => 60,
+				'timeout'    => 30, // 30 seconds - RSS feed takes ~19 seconds to load
 				'user-agent' => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ),
 			)
 		);
@@ -119,6 +153,9 @@ class RealSatisfied_Company_RSS_Parser {
 		// Remove timeout filter
 		remove_filter( 'http_request_timeout', array( $this, 'increase_http_timeout' ) );
 		remove_filter( 'http_request_args', array( $this, 'customize_http_args' ) );
+
+		// Clear the lock
+		delete_transient( $lock_key );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'fetch_failed', 'Failed to fetch RSS feed: ' . $response->get_error_message() );
@@ -149,8 +186,15 @@ class RealSatisfied_Company_RSS_Parser {
 			return $company_data;
 		}
 
-		// Cache the result for 12 hours (43200 seconds)
+		// Cache the result (using class property for duration - 7 days)
 		set_transient( $cache_key, $company_data, $this->cache_duration );
+
+		// Also store in object cache for immediate access
+		wp_cache_set( $cache_key, $company_data, 'realsatisfied_blocks', 3600 );
+
+		// Clear retry counter on success
+		$retry_key = 'rsob_retry_count_' . md5( $company_id );
+		delete_transient( $retry_key );
 
 		// Store cache metadata for the cache manager
 		$cache_hash = md5( $company_id . serialize( $options ) );
@@ -678,6 +722,75 @@ class RealSatisfied_Company_RSS_Parser {
 			error_log( 'RealSatisfied Company RSS Parser: Error getting channel tag ' . $tag . ': ' . $e->getMessage() );
 		}
 		return $default;
+	}
+
+	/**
+	 * Schedule weekly RSS update cron job
+	 */
+	public function schedule_weekly_rss_update() {
+		if ( ! wp_next_scheduled( 'rsob_weekly_rss_update' ) ) {
+			wp_schedule_event( time(), 'weekly', 'rsob_weekly_rss_update' );
+		}
+	}
+
+	/**
+	 * Update company testimonials via cron job (runs weekly)
+	 */
+	public function update_company_testimonials_cron() {
+		// Get all unique company IDs that have been used
+		$company_ids = $this->get_used_company_ids();
+
+		foreach ( $company_ids as $company_id ) {
+			// Clear existing cache to force refresh
+			$cache_key = 'rsob_company_' . md5( $company_id );
+			delete_transient( $cache_key );
+
+			// Fetch fresh data (this will cache it for 7 days)
+			$this->fetch_company_data( $company_id, array( 'limit' => 200 ) );
+
+			// Sleep for 2 seconds between fetches to be nice to the RSS server
+			sleep( 2 );
+		}
+
+		error_log( 'RealSatisfied: Weekly cron updated ' . count( $company_ids ) . ' company feeds' );
+	}
+
+	/**
+	 * Get list of company IDs that have been used
+	 */
+	private function get_used_company_ids() {
+		global $wpdb;
+
+		// Look for company IDs in post content
+		$query = "
+			SELECT DISTINCT meta_value
+			FROM {$wpdb->postmeta}
+			WHERE meta_key = 'realsatisfied_company_id'
+
+			UNION
+
+			SELECT DISTINCT
+				SUBSTRING_INDEX(SUBSTRING_INDEX(post_content, '\"companyId\":\"', -1), '\"', 1) as company_id
+			FROM {$wpdb->posts}
+			WHERE post_content LIKE '%\"companyId\":\"%'
+			AND post_status = 'publish'
+			AND post_content LIKE '%realsatisfied/testimonial-marquee%'
+		";
+
+		$results = $wpdb->get_col( $query );
+
+		// Filter out empty or invalid IDs
+		$company_ids = array_filter( $results, function( $id ) {
+			return ! empty( $id ) && strlen( $id ) > 10;
+		} );
+
+		// Add the default company ID if configured
+		$default_id = '1d5090ddb597aa7bba';
+		if ( ! in_array( $default_id, $company_ids ) ) {
+			$company_ids[] = $default_id;
+		}
+
+		return array_unique( $company_ids );
 	}
 
 	/**
