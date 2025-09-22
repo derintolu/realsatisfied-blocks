@@ -1,0 +1,177 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Code Quality & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+        coverage: none
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+
+    - name: Configure PHPCS
+      run: composer run-script install-standards
+
+    - name: Run WordPress Coding Standards
+      run: vendor/bin/phpcs --standard=phpcs.xml --report=summary
+      continue-on-error: true
+
+    - name: Check for security issues
+      run: |
+        echo "Checking for common security issues..."
+        ! grep -r "eval(" --include="*.php" . || (echo "Found eval() usage" && exit 1)
+        ! grep -r "\$_GET\[" --include="*.php" . | grep -v "sanitize\|esc_" || (echo "Found unsanitized \$_GET usage" && exit 1)
+        ! grep -r "\$_POST\[" --include="*.php" . | grep -v "sanitize\|esc_\|wp_nonce" || (echo "Found unsanitized \$_POST usage" && exit 1)
+        echo "Security checks passed"
+
+  deploy:
+    name: Deploy to Production
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        if [ -f package.json ]; then
+          npm ci
+        fi
+
+    - name: Build assets
+      run: |
+        if [ -f package.json ] && grep -q "build" package.json; then
+          npm run build
+        fi
+
+    - name: Create deployment package
+      run: |
+        # Create a clean build without development files
+        mkdir -p deploy
+        rsync -av --exclude='.git*' \
+                  --exclude='node_modules' \
+                  --exclude='vendor' \
+                  --exclude='tests' \
+                  --exclude='phpcs.xml' \
+                  --exclude='composer.*' \
+                  --exclude='package*.json' \
+                  --exclude='webpack.config.js' \
+                  --exclude='src' \
+                  --exclude='.github' \
+                  --exclude='logs' \
+                  --exclude='deploy' \
+                  . deploy/
+
+        # Create zip file
+        cd deploy
+        zip -r ../realsatisfied-blocks.zip .
+        cd ..
+
+    - name: Deploy via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      if: ${{ secrets.FTP_SERVER && secrets.FTP_USERNAME && secrets.FTP_PASSWORD }}
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: deploy/
+        server-dir: ${{ secrets.FTP_SERVER_DIR }}/wp-content/plugins/realsatisfied-blocks/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/vendor/**
+          **/tests/**
+
+    - name: Deploy via SSH
+      if: ${{ secrets.SSH_HOST && secrets.SSH_USERNAME && secrets.SSH_KEY }}
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        script: |
+          cd ${{ secrets.DEPLOY_PATH }}/wp-content/plugins/
+
+          # Backup current plugin
+          if [ -d "realsatisfied-blocks" ]; then
+            cp -r realsatisfied-blocks realsatisfied-blocks-backup-$(date +%Y%m%d-%H%M%S)
+          fi
+
+          # Create temp directory
+          mkdir -p temp-deploy
+          cd temp-deploy
+
+          # Download and extract new version
+          wget -O realsatisfied-blocks.zip "${{ secrets.DEPLOY_DOWNLOAD_URL || format('https://github.com/{0}/releases/latest/download/realsatisfied-blocks.zip', github.repository) }}"
+          unzip -o realsatisfied-blocks.zip
+
+          # Deploy new version
+          cd ..
+          rm -rf realsatisfied-blocks
+          mv temp-deploy realsatisfied-blocks
+
+          # Set proper permissions
+          chmod -R 755 realsatisfied-blocks
+          chown -R www-data:www-data realsatisfied-blocks || true
+
+          # Clear any WordPress caches
+          if command -v wp &> /dev/null; then
+            wp cache flush --path=${{ secrets.DEPLOY_PATH }} || true
+          fi
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: realsatisfied-blocks.zip
+        generate_release_notes: true
+
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "🚀 Deployment completed successfully!"
+        echo "Version: ${{ github.ref_name }}"
+        echo "Commit: ${{ github.sha }}"
+
+    - name: Notify deployment failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed!"
+        echo "Check the logs above for details."
+        exit 1

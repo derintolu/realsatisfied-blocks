@@ -1,0 +1,22 @@
+{
+    "name": "derintolu/realsatisfied-blocks",
+    "description": "Standalone Gutenberg blocks for RealSatisfied office and agent data",
+    "type": "wordpress-plugin",
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.5",
+        "wp-coding-standards/wpcs": "^2.3",
+        "phpcompatibility/phpcompatibility-wp": "^2.1"
+    },
+    "scripts": {
+        "lint": "phpcs --standard=WordPress .",
+        "lint-fix": "phpcbf --standard=WordPress .",
+        "install-standards": [
+            "phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcompatibility/phpcompatibility-wp"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

@@ -17,7 +17,6 @@ SAFETY-PROTOCOL.md
 AI-DEVELOPMENT-RULES.md
 
 # Modern WordPress Development Files
-composer.json
 composer.lock
 vendor/
 package.json
@@ -29,7 +28,6 @@ webpack.config.js
 .prettierrc*
 tsconfig.json
 phpunit.xml
-phpcs.xml
 .phpcs.xml
 tests/
 dist/
@@ -38,3 +36,13 @@ build/
 # Release packages - distribute via GitHub Releases, don't track in repo
 realsatisfied-blocks-v*/
 *.zip
+
+# Deployment and environment files
+.env
+.env.local
+.env.production
+deploy/
+
+# Logs
+logs/
+*.log

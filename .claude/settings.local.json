@@ -4,7 +4,18 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "mcp__memory__create_entities",
+      "mcp__github__get_file_contents",
+      "mcp__github__list_commits",
+      "Read(//tmp/**)",
+      "Bash(find:*)",
+      "Bash(composer install:*)",
+      "Bash(composer run-script:*)",
+      "Bash(vendor/bin/phpcs:*)",
+      "Bash(vendor/bin/phpcbf:*)",
+      "Bash(wp plugin verify-checksums:*)",
+      "Bash(wp plugin status:*)"
     ],
     "deny": []
   }

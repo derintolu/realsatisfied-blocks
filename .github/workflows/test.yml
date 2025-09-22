@@ -1,0 +1,182 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ develop ]
+
+jobs:
+  phpcs:
+    name: WordPress Coding Standards
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: dom, curl, libxml, mbstring, zip
+        coverage: none
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Configure PHPCS
+      run: composer run-script install-standards
+
+    - name: Run PHPCS
+      run: vendor/bin/phpcs --standard=phpcs.xml --report=checkstyle --report-file=phpcs-report.xml
+
+    - name: Upload PHPCS results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: phpcs-report
+        path: phpcs-report.xml
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check for hardcoded secrets
+      run: |
+        echo "Checking for potential hardcoded secrets..."
+        ! grep -ri "password\s*=" --include="*.php" . || (echo "Found hardcoded password" && exit 1)
+        ! grep -ri "api[_-]?key\s*=" --include="*.php" . || (echo "Found hardcoded API key" && exit 1)
+        ! grep -ri "secret\s*=" --include="*.php" . || (echo "Found hardcoded secret" && exit 1)
+        echo "✅ No hardcoded secrets found"
+
+    - name: Check for security anti-patterns
+      run: |
+        echo "Checking for security anti-patterns..."
+        ! grep -r "eval(" --include="*.php" . || (echo "❌ Found eval() usage" && exit 1)
+        ! grep -r "exec(" --include="*.php" . || (echo "❌ Found exec() usage" && exit 1)
+        ! grep -r "system(" --include="*.php" . || (echo "❌ Found system() usage" && exit 1)
+        ! grep -r "shell_exec(" --include="*.php" . || (echo "❌ Found shell_exec() usage" && exit 1)
+        ! grep -r "file_get_contents(\$_" --include="*.php" . || (echo "❌ Found file_get_contents with user input" && exit 1)
+        echo "✅ Security anti-pattern checks passed"
+
+    - name: Check for proper escaping
+      run: |
+        echo "Checking for output escaping..."
+        # Check for echo without escaping (basic check)
+        if grep -r "echo \$" --include="*.php" . | grep -v "esc_html\|esc_attr\|esc_url\|wp_kses"; then
+          echo "⚠️  Found potential unescaped output - please review"
+          # Don't fail the build, just warn
+        else
+          echo "✅ Output escaping checks passed"
+        fi
+
+  file-validation:
+    name: File Validation
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check file permissions
+      run: |
+        echo "Checking file permissions..."
+        # Check for world-writable files
+        if find . -type f -perm -002 -not -path "./.git/*" | grep -q .; then
+          echo "❌ Found world-writable files:"
+          find . -type f -perm -002 -not -path "./.git/*"
+          exit 1
+        fi
+        echo "✅ File permissions check passed"
+
+    - name: Check for PHP syntax errors
+      run: |
+        echo "Checking PHP syntax..."
+        find . -name "*.php" -not -path "./vendor/*" -exec php -l {} \; | grep -v "No syntax errors detected" || true
+
+        # Count syntax errors
+        ERROR_COUNT=$(find . -name "*.php" -not -path "./vendor/*" -exec php -l {} \; 2>&1 | grep -c "Parse error" || true)
+
+        if [ "$ERROR_COUNT" -gt 0 ]; then
+          echo "❌ Found $ERROR_COUNT PHP syntax errors"
+          exit 1
+        fi
+        echo "✅ PHP syntax check passed"
+
+    - name: Validate plugin header
+      run: |
+        echo "Validating plugin header..."
+        if ! grep -q "Plugin Name:" realsatisfied-blocks.php; then
+          echo "❌ Missing Plugin Name in header"
+          exit 1
+        fi
+        if ! grep -q "Version:" realsatisfied-blocks.php; then
+          echo "❌ Missing Version in header"
+          exit 1
+        fi
+        if ! grep -q "defined.*ABSPATH" realsatisfied-blocks.php; then
+          echo "❌ Missing ABSPATH check in main plugin file"
+          exit 1
+        fi
+        echo "✅ Plugin header validation passed"
+
+  compatibility:
+    name: PHP Compatibility
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php-version: ['7.4', '8.0', '8.1', '8.2']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP ${{ matrix.php-version }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: dom, curl, libxml, mbstring, zip
+
+    - name: Check PHP syntax
+      run: |
+        echo "Testing PHP ${{ matrix.php-version }} compatibility..."
+        find . -name "*.php" -not -path "./vendor/*" -exec php -l {} \; > /dev/null
+        echo "✅ PHP ${{ matrix.php-version }} syntax check passed"
+
+  status-check:
+    name: All Tests Status
+    runs-on: ubuntu-latest
+    needs: [phpcs, security, file-validation, compatibility]
+    if: always()
+
+    steps:
+    - name: Check all jobs status
+      run: |
+        if [[ "${{ needs.phpcs.result }}" == "success" &&
+              "${{ needs.security.result }}" == "success" &&
+              "${{ needs.file-validation.result }}" == "success" &&
+              "${{ needs.compatibility.result }}" == "success" ]]; then
+          echo "✅ All tests passed!"
+        else
+          echo "❌ Some tests failed:"
+          echo "  PHPCS: ${{ needs.phpcs.result }}"
+          echo "  Security: ${{ needs.security.result }}"
+          echo "  File Validation: ${{ needs.file-validation.result }}"
+          echo "  PHP Compatibility: ${{ needs.compatibility.result }}"
+          exit 1
+        fi

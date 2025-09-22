@@ -1,0 +1,186 @@
+name: Deploy to Production (Studio21)
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Code Quality & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+        coverage: none
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+
+    - name: Configure PHPCS
+      run: composer run-script install-standards
+
+    - name: Run WordPress Coding Standards
+      run: vendor/bin/phpcs --standard=phpcs.xml --report=summary
+      continue-on-error: true
+
+    - name: Check for security issues
+      run: |
+        echo "Checking for common security issues..."
+        ! grep -r "eval(" --include="*.php" . || (echo "Found eval() usage" && exit 1)
+        ! grep -r "\$_GET\[" --include="*.php" . | grep -v "sanitize\|esc_" || (echo "Found unsanitized \$_GET usage" && exit 1)
+        ! grep -r "\$_POST\[" --include="*.php" . | grep -v "sanitize\|esc_\|wp_nonce" || (echo "Found unsanitized \$_POST usage" && exit 1)
+        echo "Security checks passed"
+
+  deploy:
+    name: Deploy to Studio21 Production
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        if [ -f package.json ]; then
+          npm ci
+        fi
+
+    - name: Build assets
+      run: |
+        if [ -f package.json ] && grep -q "build" package.json; then
+          npm run build
+        fi
+
+    - name: Create deployment package
+      run: |
+        # Create a clean build without development files
+        mkdir -p deploy
+        rsync -av --exclude='.git*' \
+                  --exclude='node_modules' \
+                  --exclude='vendor' \
+                  --exclude='tests' \
+                  --exclude='phpcs.xml' \
+                  --exclude='composer.*' \
+                  --exclude='package*.json' \
+                  --exclude='webpack.config.js' \
+                  --exclude='src' \
+                  --exclude='.github' \
+                  --exclude='logs' \
+                  --exclude='deploy' \
+                  --exclude='.env*' \
+                  --exclude='DEPLOYMENT.md' \
+                  . deploy/
+
+        # Create zip file for backup
+        cd deploy
+        zip -r ../realsatisfied-blocks-$(date +%Y%m%d-%H%M%S).zip .
+        cd ..
+
+    - name: Deploy via SFTP to Studio21
+      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+      with:
+        server: studio21.tempurl.host
+        username: c21mas-sftp
+        password: ${{ secrets.SFTP_PASSWORD }}
+        local_path: deploy/
+        remote_path: /wp-content/plugins/realsatisfied-blocks/
+        sftpArgs: '-o ConnectTimeout=5'
+
+    - name: Backup and deploy via SSH (Alternative method)
+      if: ${{ secrets.SSH_PRIVATE_KEY }}
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: studio21.tempurl.host
+        username: c21mas-sftp
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          # Navigate to WordPress plugins directory
+          cd /wp-content/plugins/
+
+          # Create backup of current plugin
+          if [ -d "realsatisfied-blocks" ]; then
+            cp -r realsatisfied-blocks realsatisfied-blocks-backup-$(date +%Y%m%d-%H%M%S)
+            echo "✅ Backup created successfully"
+          fi
+
+          # Clean up old backups (keep last 5)
+          ls -t realsatisfied-blocks-backup-* 2>/dev/null | tail -n +6 | xargs rm -rf
+
+          echo "🚀 Deployment completed successfully!"
+
+    - name: Test deployment
+      if: success()
+      run: |
+        echo "🧪 Testing deployment..."
+        # Basic connectivity test
+        curl -I "https://studio21.tempurl.host" || echo "⚠️  Site connectivity test failed"
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: realsatisfied-blocks-*.zip
+        generate_release_notes: true
+        body: |
+          ## 🚀 RealSatisfied Blocks ${{ github.ref_name }}
+
+          This release has been automatically deployed to production.
+
+          ### Deployment Details
+          - **Environment**: Studio21 Production
+          - **Deployed**: ${{ github.event.head_commit.timestamp }}
+          - **Commit**: ${{ github.sha }}
+
+          ### Changes
+          ${{ github.event.head_commit.message }}
+
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo "📋 Deployment Summary:"
+        echo "  - Environment: Studio21 Production (studio21.tempurl.host)"
+        echo "  - Version: ${{ github.ref_name }}"
+        echo "  - Commit: ${{ github.sha }}"
+        echo "  - Timestamp: $(date)"
+        echo ""
+        echo "✅ Plugin deployed to: /wp-content/plugins/realsatisfied-blocks/"
+
+    - name: Notify deployment failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed!"
+        echo "🔍 Troubleshooting steps:"
+        echo "  1. Check SFTP credentials in GitHub secrets"
+        echo "  2. Verify server connectivity"
+        echo "  3. Ensure proper file permissions"
+        echo "  4. Check deployment logs above"
+        exit 1

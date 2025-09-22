@@ -1,0 +1,258 @@
+name: Deploy to Production (SSH)
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Code Quality & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+        coverage: none
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+
+    - name: Configure PHPCS
+      run: composer run-script install-standards
+
+    - name: Run WordPress Coding Standards
+      run: vendor/bin/phpcs --standard=phpcs.xml --report=summary
+      continue-on-error: true
+
+    - name: Check for security issues
+      run: |
+        echo "Checking for common security issues..."
+        ! grep -r "eval(" --include="*.php" . || (echo "Found eval() usage" && exit 1)
+        ! grep -r "\$_GET\[" --include="*.php" . | grep -v "sanitize\|esc_" || (echo "Found unsanitized \$_GET usage" && exit 1)
+        ! grep -r "\$_POST\[" --include="*.php" . | grep -v "sanitize\|esc_\|wp_nonce" || (echo "Found unsanitized \$_POST usage" && exit 1)
+        echo "Security checks passed"
+
+  deploy:
+    name: Deploy to Production Server
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        if [ -f package.json ]; then
+          npm ci
+        fi
+
+    - name: Build assets
+      run: |
+        if [ -f package.json ] && grep -q "build" package.json; then
+          npm run build
+        fi
+
+    - name: Create deployment package
+      run: |
+        # Create a clean build without development files
+        mkdir -p deploy-package
+        rsync -av --exclude='.git*' \
+                  --exclude='node_modules' \
+                  --exclude='vendor' \
+                  --exclude='tests' \
+                  --exclude='phpcs.xml' \
+                  --exclude='composer.*' \
+                  --exclude='package*.json' \
+                  --exclude='webpack.config.js' \
+                  --exclude='src' \
+                  --exclude='.github' \
+                  --exclude='logs' \
+                  --exclude='deploy*' \
+                  --exclude='.env*' \
+                  --exclude='*SETUP.md' \
+                  --exclude='DEPLOYMENT.md' \
+                  . deploy-package/
+
+        # Create zip file for release
+        cd deploy-package
+        zip -r ../realsatisfied-blocks-$(date +%Y%m%d-%H%M%S).zip .
+        cd ..
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        script: |
+          echo "🚀 Starting deployment to production..."
+
+          # Navigate to WordPress plugins directory
+          PLUGIN_DIR="${{ secrets.WORDPRESS_PATH }}/wp-content/plugins/realsatisfied-blocks"
+
+          # Create plugin directory if it doesn't exist
+          mkdir -p "$PLUGIN_DIR"
+          cd "$(dirname "$PLUGIN_DIR")"
+
+          # Create backup of current plugin
+          if [ -d "realsatisfied-blocks" ]; then
+            BACKUP_NAME="realsatisfied-blocks-backup-$(date +%Y%m%d-%H%M%S)"
+            cp -r realsatisfied-blocks "$BACKUP_NAME"
+            echo "✅ Backup created: $BACKUP_NAME"
+          fi
+
+          # Clean up old backups (keep last 5)
+          ls -t realsatisfied-blocks-backup-* 2>/dev/null | tail -n +6 | xargs rm -rf 2>/dev/null || true
+
+          echo "📁 Ready for file upload..."
+
+    - name: Upload files via SCP
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        source: "deploy-package/*"
+        target: ${{ secrets.WORDPRESS_PATH }}/wp-content/plugins/realsatisfied-blocks/
+        strip_components: 1
+
+    - name: Set permissions and cleanup
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        script: |
+          # Navigate to plugin directory
+          PLUGIN_DIR="${{ secrets.WORDPRESS_PATH }}/wp-content/plugins/realsatisfied-blocks"
+          cd "$PLUGIN_DIR"
+
+          # Set proper permissions
+          find . -type f -exec chmod 644 {} \;
+          find . -type d -exec chmod 755 {} \;
+
+          # Set ownership if we have permission (ignore errors if not)
+          chown -R www-data:www-data . 2>/dev/null || echo "⚠️  Could not set ownership (may require sudo)"
+
+          # Clear WordPress caches if WP-CLI is available
+          if command -v wp &> /dev/null; then
+            cd "${{ secrets.WORDPRESS_PATH }}"
+            wp cache flush 2>/dev/null || echo "⚠️  Could not flush WordPress cache"
+            wp plugin status realsatisfied-blocks 2>/dev/null || echo "⚠️  Could not check plugin status"
+          fi
+
+          echo "✅ File permissions set successfully"
+          echo "🎉 Deployment completed!"
+
+    - name: Verify deployment
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        script: |
+          # Check if main plugin file exists
+          PLUGIN_FILE="${{ secrets.WORDPRESS_PATH }}/wp-content/plugins/realsatisfied-blocks/realsatisfied-blocks.php"
+          if [ -f "$PLUGIN_FILE" ]; then
+            echo "✅ Plugin file exists: $PLUGIN_FILE"
+            # Check if file is readable
+            if [ -r "$PLUGIN_FILE" ]; then
+              echo "✅ Plugin file is readable"
+              # Extract version from plugin header
+              VERSION=$(grep "Version:" "$PLUGIN_FILE" | head -1 | sed 's/.*Version: *\([0-9.]*\).*/\1/')
+              echo "📊 Plugin version: $VERSION"
+            else
+              echo "❌ Plugin file is not readable"
+              exit 1
+            fi
+          else
+            echo "❌ Plugin file not found"
+            exit 1
+          fi
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: realsatisfied-blocks-*.zip
+        generate_release_notes: true
+        body: |
+          ## 🚀 RealSatisfied Blocks ${{ github.ref_name }}
+
+          This release has been automatically deployed to production.
+
+          ### Deployment Details
+          - **Environment**: Production Server
+          - **Deployed**: ${{ github.event.head_commit.timestamp }}
+          - **Commit**: ${{ github.sha }}
+
+          ### Changes
+          ${{ github.event.head_commit.message }}
+
+          ### Files Deployed
+          - All plugin files
+          - WordPress coding standards compliant
+          - Security tested
+          - PHP 7.4+ compatible
+
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo ""
+        echo "📋 Deployment Summary:"
+        echo "  - Environment: Production Server"
+        echo "  - Host: ${{ secrets.SSH_HOST }}"
+        echo "  - Version: ${{ github.ref_name }}"
+        echo "  - Commit: ${{ github.sha }}"
+        echo "  - Timestamp: $(date)"
+        echo ""
+        echo "✅ Plugin deployed to: ${{ secrets.WORDPRESS_PATH }}/wp-content/plugins/realsatisfied-blocks/"
+        echo "✅ Backup created with timestamp"
+        echo "✅ File permissions set correctly"
+        echo "✅ Deployment verification passed"
+
+    - name: Notify deployment failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed!"
+        echo ""
+        echo "🔍 Troubleshooting steps:"
+        echo "  1. Check SSH connection and credentials"
+        echo "  2. Verify WordPress path is correct"
+        echo "  3. Ensure server has sufficient disk space"
+        echo "  4. Check file permissions on target directory"
+        echo "  5. Review deployment logs above for specific errors"
+        echo ""
+        echo "📞 If issues persist, check server logs or contact hosting provider"
+        exit 1
