@@ -17,7 +17,8 @@
       "Bash(wp plugin verify-checksums:*)",
       "Bash(wp plugin status:*)",
       "Bash(git checkout:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(php:*)"
     ],
     "deny": []
   }

@@ -35,6 +35,9 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-interaction
 
+    - name: Setup PHPCS standards
+      run: composer run-script install-standards
+
     - name: Run WordPress Coding Standards
       run: |
         echo "Running WordPress Coding Standards checks..."
