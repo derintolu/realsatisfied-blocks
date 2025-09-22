@@ -286,18 +286,24 @@ class RealSatisfied_Testimonial_Marquee_Block {
 			'office_filter' => isset( $attributes['officeFilter'] ) ? $attributes['officeFilter'] : '',
 		);
 
-		// Try to get testimonials from cache first
+		// Try to get testimonials from cache first (fast)
 		$testimonials = $parser->get_testimonials_from_cache( $attributes['companyId'], $options );
 
-		// If no cached data, fetch fresh data
+		// If no cached data, schedule a background fetch and show empty for now
 		if ( empty( $testimonials ) ) {
-			error_log( 'RealSatisfied Testimonial Marquee: No cached data, fetching fresh testimonials for company: ' . $attributes['companyId'] );
-			$data = $parser->fetch_company_data( $attributes['companyId'], $options );
+			// Trigger background fetch via AJAX or cron
+			wp_schedule_single_event( time() + 1, 'rsob_fetch_company_testimonials', array( $attributes['companyId'], $options ) );
+			error_log( 'RealSatisfied Testimonial Marquee: No cached data for company ' . $attributes['companyId'] . ', scheduled background fetch' );
+
+			// Try one quick fetch with very short timeout as last resort
+			add_filter( 'http_request_timeout', function() { return 2; } ); // 2 second timeout
+			$data = $parser->fetch_company_data( $attributes['companyId'], array_merge( $options, array( 'limit' => 50 ) ) ); // Fetch less for speed
+			remove_filter( 'http_request_timeout', function() { return 2; } );
+
 			if ( ! is_wp_error( $data ) && ! empty( $data['testimonials'] ) ) {
 				$testimonials = $data['testimonials'];
 			} else {
-				error_log( 'RealSatisfied Testimonial Marquee: Failed to fetch testimonials' );
-				return array();
+				return array(); // Return empty to avoid slow page load
 			}
 		}
 

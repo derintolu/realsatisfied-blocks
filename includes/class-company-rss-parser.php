@@ -80,6 +80,9 @@ class RealSatisfied_Company_RSS_Parser {
 
 		// Initialize RSS data on first load
 		add_action( 'init', array( $this, 'initialize_rss_data' ) );
+
+		// Handle background fetch requests
+		add_action( 'rsob_fetch_company_testimonials', array( $this, 'fetch_company_testimonials_background' ), 10, 2 );
 	}
 
 	/**
@@ -308,9 +311,9 @@ class RealSatisfied_Company_RSS_Parser {
 						sanitize_text_field( $testimonial['agent_name'] ),
 						sanitize_text_field( $testimonial['office_name'] ),
 						sanitize_textarea_field( $testimonial['text'] ),
-						sanitize_text_field( $testimonial['client_name'] ),
-						sanitize_text_field( $testimonial['transaction_type'] ),
-						sanitize_text_field( $testimonial['date'] ),
+						sanitize_text_field( isset($testimonial['customer_name']) ? $testimonial['customer_name'] : $testimonial['client_name'] ),
+						sanitize_text_field( isset($testimonial['customer_type']) ? $testimonial['customer_type'] : $testimonial['transaction_type'] ),
+						sanitize_text_field( isset($testimonial['pub_date']) ? $testimonial['pub_date'] : $testimonial['date'] ),
 						floatval( $testimonial['rating'] ),
 						sanitize_text_field( $testimonial['link'] ),
 						time()
@@ -540,32 +543,22 @@ class RealSatisfied_Company_RSS_Parser {
 
 		$table_name = $wpdb->prefix . 'realsatisfied_testimonials';
 
-		// Check if we need to initialize data
-		$init_option = 'rsob_rss_initialized';
-		if ( get_option( $init_option ) ) {
-			return; // Already initialized
-		}
-
 		// Create table if it doesn't exist
 		$this->create_testimonials_table();
 
 		// Check if table is empty
 		$count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
 		if ( $count > 0 ) {
-			update_option( $init_option, true );
 			return; // Already has data
 		}
 
 		// Get default company ID from blocks or options
 		$default_company_id = $this->get_default_company_id();
 		if ( $default_company_id ) {
-			// Fetch initial data
-			$options = array( 'limit' => 200 ); // Start with 200 testimonials
-			$this->fetch_company_data_paginated( $default_company_id, $options, 200, 200 );
+			// Schedule background fetch to avoid slowing page load
+			wp_schedule_single_event( time() + 5, 'rsob_fetch_company_testimonials', array( $default_company_id, array( 'limit' => 200 ) ) );
+			error_log( 'RealSatisfied: Scheduled initial data fetch for company ' . $default_company_id );
 		}
-
-		// Mark as initialized
-		update_option( $init_option, true );
 	}
 
 	/**
@@ -593,6 +586,18 @@ class RealSatisfied_Company_RSS_Parser {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Fetch company testimonials in background
+	 *
+	 * @param string $company_id Company ID
+	 * @param array $options Fetch options
+	 */
+	public function fetch_company_testimonials_background( $company_id, $options ) {
+		// Fetch and store testimonials in the background
+		$this->fetch_company_data_paginated( $company_id, $options, 200, 200 );
+		error_log( 'RealSatisfied: Background fetch completed for company ' . $company_id );
 	}
 
 	/**
