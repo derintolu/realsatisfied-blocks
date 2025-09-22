@@ -286,11 +286,19 @@ class RealSatisfied_Testimonial_Marquee_Block {
 			'office_filter' => isset( $attributes['officeFilter'] ) ? $attributes['officeFilter'] : '',
 		);
 
-		// Use database-only method for fast loading
+		// Try to get testimonials from cache first
 		$testimonials = $parser->get_testimonials_from_cache( $attributes['companyId'], $options );
 
+		// If no cached data, fetch fresh data
 		if ( empty( $testimonials ) ) {
-			return array();
+			error_log( 'RealSatisfied Testimonial Marquee: No cached data, fetching fresh testimonials for company: ' . $attributes['companyId'] );
+			$data = $parser->fetch_company_data( $attributes['companyId'], $options );
+			if ( ! is_wp_error( $data ) && ! empty( $data['testimonials'] ) ) {
+				$testimonials = $data['testimonials'];
+			} else {
+				error_log( 'RealSatisfied Testimonial Marquee: Failed to fetch testimonials' );
+				return array();
+			}
 		}
 
 		return $testimonials;
