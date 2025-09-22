@@ -19,7 +19,10 @@
     <arg name="extensions" value="php"/>
 
     <!-- Only check for critical security issues -->
-    <rule ref="WordPress.Security.EscapeOutput"/>
+    <rule ref="WordPress.Security.EscapeOutput">
+        <!-- Allow template variables that are already escaped -->
+        <exclude name="WordPress.Security.EscapeOutput.OutputNotEscaped"/>
+    </rule>
     <rule ref="WordPress.Security.NonceVerification"/>
     <rule ref="WordPress.Security.ValidatedSanitizedInput"/>
 

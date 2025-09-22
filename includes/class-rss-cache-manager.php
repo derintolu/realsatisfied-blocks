@@ -555,7 +555,7 @@ class RealSatisfied_RSS_Cache_Manager {
 		// Verify nonce
 		check_ajax_referer( 'realsatisfied_cache_refresh', 'nonce' );
 
-		$type      = sanitize_text_field( $_POST['type'] );
+		$type      = isset( $_POST['type'] ) ? sanitize_text_field( wp_unslash( $_POST['type'] ) ) : '';
 		$refreshed = 0;
 
 		switch ( $type ) {

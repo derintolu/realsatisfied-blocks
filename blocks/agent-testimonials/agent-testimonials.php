@@ -404,7 +404,7 @@ class RealSatisfied_Agent_Testimonials_Block {
 					<button class="pagination-btn pagination-prev" 
 							data-wp-on--click="actions.prevPage"
 							data-wp-bind--disabled="!state.canGoPrev">
-						&larr; <?php _e( 'Previous', 'realsatisfied-blocks' ); ?>
+						&larr; <?php esc_html_e( 'Previous', 'realsatisfied-blocks' ); ?>
 					</button>
 					<div class="pagination-numbers">
 						<span class="pagination-info" data-wp-text="state.pageInfo"></span>
@@ -412,7 +412,7 @@ class RealSatisfied_Agent_Testimonials_Block {
 					<button class="pagination-btn pagination-next"
 							data-wp-on--click="actions.nextPage" 
 							data-wp-bind--disabled="!state.canGoNext">
-						<?php _e( 'Next', 'realsatisfied-blocks' ); ?> &rarr;
+						<?php esc_html_e( 'Next', 'realsatisfied-blocks' ); ?> &rarr;
 					</button>
 				</div>
 			<?php endif; ?>
@@ -936,7 +936,7 @@ class RealSatisfied_Agent_Testimonials_Block {
 							<div class="ratings-grid">
 								<?php if ( $attributes['showSatisfactionRating'] ?? true ) : ?>
 									<div class="rating-item" data-wp-show="context.item.satisfaction">
-										<span class="rating-label"><?php _e( 'Satisfaction:', 'realsatisfied-blocks' ); ?></span>
+										<span class="rating-label"><?php esc_html_e( 'Satisfaction:', 'realsatisfied-blocks' ); ?></span>
 										<span class="rating-stars" data-wp-text="context.item.satisfactionStars"></span>
 										<?php if ( $attributes['showRatingValues'] ?? true ) : ?>
 											<span class="rating-value" data-wp-text="context.item.satisfactionValue"></span>
@@ -946,7 +946,7 @@ class RealSatisfied_Agent_Testimonials_Block {
 								
 								<?php if ( $attributes['showRecommendationRating'] ?? true ) : ?>
 									<div class="rating-item" data-wp-show="context.item.recommendation">
-										<span class="rating-label"><?php _e( 'Recommendation:', 'realsatisfied-blocks' ); ?></span>
+										<span class="rating-label"><?php esc_html_e( 'Recommendation:', 'realsatisfied-blocks' ); ?></span>
 										<span class="rating-stars" data-wp-text="context.item.recommendationStars"></span>
 										<?php if ( $attributes['showRatingValues'] ?? true ) : ?>
 											<span class="rating-value" data-wp-text="context.item.recommendationValue"></span>
@@ -956,7 +956,7 @@ class RealSatisfied_Agent_Testimonials_Block {
 								
 								<?php if ( $attributes['showPerformanceRating'] ?? true ) : ?>
 									<div class="rating-item" data-wp-show="context.item.performance">
-										<span class="rating-label"><?php _e( 'Performance:', 'realsatisfied-blocks' ); ?></span>
+										<span class="rating-label"><?php esc_html_e( 'Performance:', 'realsatisfied-blocks' ); ?></span>
 										<span class="rating-stars" data-wp-text="context.item.performanceStars"></span>
 										<?php if ( $attributes['showRatingValues'] ?? true ) : ?>
 											<span class="rating-value" data-wp-text="context.item.performanceValue"></span>

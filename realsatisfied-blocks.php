@@ -271,7 +271,7 @@ class RealSatisfied_Blocks {
 		// Check WordPress version
 		if ( version_compare( get_bloginfo( 'version' ), '5.4', '<' ) ) {
 			deactivate_plugins( RSOB_PLUGIN_BASENAME );
-			wp_die( __( 'RealSatisfied Blocks requires WordPress 5.4 or higher.', 'realsatisfied-blocks' ) );
+			wp_die( esc_html__( 'RealSatisfied Blocks requires WordPress 5.4 or higher.', 'realsatisfied-blocks' ) );
 		}
 
 		// Flush rewrite rules

@@ -115,22 +115,22 @@ class RealSatisfied_Cache_Admin {
 			
 			<div class="notice notice-info">
 				<p>
-					<strong><?php _e( 'Auto Cache Prefetch System', 'realsatisfied-blocks' ); ?></strong><br>
-					<?php _e( 'This system automatically refreshes RSS caches every 11 hours to prevent expiration delays. Caches are refreshed in the background using WordPress Cron.', 'realsatisfied-blocks' ); ?>
+					<strong><?php esc_html_e( 'Auto Cache Prefetch System', 'realsatisfied-blocks' ); ?></strong><br>
+					<?php esc_html_e( 'This system automatically refreshes RSS caches every 11 hours to prevent expiration delays. Caches are refreshed in the background using WordPress Cron.', 'realsatisfied-blocks' ); ?>
 				</p>
 			</div>
 
 			<div class="postbox">
-				<h2 class="hndle"><?php _e( 'Cache Status', 'realsatisfied-blocks' ); ?></h2>
+				<h2 class="hndle"><?php esc_html_e( 'Cache Status', 'realsatisfied-blocks' ); ?></h2>
 				<div class="inside">
 					<table class="wp-list-table widefat fixed striped">
 						<thead>
 							<tr>
-								<th><?php _e( 'Cache Type', 'realsatisfied-blocks' ); ?></th>
-								<th><?php _e( 'Status', 'realsatisfied-blocks' ); ?></th>
-								<th><?php _e( 'Last Refresh', 'realsatisfied-blocks' ); ?></th>
-								<th><?php _e( 'Next Scheduled', 'realsatisfied-blocks' ); ?></th>
-								<th><?php _e( 'Actions', 'realsatisfied-blocks' ); ?></th>
+								<th><?php esc_html_e( 'Cache Type', 'realsatisfied-blocks' ); ?></th>
+								<th><?php esc_html_e( 'Status', 'realsatisfied-blocks' ); ?></th>
+								<th><?php esc_html_e( 'Last Refresh', 'realsatisfied-blocks' ); ?></th>
+								<th><?php esc_html_e( 'Next Scheduled', 'realsatisfied-blocks' ); ?></th>
+								<th><?php esc_html_e( 'Actions', 'realsatisfied-blocks' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -144,9 +144,9 @@ class RealSatisfied_Cache_Admin {
 									<td><strong><?php echo esc_html( $type ); ?></strong></td>
 									<td>
 										<?php if ( $data['is_scheduled'] ) : ?>
-											<span style="color: green;">✓ <?php _e( 'Scheduled', 'realsatisfied-blocks' ); ?></span>
+											<span style="color: green;">✓ <?php esc_html_e( 'Scheduled', 'realsatisfied-blocks' ); ?></span>
 										<?php else : ?>
-											<span style="color: red;">✗ <?php _e( 'Not Scheduled', 'realsatisfied-blocks' ); ?></span>
+											<span style="color: red;">✗ <?php esc_html_e( 'Not Scheduled', 'realsatisfied-blocks' ); ?></span>
 										<?php endif; ?>
 									</td>
 									<td>
@@ -154,19 +154,19 @@ class RealSatisfied_Cache_Admin {
 											<?php echo esc_html( human_time_diff( $data['last_refresh']['timestamp'] ) . ' ago' ); ?>
 											<br><small>(<?php echo esc_html( $data['last_refresh']['count'] ); ?> caches, <?php echo esc_html( $data['last_refresh']['execution_time'] ); ?>ms)</small>
 										<?php else : ?>
-											<em><?php _e( 'Never', 'realsatisfied-blocks' ); ?></em>
+											<em><?php esc_html_e( 'Never', 'realsatisfied-blocks' ); ?></em>
 										<?php endif; ?>
 									</td>
 									<td>
 										<?php if ( $data['next_scheduled'] ) : ?>
 											<?php echo esc_html( human_time_diff( $data['next_scheduled'] ) . ' from now' ); ?>
 										<?php else : ?>
-											<em><?php _e( 'Not scheduled', 'realsatisfied-blocks' ); ?></em>
+											<em><?php esc_html_e( 'Not scheduled', 'realsatisfied-blocks' ); ?></em>
 										<?php endif; ?>
 									</td>
 									<td>
 										<button class="button refresh-cache" data-type="<?php echo esc_attr( strtolower( $type ) ); ?>">
-											<?php _e( 'Refresh Now', 'realsatisfied-blocks' ); ?>
+											<?php esc_html_e( 'Refresh Now', 'realsatisfied-blocks' ); ?>
 										</button>
 									</td>
 								</tr>
@@ -177,39 +177,39 @@ class RealSatisfied_Cache_Admin {
 			</div>
 
 			<div class="postbox">
-				<h2 class="hndle"><?php _e( 'Manual Actions', 'realsatisfied-blocks' ); ?></h2>
+				<h2 class="hndle"><?php esc_html_e( 'Manual Actions', 'realsatisfied-blocks' ); ?></h2>
 				<div class="inside">
-					<p><?php _e( 'Use these buttons to manually refresh specific cache types or all caches at once.', 'realsatisfied-blocks' ); ?></p>
+					<p><?php esc_html_e( 'Use these buttons to manually refresh specific cache types or all caches at once.', 'realsatisfied-blocks' ); ?></p>
 					<p>
 						<button class="button button-primary refresh-cache" data-type="all">
-							<?php _e( 'Refresh All Caches', 'realsatisfied-blocks' ); ?>
+							<?php esc_html_e( 'Refresh All Caches', 'realsatisfied-blocks' ); ?>
 						</button>
 						<button class="button refresh-cache" data-type="company">
-							<?php _e( 'Refresh Company Caches', 'realsatisfied-blocks' ); ?>
+							<?php esc_html_e( 'Refresh Company Caches', 'realsatisfied-blocks' ); ?>
 						</button>
 						<button class="button refresh-cache" data-type="office">
-							<?php _e( 'Refresh Office Caches', 'realsatisfied-blocks' ); ?>
+							<?php esc_html_e( 'Refresh Office Caches', 'realsatisfied-blocks' ); ?>
 						</button>
 						<button class="button refresh-cache" data-type="agent">
-							<?php _e( 'Refresh Agent Caches', 'realsatisfied-blocks' ); ?>
+							<?php esc_html_e( 'Refresh Agent Caches', 'realsatisfied-blocks' ); ?>
 						</button>
 					</p>
 					
 					<hr style="margin: 20px 0;">
 					
-					<p><?php _e( 'If cron jobs show "Not Scheduled", use this button to force schedule them:', 'realsatisfied-blocks' ); ?></p>
+					<p><?php esc_html_e( 'If cron jobs show "Not Scheduled", use this button to force schedule them:', 'realsatisfied-blocks' ); ?></p>
 					<p>
 						<button class="button button-secondary" id="force-schedule-jobs">
-							<?php _e( 'Force Schedule All Cron Jobs', 'realsatisfied-blocks' ); ?>
+							<?php esc_html_e( 'Force Schedule All Cron Jobs', 'realsatisfied-blocks' ); ?>
 						</button>
 					</p>
 				</div>
 			</div>
 
 			<div class="postbox">
-				<h2 class="hndle"><?php _e( 'Company Cache Configuration', 'realsatisfied-blocks' ); ?></h2>
+				<h2 class="hndle"><?php esc_html_e( 'Company Cache Configuration', 'realsatisfied-blocks' ); ?></h2>
 				<div class="inside">
-					<p><?php _e( 'Configure which company IDs should be cached for testimonial marquee blocks. Enter comma-separated company IDs.', 'realsatisfied-blocks' ); ?></p>
+					<p><?php esc_html_e( 'Configure which company IDs should be cached for testimonial marquee blocks. Enter comma-separated company IDs.', 'realsatisfied-blocks' ); ?></p>
 					<form id="company-cache-config">
 						<?php
 						$saved_company_ids = get_option( 'realsatisfied_company_cache_ids', array() );
@@ -217,16 +217,16 @@ class RealSatisfied_Cache_Admin {
 						?>
 						<p>
 							<label for="company_cache_ids">
-								<strong><?php _e( 'Company IDs:', 'realsatisfied-blocks' ); ?></strong><br>
+								<strong><?php esc_html_e( 'Company IDs:', 'realsatisfied-blocks' ); ?></strong><br>
 								<textarea id="company_cache_ids" name="company_cache_ids" rows="3" cols="50" class="large-text"><?php echo esc_textarea( $company_ids_text ); ?></textarea>
 							</label>
 						</p>
 						<p class="description">
-							<?php _e( 'Example: 12345, 67890, 13579. Leave empty to auto-discover from testimonial marquee blocks.', 'realsatisfied-blocks' ); ?>
+							<?php esc_html_e( 'Example: 12345, 67890, 13579. Leave empty to auto-discover from testimonial marquee blocks.', 'realsatisfied-blocks' ); ?>
 						</p>
 						<p>
 							<button type="submit" class="button button-primary">
-								<?php _e( 'Save Company IDs', 'realsatisfied-blocks' ); ?>
+								<?php esc_html_e( 'Save Company IDs', 'realsatisfied-blocks' ); ?>
 							</button>
 						</p>
 						<?php wp_nonce_field( 'realsatisfied_save_company_ids', 'company_ids_nonce' ); ?>
@@ -423,7 +423,7 @@ class RealSatisfied_Cache_Admin {
 		}
 
 		// Get and sanitize company IDs
-		$company_ids_raw = isset( $_POST['company_cache_ids'] ) ? sanitize_textarea_field( $_POST['company_cache_ids'] ) : '';
+		$company_ids_raw = isset( $_POST['company_cache_ids'] ) ? sanitize_textarea_field( wp_unslash( $_POST['company_cache_ids'] ) ) : '';
 
 		// Convert to array and clean up
 		$company_ids = array_filter( array_map( 'trim', explode( ',', $company_ids_raw ) ) );
@@ -449,11 +449,11 @@ class RealSatisfied_Cache_Admin {
 		}
 
 		// Verify nonce
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'realsatisfied_cache_refresh' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'realsatisfied_cache_refresh' ) ) {
 			wp_send_json_error( __( 'Invalid nonce', 'realsatisfied-blocks' ) );
 		}
 
-		$type          = sanitize_text_field( $_POST['type'] );
+		$type          = isset( $_POST['type'] ) ? sanitize_text_field( wp_unslash( $_POST['type'] ) ) : '';
 		$cache_manager = RealSatisfied_RSS_Cache_Manager::get_instance();
 
 		// Handle force scheduling

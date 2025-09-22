@@ -408,7 +408,7 @@ class RealSatisfied_Office_Testimonials_Block {
 				<div class="testimonials-controls">
 					<div class="testimonials-filters">
 						<select data-wp-on--change="actions.filterByAgent" class="agent-filter">
-							<option value="all"><?php _e( 'All Agents', 'realsatisfied-blocks' ); ?></option>
+							<option value="all"><?php esc_html_e( 'All Agents', 'realsatisfied-blocks' ); ?></option>
 							<?php foreach ( $unique_agents as $agent ) : ?>
 								<option value="<?php echo esc_attr( $agent ); ?>"><?php echo esc_html( $agent ); ?></option>
 							<?php endforeach; ?>
@@ -417,10 +417,10 @@ class RealSatisfied_Office_Testimonials_Block {
 					
 					<div class="testimonials-sorting">
 						<select data-wp-on--change="actions.sortTestimonials" class="sort-control">
-							<option value="date_desc"><?php _e( 'Newest First', 'realsatisfied-blocks' ); ?></option>
-							<option value="date"><?php _e( 'Oldest First', 'realsatisfied-blocks' ); ?></option>
-							<option value="rating"><?php _e( 'Highest Rated', 'realsatisfied-blocks' ); ?></option>
-							<option value="agent"><?php _e( 'By Agent Name', 'realsatisfied-blocks' ); ?></option>
+							<option value="date_desc"><?php esc_html_e( 'Newest First', 'realsatisfied-blocks' ); ?></option>
+							<option value="date"><?php esc_html_e( 'Oldest First', 'realsatisfied-blocks' ); ?></option>
+							<option value="rating"><?php esc_html_e( 'Highest Rated', 'realsatisfied-blocks' ); ?></option>
+							<option value="agent"><?php esc_html_e( 'By Agent Name', 'realsatisfied-blocks' ); ?></option>
 						</select>
 					</div>
 				</div>
@@ -466,7 +466,7 @@ class RealSatisfied_Office_Testimonials_Block {
 					<button class="pagination-btn pagination-prev" 
 							data-wp-on--click="actions.prevPage"
 							data-wp-bind--disabled="!state.canGoPrev">
-						&larr; <?php _e( 'Previous', 'realsatisfied-blocks' ); ?>
+						&larr; <?php esc_html_e( 'Previous', 'realsatisfied-blocks' ); ?>
 					</button>
 					<div class="pagination-numbers">
 						<span class="pagination-info" data-wp-text="state.pageInfo"></span>
@@ -474,7 +474,7 @@ class RealSatisfied_Office_Testimonials_Block {
 					<button class="pagination-btn pagination-next"
 							data-wp-on--click="actions.nextPage" 
 							data-wp-bind--disabled="!state.canGoNext">
-						<?php _e( 'Next', 'realsatisfied-blocks' ); ?> &rarr;
+						<?php esc_html_e( 'Next', 'realsatisfied-blocks' ); ?> &rarr;
 					</button>
 				</div>
 			<?php endif; ?>
@@ -938,19 +938,19 @@ class RealSatisfied_Office_Testimonials_Block {
 						<div class="testimonial-ratings" data-wp-show="context.item.hasRatings">
 							<div class="ratings-grid">
 								<div class="rating-item" data-wp-show="context.item.satisfaction">
-									<span class="rating-label"><?php _e( 'Satisfaction:', 'realsatisfied-blocks' ); ?></span>
+									<span class="rating-label"><?php esc_html_e( 'Satisfaction:', 'realsatisfied-blocks' ); ?></span>
 									<span class="rating-stars" data-wp-text="context.item.satisfactionStars"></span>
 									<span class="rating-value" data-wp-text="context.item.satisfactionValue"></span>
 								</div>
 								
 								<div class="rating-item" data-wp-show="context.item.recommendation">
-									<span class="rating-label"><?php _e( 'Recommendation:', 'realsatisfied-blocks' ); ?></span>
+									<span class="rating-label"><?php esc_html_e( 'Recommendation:', 'realsatisfied-blocks' ); ?></span>
 									<span class="rating-stars" data-wp-text="context.item.recommendationStars"></span>
 									<span class="rating-value" data-wp-text="context.item.recommendationValue"></span>
 								</div>
 								
 								<div class="rating-item" data-wp-show="context.item.performance">
-									<span class="rating-label"><?php _e( 'Performance:', 'realsatisfied-blocks' ); ?></span>
+									<span class="rating-label"><?php esc_html_e( 'Performance:', 'realsatisfied-blocks' ); ?></span>
 									<span class="rating-stars" data-wp-text="context.item.performanceStars"></span>
 									<span class="rating-value" data-wp-text="context.item.performanceValue"></span>
 								</div>

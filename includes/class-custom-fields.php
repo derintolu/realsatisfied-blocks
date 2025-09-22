@@ -135,7 +135,7 @@ class RealSatisfied_Custom_Fields {
 	 */
 	public function get_custom_fields_ajax() {
 		// Verify nonce
-		if ( ! wp_verify_nonce( $_POST['nonce'], 'realsatisfied_office_blocks_nonce' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'realsatisfied_office_blocks_nonce' ) ) {
 			wp_send_json_error( 'Invalid nonce' );
 			return;
 		}
@@ -198,7 +198,7 @@ class RealSatisfied_Custom_Fields {
 			<tr>
 				<th scope="row">
 					<label for="<?php echo esc_attr( $this->vanity_key_field ); ?>">
-						<?php esc_html_e( 'Office Vanity Key', 'realsatisfied-blocks' ); ?>
+						<?php esc_htmlesc_html_e( 'Office Vanity Key', 'realsatisfied-blocks' ); ?>
 					</label>
 				</th>
 				<td>
@@ -207,10 +207,10 @@ class RealSatisfied_Custom_Fields {
 						   name="<?php echo esc_attr( $this->vanity_key_field ); ?>"
 						   value="<?php echo esc_attr( $vanity_key ); ?>"
 						   class="regular-text"
-						   placeholder="<?php esc_attr_e( 'e.g., CENTURY21-Masters-11', 'realsatisfied-blocks' ); ?>"
+						   placeholder="<?php esc_attresc_html_e( 'e.g., CENTURY21-Masters-11', 'realsatisfied-blocks' ); ?>"
 					/>
 					<p class="description">
-						<?php esc_html_e( 'Enter the RealSatisfied office vanity key for this office page.', 'realsatisfied-blocks' ); ?>
+						<?php esc_htmlesc_html_e( 'Enter the RealSatisfied office vanity key for this office page.', 'realsatisfied-blocks' ); ?>
 					</p>
 				</td>
 			</tr>
@@ -231,7 +231,7 @@ class RealSatisfied_Custom_Fields {
 
 		// Verify nonce
 		if ( ! isset( $_POST['realsatisfied_office_meta_nonce'] ) ||
-			! wp_verify_nonce( $_POST['realsatisfied_office_meta_nonce'], 'realsatisfied_office_meta_nonce' ) ) {
+			! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['realsatisfied_office_meta_nonce'] ) ), 'realsatisfied_office_meta_nonce' ) ) {
 			return;
 		}
 
@@ -242,7 +242,7 @@ class RealSatisfied_Custom_Fields {
 
 		// Save the field
 		if ( isset( $_POST[ $this->vanity_key_field ] ) ) {
-			$this->set_vanity_key( $post_id, $_POST[ $this->vanity_key_field ] );
+			$this->set_vanity_key( $post_id, sanitize_text_field( wp_unslash( $_POST[ $this->vanity_key_field ] ) ) );
 		}
 	}
 
