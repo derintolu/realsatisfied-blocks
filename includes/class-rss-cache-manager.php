@@ -84,17 +84,23 @@ class RealSatisfied_RSS_Cache_Manager {
 	 * Initialize WordPress hooks
 	 */
 	private function init_hooks() {
-		// Register cron hooks
+		// DISABLED: Automatic cron jobs were causing performance issues
+		// Cron jobs disabled - cache refresh only via manual trigger or on-demand
+		//
+		// Register cron hooks (kept for backward compatibility but not scheduled)
 		foreach ( $this->cron_hooks as $hook ) {
 			add_action( $hook, array( $this, 'execute_cache_refresh' ) );
 		}
 
-		// Add custom cron interval early
+		// Add custom cron interval (kept for manual scheduling if needed)
 		add_filter( 'cron_schedules', array( $this, 'add_cron_interval' ) );
 
-		// Schedule initial cron jobs on plugin activation and init
-		add_action( 'init', array( $this, 'schedule_cron_jobs' ) );
-		add_action( 'wp_loaded', array( $this, 'schedule_cron_jobs' ) );
+		// DISABLED: Auto-scheduling removed to prevent performance issues
+		// add_action( 'init', array( $this, 'schedule_cron_jobs' ) );
+		// add_action( 'wp_loaded', array( $this, 'schedule_cron_jobs' ) );
+
+		// Clean up existing cron jobs on init to remove old schedules
+		add_action( 'init', array( $this, 'unschedule_cron_jobs' ), 1 );
 
 		// Clean up cron jobs on plugin deactivation
 		register_deactivation_hook( RSOB_PLUGIN_BASENAME, array( $this, 'unschedule_cron_jobs' ) );
@@ -102,11 +108,11 @@ class RealSatisfied_RSS_Cache_Manager {
 		// Add admin action to manually trigger cache refresh
 		add_action( 'wp_ajax_refresh_realsatisfied_cache', array( $this, 'manual_cache_refresh' ) );
 
-		// Add admin notice for cache status
-		add_action( 'admin_notices', array( $this, 'display_cache_status' ) );
+		// DISABLED: Admin notices removed to reduce admin overhead
+		// add_action( 'admin_notices', array( $this, 'display_cache_status' ) );
 
-		// Force schedule on admin page load if not scheduled
-		add_action( 'admin_menu', array( $this, 'ensure_cron_scheduled' ) );
+		// DISABLED: Auto-scheduling removed
+		// add_action( 'admin_menu', array( $this, 'ensure_cron_scheduled' ) );
 	}
 
 	/**
@@ -219,47 +225,22 @@ class RealSatisfied_RSS_Cache_Manager {
 
 		foreach ( $company_ids as $company_id ) {
 			try {
-				// Cache multiple variations that testimonial marquee blocks typically use
-				$cache_variations = array(
-					// Default options (empty)
-					array(),
-					// Common testimonial marquee options
-					array(
-						'limit'          => 50,
-						'preserve_order' => false,
-					),
-					array(
-						'limit'          => 100,
-						'preserve_order' => false,
-					),
-					array(
-						'limit'          => 30,
-						'preserve_order' => false,
-					),
-					array(
-						'limit'          => 60,
-						'preserve_order' => false,
-					),
-				);
+				// SIMPLIFIED: Only cache default options (removed 5x multiplication)
+				$options = array();
 
-				foreach ( $cache_variations as $options ) {
-					// Force refresh by clearing cache first
-					$cache_key = 'rsob_company_' . md5( $company_id . serialize( $options ) );
-					delete_transient( $cache_key );
+				// Force refresh by clearing cache first
+				$cache_key = 'rsob_company_' . md5( $company_id . serialize( $options ) );
+				delete_transient( $cache_key );
 
-					// Fetch fresh data (this will create new cache)
-					$data = $parser->fetch_company_data( $company_id, $options );
+				// Fetch fresh data (this will create new cache)
+				$data = $parser->fetch_company_data( $company_id, $options );
 
-					if ( ! is_wp_error( $data ) && ! empty( $data['testimonials'] ) ) {
-						$refreshed++;
-					}
-
-					// Small delay between variations
-					usleep( 100000 ); // 0.1 seconds
+				if ( ! is_wp_error( $data ) && ! empty( $data['testimonials'] ) ) {
+					$refreshed++;
 				}
 
 				// Delay between company IDs to prevent overwhelming the RSS server
-				usleep( 250000 ); // 0.25 seconds
+				sleep( 1 ); // 1 second delay
 
 			} catch ( Exception $e ) {
 				error_log( "RealSatisfied Cache Manager: Error refreshing company {$company_id} - " . $e->getMessage() );

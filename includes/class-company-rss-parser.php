@@ -24,11 +24,11 @@ class RealSatisfied_Company_RSS_Parser {
 	private static $instance = null;
 
 	/**
-	 * RSS feed cache duration (7 days - only fetch once per week)
+	 * RSS feed cache duration (14 days - reduced refresh frequency)
 	 *
 	 * @var int
 	 */
-	private $cache_duration = 604800; // 7 days to prevent frequent RSS calls
+	private $cache_duration = 1209600; // 14 days to prevent frequent RSS calls
 
 	/**
 	 * RSS feed URL for company
@@ -91,43 +91,18 @@ class RealSatisfied_Company_RSS_Parser {
 			return new WP_Error( 'missing_company_id', __( 'No company ID provided', 'realsatisfied-blocks' ) );
 		}
 
-		// Check both object cache AND transient cache
+		// SIMPLIFIED: Single-layer transient cache only
 		$cache_key = 'rsob_company_' . md5( $company_id . serialize( $options ) );
 
-		// Try object cache first (fastest)
-		$cached_data = wp_cache_get( $cache_key, 'realsatisfied_blocks' );
-
-		if ( $cached_data === false ) {
-			// Try transient cache (persistent)
-			$cached_data = get_transient( $cache_key );
-		}
+		// Check transient cache (persistent across requests)
+		$cached_data = get_transient( $cache_key );
 
 		if ( $cached_data !== false ) {
-			// Store in object cache for this request
-			wp_cache_set( $cache_key, $cached_data, 'realsatisfied_blocks', 3600 );
 			return $cached_data;
 		}
 
-		// Check if another request is already fetching this data
-		$lock_key = 'rsob_fetching_' . md5( $company_id );
-		if ( get_transient( $lock_key ) ) {
-			// Return empty to prevent multiple simultaneous fetches
-			return new WP_Error( 'fetch_in_progress', 'Another request is already fetching this data' );
-		}
-
-		// Check retry limit - max 3 attempts per hour
-		$retry_key = 'rsob_retry_count_' . md5( $company_id );
-		$retry_count = get_transient( $retry_key );
-		if ( $retry_count >= 3 ) {
-			// Too many failed attempts, wait an hour
-			return new WP_Error( 'too_many_retries', 'Too many failed attempts. Please try again later.' );
-		}
-
-		// Increment retry counter (expires in 1 hour)
-		set_transient( $retry_key, $retry_count + 1, 3600 );
-
-		// Set lock to prevent simultaneous fetches (30 second lock - enough for fetch)
-		set_transient( $lock_key, true, 30 );
+		// REMOVED: Complex lock and retry mechanism that was causing issues
+		// RSS feeds are now fetched on-demand with simple caching
 
 		// Build feed URL
 		$feed_url = $this->company_feed_url . $company_id;
@@ -137,25 +112,16 @@ class RealSatisfied_Company_RSS_Parser {
 			$feed_url .= '?page=' . intval( $options['page'] );
 		}
 
-		// Temporarily increase HTTP timeout for this request
-		add_filter( 'http_request_timeout', array( $this, 'increase_http_timeout' ) );
-		add_filter( 'http_request_args', array( $this, 'customize_http_args' ) );
-
-		// Try to fetch RSS feed using WordPress HTTP API with reasonable timeout
+		// Fetch RSS feed with optimized timeout
 		$response = wp_remote_get(
 			$feed_url,
 			array(
-				'timeout'    => 30, // 30 seconds - RSS feed takes ~19 seconds to load
-				'user-agent' => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ),
+				'timeout'     => 15, // Reduced from 30 to 15 seconds
+				'user-agent'  => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ),
+				'sslverify'   => true,
+				'redirection' => 3, // Reduced from 5 to 3
 			)
 		);
-
-		// Remove timeout filter
-		remove_filter( 'http_request_timeout', array( $this, 'increase_http_timeout' ) );
-		remove_filter( 'http_request_args', array( $this, 'customize_http_args' ) );
-
-		// Clear the lock
-		delete_transient( $lock_key );
 
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'fetch_failed', 'Failed to fetch RSS feed: ' . $response->get_error_message() );
@@ -186,29 +152,8 @@ class RealSatisfied_Company_RSS_Parser {
 			return $company_data;
 		}
 
-		// Cache the result (using class property for duration - 7 days)
+		// Cache the result (14 days)
 		set_transient( $cache_key, $company_data, $this->cache_duration );
-
-		// Also store in object cache for immediate access
-		wp_cache_set( $cache_key, $company_data, 'realsatisfied_blocks', 3600 );
-
-		// Clear retry counter on success
-		$retry_key = 'rsob_retry_count_' . md5( $company_id );
-		delete_transient( $retry_key );
-
-		// Store cache metadata for the cache manager
-		$cache_hash = md5( $company_id . serialize( $options ) );
-		$meta_key   = 'realsatisfied_company_meta_' . $cache_hash;
-		update_option(
-			$meta_key,
-			array(
-				'company_id' => $company_id,
-				'options'    => $options,
-				'cached_at'  => time(),
-				'cache_key'  => $cache_key,
-			),
-			false
-		);
 
 		return $company_data;
 	}

@@ -24,11 +24,11 @@ class RealSatisfied_Agent_RSS_Parser {
 	private static $instance = null;
 
 	/**
-	 * RSS feed cache duration (12 hours)
+	 * RSS feed cache duration (7 days - increased from 12 hours)
 	 *
 	 * @var int
 	 */
-	private $cache_duration = 43200;
+	private $cache_duration = 604800;
 
 	/**
 	 * Agent RSS feed URL

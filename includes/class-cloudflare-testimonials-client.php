@@ -27,7 +27,7 @@ class Cloudflare_Testimonials_Client {
 	 *
 	 * @var string
 	 */
-	private $api_url = 'https://testimonials.c21masters.com';
+	private $api_url = 'https://api.c21masters.com/testimonials';
 
 	/**
 	 * Cache duration (1 hour - Worker already caches for 7 days)
