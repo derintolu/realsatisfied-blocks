@@ -91,43 +91,31 @@ class RealSatisfied_Company_RSS_Parser {
 			return new WP_Error( 'missing_company_id', __( 'No company ID provided', 'realsatisfied-blocks' ) );
 		}
 
-		// Check both object cache AND transient cache
+		// Use only transient cache (persistent database storage)
+		// Avoid object cache to prevent memory bloat
 		$cache_key = 'rsob_company_' . md5( $company_id . serialize( $options ) );
 
-		// Try object cache first (fastest)
-		$cached_data = wp_cache_get( $cache_key, 'realsatisfied_blocks' );
-
-		if ( $cached_data === false ) {
-			// Try transient cache (persistent)
-			$cached_data = get_transient( $cache_key );
-		}
+		// Check transient cache first
+		$cached_data = get_transient( $cache_key );
 
 		if ( $cached_data !== false ) {
-			// Store in object cache for this request
-			wp_cache_set( $cache_key, $cached_data, 'realsatisfied_blocks', 3600 );
 			return $cached_data;
 		}
 
 		// Check if another request is already fetching this data
 		$lock_key = 'rsob_fetching_' . md5( $company_id );
 		if ( get_transient( $lock_key ) ) {
-			// Return empty to prevent multiple simultaneous fetches
+			// Return cached data if available, even if stale
+			// This prevents blocking the site during fetches
+			$stale_cache = get_transient( $cache_key . '_stale' );
+			if ( $stale_cache !== false ) {
+				return $stale_cache;
+			}
 			return new WP_Error( 'fetch_in_progress', 'Another request is already fetching this data' );
 		}
 
-		// Check retry limit - max 3 attempts per hour
-		$retry_key = 'rsob_retry_count_' . md5( $company_id );
-		$retry_count = get_transient( $retry_key );
-		if ( $retry_count >= 3 ) {
-			// Too many failed attempts, wait an hour
-			return new WP_Error( 'too_many_retries', 'Too many failed attempts. Please try again later.' );
-		}
-
-		// Increment retry counter (expires in 1 hour)
-		set_transient( $retry_key, $retry_count + 1, 3600 );
-
-		// Set lock to prevent simultaneous fetches (30 second lock - enough for fetch)
-		set_transient( $lock_key, true, 30 );
+		// Set lock to prevent simultaneous fetches (60 second lock - RSS takes ~19s + processing time)
+		set_transient( $lock_key, time(), 60 );
 
 		// Build feed URL
 		$feed_url = $this->company_feed_url . $company_id;
@@ -154,15 +142,17 @@ class RealSatisfied_Company_RSS_Parser {
 		remove_filter( 'http_request_timeout', array( $this, 'increase_http_timeout' ) );
 		remove_filter( 'http_request_args', array( $this, 'customize_http_args' ) );
 
-		// Clear the lock
+		// ALWAYS clear the lock, even on error
 		delete_transient( $lock_key );
 
 		if ( is_wp_error( $response ) ) {
+			error_log( 'RealSatisfied Company RSS: Fetch failed - ' . $response->get_error_message() );
 			return new WP_Error( 'fetch_failed', 'Failed to fetch RSS feed: ' . $response->get_error_message() );
 		}
 
 		$body = wp_remote_retrieve_body( $response );
 		if ( empty( $body ) ) {
+			error_log( 'RealSatisfied Company RSS: Empty response body' );
 			return new WP_Error( 'empty_response', 'Empty response from RSS feed' );
 		}
 
@@ -176,6 +166,7 @@ class RealSatisfied_Company_RSS_Parser {
 			if ( ! empty( $errors ) ) {
 				$error_msg .= ': ' . $errors[0]->message;
 			}
+			error_log( 'RealSatisfied Company RSS: ' . $error_msg );
 			return new WP_Error( 'xml_parse_failed', $error_msg );
 		}
 
@@ -183,18 +174,15 @@ class RealSatisfied_Company_RSS_Parser {
 		$company_data = $this->extract_company_data_from_xml( $xml, $options );
 
 		if ( is_wp_error( $company_data ) ) {
+			error_log( 'RealSatisfied Company RSS: Data extraction failed - ' . $company_data->get_error_message() );
 			return $company_data;
 		}
 
 		// Cache the result (using class property for duration - 7 days)
 		set_transient( $cache_key, $company_data, $this->cache_duration );
 
-		// Also store in object cache for immediate access
-		wp_cache_set( $cache_key, $company_data, 'realsatisfied_blocks', 3600 );
-
-		// Clear retry counter on success
-		$retry_key = 'rsob_retry_count_' . md5( $company_id );
-		delete_transient( $retry_key );
+		// Store a stale copy for fallback when fetching (shorter duration)
+		set_transient( $cache_key . '_stale', $company_data, $this->cache_duration + 86400 ); // 8 days
 
 		// Store cache metadata for the cache manager
 		$cache_hash = md5( $company_id . serialize( $options ) );
@@ -780,9 +768,12 @@ class RealSatisfied_Company_RSS_Parser {
 		$results = $wpdb->get_col( $query );
 
 		// Filter out empty or invalid IDs
-		$company_ids = array_filter( $results, function( $id ) {
-			return ! empty( $id ) && strlen( $id ) > 10;
-		} );
+		$company_ids = array_filter(
+			$results,
+			function( $id ) {
+				return ! empty( $id ) && strlen( $id ) > 10;
+			}
+		);
 
 		// Add the default company ID if configured
 		$default_id = '1d5090ddb597aa7bba';
